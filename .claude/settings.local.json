@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(gunzip -c \"/mnt/c/Users/ronal/.claude/projects/E--Projetos-cypher-front/bbd60d9d-3c04-4ddf-bd2e-c0649e81cf33/tool-results/webfetch-1778710482585-r5dkcq.bin\")",
+      "Bash(node *)",
+      "Bash(tar -xf \"C:/Users/ronal/.claude/projects/E--Projetos-cypher-front/design-bundle.tar\" -C /tmp/design-bundle)",
+      "Bash(mkdir -p /tmp/design-bundle)",
+      "Read(//tmp/design-bundle/**)",
+      "Bash(tar -xf \"/mnt/c/Users/ronal/.claude/projects/E--Projetos-cypher-front/design-bundle.tar\" -C /tmp/design-bundle)",
+      "Bash(tar -xf \"/mnt/c/Users/ronal/design-bundle.tar\" -C /tmp/design-bundle)",
+      "Bash(ng version *)",
+      "PowerShell(ng version *)",
+      "PowerShell(npm *)",
+      "Bash(npm --version)",
+      "Bash(npx --version)",
+      "Bash(npx @angular/cli@latest version)",
+      "Bash(npx @angular/cli@21 new cypher-front --directory=. --routing=false --style=scss --skip-git --standalone --skip-tests)",
+      "Bash(npx @angular/cli@21 new cypher-front --directory=. --routing=false --style=scss --skip-git --standalone --skip-tests --force)",
+      "Bash(cd \"/tmp\")",
+      "Bash(npx @angular/cli@21 new cypher-front --routing=false --style=scss --skip-git --standalone --skip-tests)",
+      "Bash(cp *)",
+      "Bash(npx @angular/cli@21 build --configuration development)"
+    ]
+  }
+}

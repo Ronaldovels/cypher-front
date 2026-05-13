@@ -1,0 +1,64 @@
+<div class="eyebrow-accent">Etapa 04 · Confirmação</div>
+<h1 class="q">Tudo pronto, <em>{{ state.data().company || 'sua operação' }}</em>.</h1>
+<p class="sub">Revise a configuração abaixo. Você pode ajustar qualquer item nas Definições da plataforma a qualquer momento — nada aqui é permanente.</p>
+
+<div class="summary-grid">
+  <!-- Identity card -->
+  <div class="summary-card">
+    <div class="h"><span class="l">Identidade</span><span class="n">— 01</span></div>
+    <div style="font-size:22px;font-weight:600;letter-spacing:-0.015em;line-height:1.15">
+      {{ state.data().company || '—' }}
+    </div>
+    <div class="kicker" style="font-size:11px">
+      {{ state.data().cnpj || 'CNPJ não informado' }} · {{ state.data().sector || 'setor não definido' }}
+    </div>
+    <div class="ident-row">
+      <div style="width:36px;height:36px;border-radius:8px;border:1px solid var(--line-2)"
+           [style.background]="state.data().accent"></div>
+      <div class="kicker" style="font-size:11px">{{ state.data().accent.toUpperCase() }} · tema {{ state.data().theme }}</div>
+    </div>
+  </div>
+
+  <!-- EPIs card -->
+  <div class="summary-card">
+    <div class="h"><span class="l">EPIs monitorados</span><span class="n">— 02</span></div>
+    <div class="big">{{ selected().length }} ativos</div>
+    <div class="pile">
+      @for (e of selected().slice(0, 5); track e.key) {
+        <span class="chip">{{ e.name }}</span>
+      }
+      @if (selected().length > 5) {
+        <span class="chip">+{{ selected().length - 5 }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- CAs card -->
+  <div class="summary-card">
+    <div class="h"><span class="l">CAs registrados</span><span class="n">— 03</span></div>
+    <div class="big" [style.color]="casCount() ? 'var(--accent)' : 'var(--ink)'">
+      {{ casCount() }} <span style="color:var(--ink-mute);font-size:18px">/ {{ selected().length }}</span>
+    </div>
+    <div class="kicker" style="font-size:11px">
+      {{ casCount() === 0
+        ? 'Você pode adicionar depois em Definições'
+        : pending() + ' pendente' + (pending() === 1 ? '' : 's') + ' de cadastro' }}
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:56px;padding:32px;border:1px solid var(--line-2);border-radius:16px;background:linear-gradient(135deg,var(--accent-soft),transparent 60%);display:flex;justify-content:space-between;align-items:center;gap:28px">
+  <div>
+    <div class="kicker" style="color:var(--accent)">— Lançamento</div>
+    <h3 style="font-size:32px;font-weight:600;letter-spacing:-0.025em;margin:10px 0 6px">Iniciar Cypher agora.</h3>
+    <p style="color:var(--ink-2);font-size:15px;margin:0;max-width:460px">
+      Você pode ajustar todas essas configurações em Definições a qualquer momento.
+    </p>
+  </div>
+  <button class="btn primary lg pulsing" (click)="state.launch()" [disabled]="state.launching()">
+    {{ state.launching() ? 'Iniciando…' : 'Iniciar Cypher' }}
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14M13 5l7 7-7 7"/>
+    </svg>
+  </button>
+</div>

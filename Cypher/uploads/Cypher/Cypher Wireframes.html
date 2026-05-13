@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Cypher · Wireframes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="sketchy.css" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #f0eee9; font-family: 'Kalam', cursive; }
+    #root { min-height: 100vh; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="primitives.jsx"></script>
+  <script type="text/babel" src="onboarding.jsx"></script>
+  <script type="text/babel" src="operador.jsx"></script>
+  <script type="text/babel" src="gestor.jsx"></script>
+
+  <script type="text/babel">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "persona": "ambos",
+      "onboardingStep": 0,
+      "operatorAlert": false
+    }/*EDITMODE-END*/;
+
+    const ONBOARDING_STEPS = ['Empresa', 'Setores', 'Máquinas', 'EPIs', 'Equipe', 'Tema'];
+
+    function App() {
+      const [tw, setTw] = useTweaks(TWEAK_DEFAULTS);
+      const showOnb = tw.persona === 'ambos' || tw.persona === 'onboarding';
+      const showOp  = tw.persona === 'ambos' || tw.persona === 'operador';
+      const showGe  = tw.persona === 'ambos' || tw.persona === 'gestor';
+      const onbStep = Number(tw.onboardingStep) || 0;
+
+      return (
+        <>
+          <DesignCanvas>
+            {showOnb && (
+              <DCSection id="onboarding" title="Onboarding" subtitle="Configuração inicial · parametrização por máquina · 3 abordagens">
+                <DCArtboard id="onb-v1" label="V1 · Wizard linear (denso, guiado)" width={1280} height={860}>
+                  <OnboardingV1 step={Math.min(onbStep, 5)} />
+                </DCArtboard>
+                <DCArtboard id="onb-v2" label="V2 · Checklist não-linear (respiro, cards independentes)" width={1280} height={1080}>
+                  <OnboardingV2 step={Math.min(onbStep, 4)} />
+                </DCArtboard>
+                <DCArtboard id="onb-v3" label="V3 · Split com preview ao vivo (ousado)" width={1400} height={880}>
+                  <OnboardingV3 step={Math.min(onbStep, 4)} />
+                </DCArtboard>
+              </DCSection>
+            )}
+
+            {showOp && (
+              <DCSection id="operador" title="Operador · por máquina" subtitle="Interface individual responsiva (tablet/monitor na estação)">
+                <DCArtboard id="op-v1" label="V1 · Clássico — sidebar + feed + checklist (denso)" width={1360} height={820}>
+                  <OperadorV1 alert={tw.operatorAlert} />
+                </DCArtboard>
+                <DCArtboard id="op-v2" label="V2 · Topbar + feed grande + EPIs no rodapé (respiro)" width={1360} height={860}>
+                  <OperadorV2 alert={tw.operatorAlert} />
+                </DCArtboard>
+                <DCArtboard id="op-v3" label="V3 · Kiosk full-bleed (ousado)" width={1360} height={820}>
+                  <OperadorV3 alert={tw.operatorAlert} />
+                </DCArtboard>
+              </DCSection>
+            )}
+
+            {showGe && (
+              <DCSection id="gestor" title="Gestor · visão geral" subtitle="Dashboard desktop com responsivo · mapa + KPIs + timeline">
+                <DCArtboard id="ge-v1" label="V1 · Clássico — sidebar + KPIs + mapa (denso)" width={1520} height={920}>
+                  <GestorV1 />
+                </DCArtboard>
+                <DCArtboard id="ge-v2" label="V2 · Tabs + mapa protagonista + painel lateral" width={1520} height={920}>
+                  <GestorV2 />
+                </DCArtboard>
+                <DCArtboard id="ge-v3" label="V3 · Bento modular personalizável (ousado, respiro)" width={1520} height={1440}>
+                  <GestorV3 />
+                </DCArtboard>
+              </DCSection>
+            )}
+
+            <DCSection id="sistema" title="Sistema visual" subtitle="Elementos, EPIs, estados — referência para o design final">
+              <DCArtboard id="sys-epis" label="EPIs detectados — estados" width={640} height={260}>
+                <div className="wf paper" style={{ padding: 22, width: '100%', height: '100%' }}>
+                  <h3>Ícones dos EPIs</h3>
+                  <Squiggle width={140} />
+                  <div style={{ marginTop: 14 }}>
+                    <div style={{ fontSize: 13, marginBottom: 8 }} className="muted">neutro / conforme / ausente</div>
+                    <div className="row" style={{ gap: 28 }}>
+                      {['capacete','oculos','luvas','colete','botas'].map((k) => {
+                        const Ic = EPI_ICONS[k];
+                        return (
+                          <div key={k} className="col" style={{ alignItems: 'center', gap: 6 }}>
+                            <div className="row gap-sm">
+                              <Ic size={28} />
+                              <Ic size={28} ok={true} />
+                              <Ic size={28} ok={false} />
+                            </div>
+                            <span style={{ fontSize: 12 }}>{EPI_LABELS[k]}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </DCArtboard>
+
+              <DCArtboard id="sys-tags" label="Tags, botões, alertas" width={640} height={260}>
+                <div className="wf paper" style={{ padding: 22, width: '100%', height: '100%' }}>
+                  <h3>Tags & ações</h3>
+                  <Squiggle width={140} />
+                  <div className="row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                    <span className="tag">neutro</span>
+                    <span className="tag ok">● operando</span>
+                    <span className="tag alert">⚠ violação</span>
+                    <span className="tag brand">preset</span>
+                    <span className="tag solid">selecionado</span>
+                    <span className="chip">chip</span>
+                  </div>
+                  <div className="row" style={{ gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+                    <button className="btn primary">primário</button>
+                    <button className="btn">secundário</button>
+                    <button className="btn ghost">ghost</button>
+                    <button className="btn sm">sm</button>
+                    <button className="btn danger">pausar</button>
+                  </div>
+                  <div style={{ marginTop: 14, fontSize: 12 }} className="muted">
+                    severidade binária: <span className="tag ok">ok</span> ou <span className="tag alert">violação</span>
+                  </div>
+                </div>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <TweaksPanel title="Tweaks · Cypher">
+            <TweakSection label="Persona" />
+            <TweakRadio
+              label="Ver"
+              value={tw.persona}
+              onChange={(v) => setTw('persona', v)}
+              options={[
+                { value: 'ambos', label: 'Tudo' },
+                { value: 'onboarding', label: 'Onb.' },
+                { value: 'operador', label: 'Oper.' },
+                { value: 'gestor', label: 'Gestor' },
+              ]}
+            />
+
+            <TweakSection label="Onboarding" />
+            <TweakSelect
+              label="Etapa"
+              value={onbStep}
+              onChange={(v) => setTw('onboardingStep', Number(v))}
+              options={ONBOARDING_STEPS.map((s, i) => ({ value: i, label: `${i + 1}. ${s}` }))}
+            />
+
+            <TweakSection label="Operador" />
+            <TweakToggle
+              label="Alerta ativo"
+              value={tw.operatorAlert}
+              onChange={(v) => setTw('operatorAlert', v)}
+            />
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

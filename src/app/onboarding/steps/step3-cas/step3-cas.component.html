@@ -1,0 +1,49 @@
+<div class="eyebrow-accent">Etapa 03 · CAs e validades</div>
+<h1 class="q">Registre os <em>Certificados de Aprovação.</em></h1>
+<p class="sub">Esta etapa é opcional. Você pode pular e cadastrar depois nas Definições — o Cypher monitora os EPIs mesmo sem o CA registrado, mas com ele você ganha alertas de validade.</p>
+
+<div class="optional-banner" style="margin-top:36px">
+  <div class="b-text">
+    <strong>Opcional</strong>
+    <span>Pule para configurar depois, ou registre agora para receber alertas 60 dias antes do vencimento.</span>
+  </div>
+  <button class="btn ghost" (click)="state.skip()">Pular esta etapa →</button>
+</div>
+
+@if (selected().length === 0) {
+  <p style="color:var(--ink-mute);font-size:14px;font-family:var(--mono);letter-spacing:0.1em;text-transform:uppercase">
+    Nenhum EPI selecionado ainda — volte à etapa anterior.
+  </p>
+} @else {
+  <div class="ca-table">
+    <div class="ca-head">
+      <span>EPI</span>
+      <span>Nº do CA</span>
+      <span>Validade</span>
+      <span>Fabricante (opcional)</span>
+    </div>
+    @for (e of selected(); track e.key) {
+      <div class="ca-row">
+        <div class="epi-tag">
+          <div class="tag-icon"><app-epi-icon [key]="e.key" [size]="18"/></div>
+          <div>
+            <div class="tag-name">{{ e.name }}</div>
+            <div class="kicker" style="font-size:10px">{{ e.nrm }}</div>
+          </div>
+        </div>
+        <input type="text" inputmode="numeric" placeholder="ex. 12345"
+               [value]="getCa(e.key).ca || ''"
+               (input)="onCaNum($event, e.key)" />
+        <input type="date"
+               [value]="getCa(e.key).validade || ''"
+               (change)="update(e.key, 'validade', $any($event.target).value)" />
+        <input type="text" placeholder="ex. 3M, MSA, Bracol"
+               [value]="getCa(e.key).fab || ''"
+               (input)="update(e.key, 'fab', $any($event.target).value)" />
+      </div>
+    }
+  </div>
+  <p class="sub" style="margin-top:20px;font-size:13px;color:var(--ink-mute)">
+    {{ caCount() }} de {{ selected().length }} EPIs com CA registrado
+  </p>
+}

@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Cypher · Apresentação Challenge 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="deck.css" />
+  <script src="deck-stage.js"></script>
+</head>
+<body style="margin:0; background:#0a0a0c;">
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ========== 01 · COVER ========== -->
+  <section data-screen-label="01 Capa">
+    <div class="slide bg-dot" style="padding: 0;">
+      <div style="position:absolute; top:64px; left:96px; right:96px; display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="kicker">FIAP · Challenge 2026 — Etapa 1</div>
+        <div class="kicker">Abril 2026</div>
+      </div>
+
+      <div style="position:absolute; left:96px; right:96px; top:50%; transform:translateY(-50%);">
+        <div class="eyebrow" style="margin-bottom:32px; display:inline-flex; align-items:center; gap:14px;">
+          <span class="icon" style="width:18px; height:18px; color:var(--accent);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="11" stroke-dasharray="2 3"/></svg></span>
+          <span>Segurança industrial proativa</span>
+        </div>
+        <h1 class="title-xl" style="font-size:280px; letter-spacing:-0.05em; font-weight:700;">Cypher.</h1>
+        <div style="margin-top:36px; max-width:1100px;" class="lede">
+          Visão computacional para detectar, em tempo real, trabalhadores sem EPIs em zonas de risco — e agir antes que o acidente aconteça.
+        </div>
+      </div>
+
+      <div style="position:absolute; bottom:64px; left:96px; right:96px; display:flex; justify-content:space-between; align-items:flex-end;">
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div class="kicker">Por</div>
+          <div style="font-family:var(--mono); font-size:18px; font-weight:600; letter-spacing:0.04em; color:var(--ink);">DEV4INNOVATION</div>
+        </div>
+        <div class="kicker">01 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 02 · TIME ========== -->
+  <section data-screen-label="02 Time">
+    <div class="slide">
+      <div class="slide-head">
+        <div>O Time · DEV4INNOVATION</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="margin-top:40px; display:grid; grid-template-columns: 360px 1fr; gap:80px; flex:1; align-items:start;">
+        <div>
+          <div class="eyebrow" style="margin-bottom:20px; display:inline-flex; align-items:center; gap:10px;">
+            <span class="icon" style="width:16px; height:16px;"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.5"/><circle cx="16" cy="10" r="2.5"/><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5"/><path d="M14 17c.5-2 2.5-3 4.5-3S22 15 22 17.5"/></svg></span>
+            <span>— 01</span>
+          </div>
+          <h2 class="title-m">DEV4<br/>INNOVATION.</h2>
+          <p class="body" style="margin-top:28px; max-width:340px;">
+            Seis integrantes, uma frente única. Todos atuam em IA, frontend e documentação ao longo das quatro etapas.
+          </p>
+          <div style="margin-top:32px; padding-top:18px; border-top:1px solid var(--ink-ghost); font-family:var(--mono); font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-mute);">
+            6 integrantes · 4 etapas · 1 produto
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:32px;">
+          <!-- members -->
+          <div>
+            <div class="avatar" style="font-size:42px;">LG</div>
+            <div style="margin-top:14px;" class="label">— 01</div>
+            <div style="font-size:18px; font-weight:600; letter-spacing:-0.015em; margin-top:4px; line-height:1.2;">Lucas<br/>Grecco</div>
+          </div>
+          <div>
+            <div class="avatar" style="font-size:42px;">MF</div>
+            <div style="margin-top:14px;" class="label">— 02</div>
+            <div style="font-size:18px; font-weight:600; letter-spacing:-0.015em; margin-top:4px; line-height:1.2;">Monique<br/>Ferreira</div>
+          </div>
+          <div>
+            <div class="avatar" style="font-size:42px;">TN</div>
+            <div style="margin-top:14px;" class="label">— 03</div>
+            <div style="font-size:18px; font-weight:600; letter-spacing:-0.015em; margin-top:4px; line-height:1.2;">Tiago<br/>Nário</div>
+          </div>
+          <div>
+            <div class="avatar" style="font-size:42px;">RA</div>
+            <div style="margin-top:14px;" class="label">— 04</div>
+            <div style="font-size:18px; font-weight:600; letter-spacing:-0.015em; margin-top:4px; line-height:1.2;">Rafael<br/>Augusto</div>
+          </div>
+          <div>
+            <div class="avatar" style="font-size:42px;">FW</div>
+            <div style="margin-top:14px;" class="label">— 05</div>
+            <div style="font-size:18px; font-weight:600; letter-spacing:-0.015em; margin-top:4px; line-height:1.2;">Felipe<br/>Wapf</div>
+          </div>
+          <div>
+            <div class="avatar" style="font-size:42px;">RV</div>
+            <div style="margin-top:14px;" class="label">— 06</div>
+            <div style="font-size:18px; font-weight:600; letter-spacing:-0.015em; margin-top:4px; line-height:1.2;">Ronaldo<br/>Veloso</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Cypher · Challenge 2026</div>
+        <div>02 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 03 · DIVISOR I ========== -->
+  <section data-screen-label="03 Divisor I">
+    <div class="slide bg-grid">
+      <div class="slide-head">
+        <div>Parte 01 · O Problema</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+        <div class="num" style="font-size:24px; color:var(--ink-mute); letter-spacing:0.16em; margin-bottom:36px;">— I —</div>
+        <h1 class="title-xl" style="font-size:200px;">A dor.</h1>
+        <div class="lede" style="margin-top:48px; max-width:1000px;">
+          O acidente de trabalho não é falta de regra. É falta de monitoramento contínuo no momento em que o risco se materializa.
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Parte 01 / 03</div>
+        <div>03 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 04 · DADOS ========== -->
+  <section data-screen-label="04 Dados">
+    <div class="slide">
+      <div class="slide-head">
+        <div>O Problema · em números</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="margin-top:48px;">
+        <div class="eyebrow">— 02 · Diagnóstico</div>
+        <h2 class="title-m" style="margin-top:18px; max-width:1600px;">
+          Mais de <span style="color:var(--accent); white-space:nowrap;">700&nbsp;mil</span> acidentes de trabalho por ano no Brasil.<br/>Custo: <span style="color:var(--accent); white-space:nowrap;">R$&nbsp;100&nbsp;bi</span>.
+        </h2>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:48px; margin-top:80px; flex:1;">
+        <div class="stat">
+          <div class="icon" style="width:32px; height:32px; margin-bottom:6px; color:var(--ink);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></div>
+          <div class="num-xl">2,3 mi</div>
+          <div class="stat-label">mortes anuais por acidentes ou doenças ocupacionais no mundo.</div>
+          <div class="src">Fonte · OIT, 2023</div>
+        </div>
+        <div class="stat">
+          <div class="icon" style="width:32px; height:32px; margin-bottom:6px; color:var(--ink);"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V11l7-5 7 5v10"/><path d="M10 21v-6h4v6"/></svg></div>
+          <div class="num-xl">700k+</div>
+          <div class="stat-label">acidentes de trabalho registrados no Brasil por ano.</div>
+          <div class="src">Fonte · SmartLab/MTE</div>
+        </div>
+        <div class="stat">
+          <div class="icon" style="width:32px; height:32px; margin-bottom:6px; color:var(--accent);"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3L12 3z"/><path d="M12 10v5"/><circle cx="12" cy="17.5" r="0.5" fill="currentColor"/></svg></div>
+          <div class="num-xl">40–60%</div>
+          <div class="stat-label">das lesões graves industriais seriam evitadas com EPI no momento certo.</div>
+          <div class="src">Fonte · Journal of Safety Research</div>
+        </div>
+        <div class="stat">
+          <div class="icon" style="width:32px; height:32px; margin-bottom:6px; color:var(--ink);"><svg viewBox="0 0 24 24"><path d="M3 19l5-6 4 4 8-10"/><path d="M14 7h6v6"/></svg></div>
+          <div class="num-xl">3,5%</div>
+          <div class="stat-label">do PIB brasileiro perdido com afastamentos e indenizações.</div>
+          <div class="src">Fonte · IBGE / INSS</div>
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Cypher · Challenge 2026</div>
+        <div>04 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 05 · GAP ========== -->
+  <section data-screen-label="05 Lacuna">
+    <div class="slide">
+      <div class="slide-head">
+        <div>O Problema · a lacuna</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="margin-top:48px; display:grid; grid-template-columns: 380px 1fr; gap:96px; flex:1;">
+        <div>
+          <div class="eyebrow" style="margin-bottom:20px;">— 03</div>
+          <h2 class="title-m">A regra existe.<br/>O monitoramento, não.</h2>
+          <p class="body" style="margin-top:32px;">
+            NR-6 e NR-12 já estabelecem as obrigações. As inspeções, porém, são humanas, periódicas e inconsistentes. Quando o gestor descobre, o risco já se materializou.
+          </p>
+        </div>
+
+        <div class="numlist">
+          <div class="item">
+            <div class="n" style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="icon" style="width:22px; height:22px; color:var(--ink);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+              <span>01</span>
+            </div>
+            <div>
+              <h4>Inspeções periódicas</h4>
+              <p>Auditorias agendadas detectam falhas depois que elas aconteceram — janela cega entre rondas.</p>
+            </div>
+          </div>
+          <div class="item">
+            <div class="n" style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="icon" style="width:22px; height:22px; color:var(--ink);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><path d="M3 3l18 18"/></svg></span>
+              <span>02</span>
+            </div>
+            <div>
+              <h4>Dependência humana</h4>
+              <p>O olhar do supervisor é finito. Em uma fábrica de várias zonas, o ponto cego é estrutural.</p>
+            </div>
+          </div>
+          <div class="item">
+            <div class="n" style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="icon" style="width:22px; height:22px; color:var(--ink);"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/><path d="M16 3l5 2-2 5"/></svg></span>
+              <span>03</span>
+            </div>
+            <div>
+              <h4>Soluções enterprise inacessíveis</h4>
+              <p>As plataformas existentes têm custo proibitivo para média indústria — segurança proativa é privilégio.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Cypher · Challenge 2026</div>
+        <div>05 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 06 · DIVISOR II ========== -->
+  <section data-screen-label="06 Divisor II">
+    <div class="slide bg-grid">
+      <div class="slide-head">
+        <div>Parte 02 · A Solução</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+        <div class="num" style="font-size:24px; color:var(--ink-mute); letter-spacing:0.16em; margin-bottom:36px;">— II —</div>
+        <h1 class="title-xl" style="font-size:200px;">A resposta.</h1>
+        <div class="lede" style="margin-top:48px; max-width:1100px;">
+          Visão computacional aplicada a um problema real e urgente. Tecnologia madura, infraestrutura existente, alerta proativo.
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Parte 02 / 03</div>
+        <div>06 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 07 · ONE-LINER ========== -->
+  <section data-screen-label="07 Proposta">
+    <div class="slide">
+      <div class="slide-head">
+        <div>Cypher · em uma frase</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; max-width:1600px; padding-bottom:40px;">
+        <div class="eyebrow" style="margin-bottom:28px;">— 04 · Proposta de Valor</div>
+        <h2 class="title-l" style="font-size:80px; line-height:1.0;">
+          Plataforma modular de segurança proativa que <em style="font-style:normal; background: linear-gradient(transparent 60%, var(--accent-soft) 60%);">detecta não conformidades de EPI</em> em câmeras IP existentes — e dispara alertas no momento exato em que o risco surge.
+        </h2>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:48px; padding-top:24px; padding-bottom:64px; border-top:1px solid var(--ink);">
+        <div>
+          <div class="label">Para</div>
+          <div style="font-size:20px; font-weight:500; margin-top:6px; letter-spacing:-0.01em;">Indústrias com zonas de risco</div>
+        </div>
+        <div>
+          <div class="label">Sobre</div>
+          <div style="font-size:20px; font-weight:500; margin-top:6px; letter-spacing:-0.01em;">Câmeras IP já instaladas</div>
+        </div>
+        <div>
+          <div class="label">Diferencial</div>
+          <div style="font-size:20px; font-weight:500; margin-top:6px; letter-spacing:-0.01em;">Configuração modular por empresa</div>
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Cypher · Challenge 2026</div>
+        <div>07 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 08 · COMO FUNCIONA ========== -->
+  <section data-screen-label="08 Como funciona">
+    <div class="slide">
+      <div class="slide-head">
+        <div>Como funciona</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="margin-top:48px;">
+        <div class="eyebrow">— 05 · Stack & arquitetura</div>
+        <h2 class="title-m" style="margin-top:18px;">Tecnologia madura, três camadas.</h2>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:64px; margin-top:64px; flex:1;">
+        <!-- pillar 1 -->
+        <div style="display:flex; flex-direction:column; gap:18px; padding-top:22px; border-top:2px solid var(--ink);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="num" style="font-size:14px; letter-spacing:0.16em; color:var(--ink-mute); text-transform:uppercase;">Camada 01</div>
+            <div class="icon" style="width:44px; height:44px; color:var(--ink);"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="15" height="12" rx="1"/><path d="M17 10l5-3v10l-5-3z"/><circle cx="9.5" cy="12" r="2.5"/></svg></div>
+          </div>
+          <h3 class="title-s">Captura</h3>
+          <p class="body" style="font-size:18px;">
+            Câmeras IP existentes na planta, sem novo hardware na Etapa 1.
+          </p>
+          <div style="margin-top:auto; padding-top:24px; border-top:1px solid var(--ink-ghost);">
+            <div class="label" style="margin-bottom:6px;">Tecnologia</div>
+            <div class="num" style="font-size:15px;">Standard IP / RTSP</div>
+          </div>
+        </div>
+
+        <!-- pillar 2 -->
+        <div style="display:flex; flex-direction:column; gap:18px; padding-top:22px; border-top:2px solid var(--ink);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="num" style="font-size:14px; letter-spacing:0.16em; color:var(--ink-mute); text-transform:uppercase;">Camada 02</div>
+            <div class="icon" style="width:44px; height:44px; color:var(--ink);"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M8 4v16M16 4v16M4 8h16M4 16h16"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+          </div>
+          <h3 class="title-s">Detecção</h3>
+          <p class="body" style="font-size:18px;">
+            YOLOv8 + OpenCV identificam EPIs em tempo real. Pose estimation entra na Etapa 2.
+          </p>
+          <div style="margin-top:auto; padding-top:24px; border-top:1px solid var(--ink-ghost);">
+            <div class="label" style="margin-bottom:6px;">Performance referência</div>
+            <div class="num" style="font-size:15px;">50+ FPS · mAP 87–91%</div>
+          </div>
+        </div>
+
+        <!-- pillar 3 -->
+        <div style="display:flex; flex-direction:column; gap:18px; padding-top:22px; border-top:2px solid var(--accent);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="num" style="font-size:14px; letter-spacing:0.16em; color:var(--accent); text-transform:uppercase;">Camada 03</div>
+            <div class="icon" style="width:44px; height:44px; color:var(--accent);"><svg viewBox="0 0 24 24"><path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.5L12 14.5 7.1 17.2 8 11.7 4 7.8l5.5-.8z"/><circle cx="19" cy="5" r="3" fill="currentColor" stroke="none"/></svg></div>
+          </div>
+          <h3 class="title-s">Ação</h3>
+          <p class="body" style="font-size:18px;">
+            Alerta proativo (sonoro · visual · dashboard) e KPIs de conformidade para o gestor.
+          </p>
+          <div style="margin-top:auto; padding-top:24px; border-top:1px solid var(--ink-ghost);">
+            <div class="label" style="margin-bottom:6px;">Interface</div>
+            <div class="num" style="font-size:15px;">Operador · Gestor</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Cypher · Challenge 2026</div>
+        <div>08 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 09 · ESCOPO ========== -->
+  <section data-screen-label="09 Escopo">
+    <div class="slide">
+      <div class="slide-head">
+        <div>Escopo · Etapa 1</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="margin-top:48px;">
+        <div class="eyebrow">— 06 · Dois pilares</div>
+        <h2 class="title-m" style="margin-top:18px;">O que está dentro. O que não está.</h2>
+      </div>
+
+      <div class="scope" style="margin-top:48px; flex:1;">
+        <!-- pillar IA -->
+        <div class="col-pillar">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="pill-head">Pilar 01</div>
+            <div class="icon" style="width:48px; height:48px; color:var(--ink);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg></div>
+          </div>
+          <h3 class="pill-title">Motor de Visão Computacional</h3>
+          <p class="body" style="font-size:17px; margin:0;">Detecção e análise em tempo real via câmera.</p>
+
+          <div class="pill-section in" style="margin-top:18px;">
+            <h5>✓  Dentro do escopo</h5>
+            <ul>
+              <li>Detecção de EPIs (capacete, colete, luvas, óculos)</li>
+              <li>Identificação e rastreamento de pessoas em zonas monitoradas</li>
+              <li>Geração de eventos com timestamp e metadados</li>
+            </ul>
+          </div>
+          <div class="pill-section out">
+            <h5>✕  Fora desta etapa</h5>
+            <ul>
+              <li>Pose estimation (Etapa 2)</li>
+              <li>Integração com hardware físico (Etapa 4)</li>
+              <li>Treinamento de modelos do zero</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- pillar Plataforma -->
+        <div class="col-pillar">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="pill-head">Pilar 02</div>
+            <div class="icon" style="width:48px; height:48px; color:var(--ink);"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="1"/><path d="M2 8h20"/><path d="M7 22h10M12 18v4"/><circle cx="5" cy="6" r="0.6" fill="currentColor"/></svg></div>
+          </div>
+          <h3 class="pill-title">Plataforma Web</h3>
+          <p class="body" style="font-size:17px; margin:0;">Frontend e dashboard com acesso por perfil.</p>
+
+          <div class="pill-section in" style="margin-top:18px;">
+            <h5>✓  Dentro do escopo</h5>
+            <ul>
+              <li>Onboarding modular (zonas, câmeras, EPIs, regras)</li>
+              <li>Perfis Operador (alertas) e Gestor (dashboards)</li>
+              <li>KPIs de conformidade, heatmaps, histórico de ocorrências</li>
+              <li>Sistema de notificações visuais e sonoras</li>
+            </ul>
+          </div>
+          <div class="pill-section out">
+            <h5>✕  Fora desta etapa</h5>
+            <ul>
+              <li>App mobile nativo</li>
+              <li>Integração com ERP / MES</li>
+              <li>Módulos financeiro ou RH</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Cypher · Challenge 2026</div>
+        <div>09 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 10 · WIREFRAMES ========== -->
+  <section data-screen-label="10 Wireframes">
+    <div class="slide">
+      <div class="slide-head">
+        <div>Produto · wireframes em construção</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="margin-top:32px; display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+          <div class="eyebrow">— 07 · Direção de produto</div>
+          <h2 class="title-m" style="margin-top:14px;">Três telas, três personas.</h2>
+        </div>
+        <a class="chip" href="Cypher Wireframes.html" target="_blank" rel="noopener" style="text-decoration:none;">Abrir wireframes ↗</a>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:32px; margin-top:48px; flex:1;">
+        <!-- Onboarding -->
+        <div class="wf-thumb" style="display:flex; flex-direction:column;">
+          <div class="wf-label">01 · Configuração</div>
+          <div style="flex:1; padding:54px 28px 64px; display:flex; flex-direction:column; gap:14px; font-family:var(--mono); color:#1a1a1a;">
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <div style="width:24px; height:24px; border-radius:50%; border:1.6px solid #1a1a1a; background:#1a1a1a; color:#fdfcf8; display:flex; align-items:center; justify-content:center; font-size:11px;">1</div>
+              <div style="width:24px; height:24px; border-radius:50%; border:1.6px solid #1a1a1a; background:#fff089; display:flex; align-items:center; justify-content:center; font-size:11px;">2</div>
+              <div style="width:24px; height:24px; border-radius:50%; border:1.6px solid #1a1a1a; background:#fdfcf8; display:flex; align-items:center; justify-content:center; font-size:11px;">3</div>
+              <div style="width:24px; height:24px; border-radius:50%; border:1.6px solid #1a1a1a; background:#fdfcf8; display:flex; align-items:center; justify-content:center; font-size:11px;">4</div>
+              <div style="width:24px; height:24px; border-radius:50%; border:1.6px solid #1a1a1a; background:#fdfcf8; display:flex; align-items:center; justify-content:center; font-size:11px;">5</div>
+            </div>
+            <div style="height:10px; background:#1a1a1a; width:40%; border-radius:999px;"></div>
+            <div style="margin-top:8px; font-family:'Inter Tight'; font-size:14px; color:#6a6a72;">Setores monitorados</div>
+            <div style="border:1.4px solid #1a1a1a; border-radius:6px; padding:10px; background:#fdfcf8; font-family:'Inter Tight'; font-size:13px;">Galpão A — Solda</div>
+            <div style="border:1.4px solid #1a1a1a; border-radius:6px; padding:10px; background:#fdfcf8; font-family:'Inter Tight'; font-size:13px;">Galpão B — Pintura</div>
+            <div style="border:1.4px dashed #6a6a72; border-radius:6px; padding:10px; font-family:'Inter Tight'; font-size:13px; color:#6a6a72;">+ adicionar setor</div>
+            <div style="margin-top:auto; display:flex; gap:8px;">
+              <div style="font-family:'Inter Tight'; font-size:13px; padding:6px 14px; border:1.6px solid #1a1a1a; border-radius:6px; background:#1a1a1a; color:#fdfcf8;">Avançar →</div>
+              <div style="font-family:'Inter Tight'; font-size:13px; padding:6px 14px; border:1.6px solid #1a1a1a; border-radius:6px;">Voltar</div>
+            </div>
+          </div>
+          <div class="wf-name">Onboarding · Empresa</div>
+        </div>
+
+        <!-- Operador -->
+        <div class="wf-thumb" style="display:flex; flex-direction:column;">
+          <div class="wf-label">02 · Estação</div>
+          <div style="flex:1; padding:54px 28px 64px; display:flex; flex-direction:column; gap:12px;">
+            <div style="background:linear-gradient(135deg,#1a1a1a 0%, #2a2a2a 100%); border:1.6px solid #1a1a1a; outline:3px solid #d33b2c; outline-offset:-3px; aspect-ratio: 16/10; position:relative;">
+              <div style="position:absolute; top:10px; left:10px; font-family:'JetBrains Mono'; font-size:10px; color:#cfcfcf; letter-spacing:0.1em;">CAM 03 · ZONA SOLDA</div>
+              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'Inter Tight'; font-weight:600; font-size:22px; color:#fff;">⚠ Violação</div>
+              <div style="position:absolute; bottom:10px; right:10px; font-family:'JetBrains Mono'; font-size:10px; color:#cfcfcf;">14:32:08</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <div style="font-family:'Inter Tight'; font-size:11px; padding:2px 8px; border:1.4px solid #2f7a3f; color:#2f7a3f; background:#c8e2c8; border-radius:999px;">capacete</div>
+              <div style="font-family:'Inter Tight'; font-size:11px; padding:2px 8px; border:1.4px solid #d33b2c; color:#d33b2c; background:#f4c7c1; border-radius:999px;">⚠ luvas</div>
+              <div style="font-family:'Inter Tight'; font-size:11px; padding:2px 8px; border:1.4px solid #2f7a3f; color:#2f7a3f; background:#c8e2c8; border-radius:999px;">colete</div>
+              <div style="font-family:'Inter Tight'; font-size:11px; padding:2px 8px; border:1.4px solid #2f7a3f; color:#2f7a3f; background:#c8e2c8; border-radius:999px;">óculos</div>
+            </div>
+            <div style="margin-top:8px; font-family:'Inter Tight'; font-size:12px; color:#6a6a72;">Histórico</div>
+            <div style="font-family:'Inter Tight'; font-size:12px; padding:6px 0; border-top:1px dashed #6a6a72;">14:32 · Luvas ausentes</div>
+            <div style="font-family:'Inter Tight'; font-size:12px; padding:6px 0; border-top:1px dashed #6a6a72;">13:48 · Capacete ausente</div>
+            <div style="margin-top:auto; font-family:'Inter Tight'; font-size:13px; padding:6px 14px; border:1.6px solid #d33b2c; color:#d33b2c; border-radius:6px; align-self:flex-start;">Pausar máquina</div>
+          </div>
+          <div class="wf-name">Operador · Estação</div>
+        </div>
+
+        <!-- Gestor -->
+        <div class="wf-thumb" style="display:flex; flex-direction:column;">
+          <div class="wf-label">03 · Visão geral</div>
+          <div style="flex:1; padding:54px 28px 64px; display:flex; flex-direction:column; gap:12px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+              <div style="border:1.4px solid #1a1a1a; padding:8px; background:#fdfcf8;">
+                <div style="font-family:'JetBrains Mono'; font-size:9px; color:#6a6a72;">CONFORMIDADE</div>
+                <div style="font-family:'Inter Tight'; font-weight:600; font-size:22px;">94%</div>
+              </div>
+              <div style="border:1.4px solid #1a1a1a; padding:8px; background:#fdfcf8;">
+                <div style="font-family:'JetBrains Mono'; font-size:9px; color:#6a6a72;">VIOLAÇÕES</div>
+                <div style="font-family:'Inter Tight'; font-weight:600; font-size:22px; color:#d33b2c;">12</div>
+              </div>
+              <div style="border:1.4px solid #1a1a1a; padding:8px; background:#fdfcf8;">
+                <div style="font-family:'JetBrains Mono'; font-size:9px; color:#6a6a72;">CÂMERAS</div>
+                <div style="font-family:'Inter Tight'; font-weight:600; font-size:22px;">24/24</div>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:6px;">
+              <div style="border:1.4px solid #2f7a3f; background:#c8e2c8; min-height:36px; padding:4px; font-family:'JetBrains Mono'; font-size:9px;">A1</div>
+              <div style="border:1.4px solid #2f7a3f; background:#c8e2c8; min-height:36px; padding:4px; font-family:'JetBrains Mono'; font-size:9px;">A2</div>
+              <div style="border:1.4px solid #d33b2c; background:#f4c7c1; min-height:36px; padding:4px; font-family:'JetBrains Mono'; font-size:9px; color:#d33b2c;">A3 ⚠</div>
+              <div style="border:1.4px solid #2f7a3f; background:#c8e2c8; min-height:36px; padding:4px; font-family:'JetBrains Mono'; font-size:9px;">A4</div>
+              <div style="border:1.4px solid #2f7a3f; background:#c8e2c8; min-height:36px; padding:4px; font-family:'JetBrains Mono'; font-size:9px;">B1</div>
+              <div style="border:1.4px solid #a8a59c; background:#ece8df; min-height:36px; padding:4px; font-family:'JetBrains Mono'; font-size:9px; color:#6a6a72;">B2</div>
+              <div style="border:1.4px solid #2f7a3f; background:#c8e2c8; min-height:36px; padding:4px; font-family:'JetBrains Mono'; font-size:9px;">B3</div>
+              <div style="border:1.4px solid #2f7a3f; background:#c8e2c8; min-height:36px; padding:4px; font-family:'JetBrains Mono'; font-size:9px;">B4</div>
+            </div>
+            <div style="margin-top:auto; font-family:'Inter Tight'; font-size:12px; color:#6a6a72;">Timeline · 24h</div>
+            <div style="display:flex; align-items:flex-end; gap:3px; height:40px;">
+              <div style="flex:1; height:30%; background:#1a1a1a;"></div>
+              <div style="flex:1; height:50%; background:#1a1a1a;"></div>
+              <div style="flex:1; height:20%; background:#1a1a1a;"></div>
+              <div style="flex:1; height:70%; background:#d33b2c;"></div>
+              <div style="flex:1; height:40%; background:#1a1a1a;"></div>
+              <div style="flex:1; height:60%; background:#1a1a1a;"></div>
+              <div style="flex:1; height:90%; background:#d33b2c;"></div>
+              <div style="flex:1; height:35%; background:#1a1a1a;"></div>
+              <div style="flex:1; height:25%; background:#1a1a1a;"></div>
+              <div style="flex:1; height:55%; background:#1a1a1a;"></div>
+            </div>
+          </div>
+          <div class="wf-name">Gestor · Dashboard</div>
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>3 variações por tela · sketchy / lo-fi</div>
+        <div>10 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 11 · DIVISOR III + CRONOGRAMA ========== -->
+  <section data-screen-label="11 Cronograma">
+    <div class="slide">
+      <div class="slide-head">
+        <div>Parte 03 · Plano de Trabalho</div>
+        <div class="wordmark">Cypher</div>
+      </div>
+
+      <div style="margin-top:36px;">
+        <div class="eyebrow">— 08 · Cronograma</div>
+        <h2 class="title-m" style="margin-top:18px;">Quatro etapas. Abril → Novembro 2026.</h2>
+        <p class="body" style="margin-top:18px; max-width:1100px;">
+          Metodologia Agile/Scrum adaptada à realidade do Challenge. Gestão centralizada no Notion, reuniões semanais, todos os membros em todas as frentes.
+        </p>
+      </div>
+
+      <div class="timeline" style="margin-top:48px;">
+        <div class="phase current">
+          <div class="ph-num">Etapa 01 · em andamento</div>
+          <h4 class="ph-title">Detecção de EPIs em tempo real</h4>
+          <div class="ph-date">Abr → Mai 2026</div>
+          <ul>
+            <li>Setup Python + YOLOv8 + OpenCV</li>
+            <li>Dataset (COCO, Roboflow)</li>
+            <li>Treinamento e validação</li>
+            <li>Demo ao vivo</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <div class="ph-num">Etapa 02 · planejado</div>
+          <h4 class="ph-title">Comportamento e postura</h4>
+          <div class="ph-date">Jun → Jul 2026</div>
+          <ul>
+            <li>Pose estimation (MediaPipe)</li>
+            <li>Detecção de zonas perigosas</li>
+            <li>Onboarding modular</li>
+            <li>Interface por perfis</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <div class="ph-num">Etapa 03 · planejado</div>
+          <h4 class="ph-title">Alerta proativo & Dashboard</h4>
+          <div class="ph-date">Ago → Set 2026</div>
+          <ul>
+            <li>Alertas em tempo real</li>
+            <li>KPIs, heatmaps, histórico</li>
+            <li>Análise preditiva</li>
+            <li>Integração completa</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <div class="ph-num">Etapa 04 · planejado</div>
+          <h4 class="ph-title">Hardware & apresentação final</h4>
+          <div class="ph-date">Out → Nov 2026</div>
+          <ul>
+            <li>Testes com hardware FIAP/SPI</li>
+            <li>Validação em ambiente real</li>
+            <li>Pitch e ensaios</li>
+            <li>Apresentação final</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="slide-foot">
+        <div>Cypher · Challenge 2026</div>
+        <div>11 / 12</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 12 · FECHAMENTO ========== -->
+  <section data-screen-label="12 Fechamento">
+    <div class="slide bg-dot" style="padding: 0;">
+      <div style="position:absolute; top:80px; left:120px; right:120px; display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="kicker">Obrigado.</div>
+        <div class="kicker">12 / 12</div>
+      </div>
+
+      <div style="position:absolute; left:120px; right:120px; top:54%; transform:translateY(-50%); max-width:1500px;">
+        <div class="eyebrow" style="margin-bottom:56px; display:inline-flex; align-items:center; gap:14px;">
+          <span class="icon" style="width:18px; height:18px; color:var(--accent);"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <span>Cypher · por DEV4INNOVATION</span>
+        </div>
+        <h1 class="title-xl" style="font-size:144px; line-height:1.0; letter-spacing:-0.045em;">
+          Agir antes que o<br/>acidente aconteça.
+        </h1>
+
+        <div style="margin-top:96px; padding-top:32px; border-top:1px solid var(--ink); display:grid; grid-template-columns: repeat(3, 1fr); gap:80px;">
+          <div>
+            <div class="label" style="margin-bottom:14px;">Etapa</div>
+            <div style="font-family:var(--display); font-size:22px; font-weight:500; letter-spacing:-0.01em; line-height:1.3;">01 · Detecção em tempo real</div>
+          </div>
+          <div>
+            <div class="label" style="margin-bottom:14px;">Status</div>
+            <div style="font-family:var(--display); font-size:22px; font-weight:500; letter-spacing:-0.01em; line-height:1.3; color:var(--accent);">● Em andamento</div>
+          </div>
+          <div>
+            <div class="label" style="margin-bottom:14px;">Próxima entrega</div>
+            <div style="font-family:var(--display); font-size:22px; font-weight:500; letter-spacing:-0.01em; line-height:1.3;">Demo ao vivo · Mai 2026</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:absolute; bottom:80px; left:120px; right:120px; display:flex; justify-content:space-between; align-items:flex-end;">
+        <div class="kicker">Perguntas?</div>
+        <div class="kicker">FIAP · 2026</div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+</deck-stage>
+
+</body>
+</html>
