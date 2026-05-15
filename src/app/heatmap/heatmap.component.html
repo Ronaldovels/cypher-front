@@ -1,0 +1,235 @@
+<div class="heatpage">
+  <app-chrome-topbar
+    [cfg]="cfg()"
+    page="Heatmap"
+    subtitle="Análise espacial e temporal · Setor A"
+    [shift]="null"
+    [live]="false"/>
+
+  <!-- Filter bar -->
+  <div class="filterbar">
+    <span class="fb-label">Período</span>
+    <div class="fb-group">
+      @for (p of [['hoje','Hoje'],['7d','7 dias'],['30d','30 dias'],['90d','90 dias'],['custom','Custom ▾']]; track p[0]) {
+        <button [class]="'chip' + (period() === p[0] ? ' on' : '')" (click)="setPeriod(p[0])">
+          @if (period() === p[0]) { <span class="dotind"></span> }
+          {{ p[1] }}
+        </button>
+      }
+    </div>
+    <div class="fb-sep"></div>
+    <span class="fb-label">Setor</span>
+    <select class="fb-select"><option>Setor A</option><option>Setor B</option><option>Setor C</option></select>
+    <div class="fb-sep"></div>
+    <span class="fb-label">EPI</span>
+    <select class="fb-select"><option>Todos os EPIs</option><option>Capacete</option><option>Óculos</option><option>Luvas</option></select>
+    <div class="fb-sep"></div>
+    <span class="fb-label">Turno</span>
+    <div class="fb-group">
+      @for (s of [['all','Todos'],['A','A · 06–14h'],['B','B · 14–22h'],['N','N · 22–06h']]; track s[0]) {
+        <button [class]="'chip' + (shift() === s[0] ? ' on' : '')" (click)="setShift(s[0])">{{ s[1] }}</button>
+      }
+    </div>
+    <div class="spacer"></div>
+    <span class="fb-status">atualizado há 3s</span>
+    <button class="fb-export">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 12l5 5 5-5M5 20h14"/></svg>
+      Exportar PDF
+    </button>
+  </div>
+
+  <main class="hp-content">
+    <!-- ─── SPATIAL HEATMAP ─── -->
+    <div class="hp-card">
+      <div class="hc-head">
+        <div class="hch-l">
+          <div class="hch-title">
+            Planta Baixa · Setor A
+            <span class="sep">·</span>
+            <span class="quiet">17 estações monitoradas</span>
+          </div>
+          <div class="hch-sub">Intensidade de incidentes por estação · últimos 7 dias</div>
+        </div>
+        <div class="hch-r">
+          <select class="fb-select">
+            <option>Ordenar: ranking</option><option>Ordenar: nome</option><option>Ordenar: zona</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Scale legend -->
+      <div class="scale-legend">
+        <span class="sl-label">Incidentes:</span>
+        <span class="scale-pill s0">Nenhum</span>
+        <span class="scale-pill s1">1–2</span>
+        <span class="scale-pill s2">3–5</span>
+        <span class="scale-pill s3">6–9</span>
+        <span class="scale-pill s4">10+</span>
+      </div>
+
+      <!-- Zones -->
+      <div class="spatial-zones">
+        @for (z of zones; track z.key) {
+          <div class="zone">
+            <div class="zone-label">{{ z.label }}</div>
+            <div class="zone-grid" [style.grid-template-columns]="zoneGridCols(z.cols)">
+              @for (c of z.cells; track $index) {
+                @if (!c) {
+                  <div class="station empty"></div>
+                } @else {
+                  <div [class]="'station ' + spatialTier(c.n)" role="button" [attr.aria-label]="c.id + ': ' + c.n + ' incidentes'">
+                    <span class="sid">{{ c.id }}</span>
+                    <span [class]="'sn' + (c.n === 0 ? ' zero' : '')">{{ c.n === 0 ? '—' : c.n }}</span>
+                    <div class="tt">
+                      <div class="t1">{{ c.id }} · {{ c.type }}</div>
+                      <div class="t2">
+                        <span class="ico">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+                        </span>
+                        {{ c.n }} incidente{{ c.n === 1 ? '' : 's' }} nos últimos 7 dias
+                      </div>
+                      <div class="t3">Último: Capacete ausente · 14:31 hoje</div>
+                      <div class="t4">Câmera: CAM-{{ c.id.slice(-2) }} · <a href="#">Ver ao vivo →</a></div>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Ranking -->
+      <div class="ranking">
+        <div class="ranking-title">Top 5 · Maior concentração</div>
+        @for (s of top5; track s.id; let i = $index) {
+          <div [class]="'rk-row ' + sev(s.n)">
+            <span class="pos">{{ (i + 1).toString().padStart(2, '0') }}</span>
+            <span class="id">{{ s.id }}</span>
+            <div class="rk-bar"><div class="fill" [style.width.%]="(s.n / top5Max) * 100"></div></div>
+            <span class="nm">{{ s.n }}</span>
+            <span class="bdg">{{ sevLabel(sev(s.n)) }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ─── TEMPORAL HEATMAP ─── -->
+    <div class="hp-card">
+      <div class="hc-head">
+        <div class="hch-l">
+          <div class="hch-title">Distribuição Temporal · Incidentes por Horário</div>
+          <div class="hch-sub">Dia da semana × faixa horária · últimos 30 dias</div>
+        </div>
+        <div class="hch-r">
+          <select class="fb-select"><option>Por hora</option><option selected>Por 2h</option><option>Por turno</option></select>
+        </div>
+      </div>
+
+      <div class="temporal">
+        <span class="corner"></span>
+        @for (d of tempDays; track $index; let i = $index) {
+          <span [class]="'day-h' + (i === 2 ? ' peak' : '')">{{ d }}</span>
+        }
+        @for (row of tempMatrix; track $index; let ri = $index) {
+          <span class="hr-l">{{ tempHours[ri] }}</span>
+          @for (v of row; track $index; let ci = $index) {
+            <div [class]="'temp-cell ' + tempTier(v)">
+              <div class="ttsmall">
+                <div class="l1">{{ tempDays[ci] }} · {{ tempHours[ri] }} – {{ tempHours[(ri + 1) % 12] }}</div>
+                <div class="l2">
+                  <span class="ico">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+                  </span>
+                  {{ v }} incidente{{ v === 1 ? '' : 's' }} em 30 dias
+                </div>
+                @if (v >= 13) {
+                  <div class="l3">Pico da semana neste período</div>
+                }
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Legend strip -->
+      <div class="lh-legend">
+        <span>Baixo</span>
+        <div class="swatches">
+          @for (t of ['h0','h1','h2','h3','h4']; track t) {
+            <span [class]="'sw temp-cell ' + t"></span>
+          }
+        </div>
+        <span>Alto</span>
+      </div>
+
+      <!-- Temporal KPIs -->
+      <div class="temp-kpis">
+        <div class="tkpi bad">
+          <span class="tkpi-label">Hoje</span>
+          <span class="tkpi-val">3 incidentes</span>
+          <span class="tkpi-trend">↑ vs ontem</span>
+        </div>
+        <div class="tkpi ok">
+          <span class="tkpi-label">Média semanal</span>
+          <span class="tkpi-val">28</span>
+          <span class="tkpi-trend">↓ vs semana ant.</span>
+        </div>
+        <div class="tkpi flat">
+          <span class="tkpi-label">Média mensal</span>
+          <span class="tkpi-val">112</span>
+          <span class="tkpi-trend">→ estável</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ANNUAL HEATMAP ─── -->
+    <div class="hp-card annual">
+      <div class="hc-head annual-head">
+        <div class="hch-l">
+          <div class="hch-title">Histórico Anual de Incidentes</div>
+          <div class="hch-sub">Setor A · Jan–Dez 2025 · {{ annualTotal }} incidentes registrados</div>
+        </div>
+        <div class="ah-r">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+          Pior semana: 12–18 mar · 38 incidentes
+        </div>
+      </div>
+
+      <div class="annual-wrap">
+        <div class="annual-days">
+          <span>Seg</span><span></span>
+          <span>Qua</span><span></span>
+          <span>Sex</span><span></span><span></span>
+        </div>
+        <div class="annual-months">
+          @for (m of months; track $index; let i = $index) {
+            <span class="mlbl" [style.left]="monthLeft(i)">{{ m }}</span>
+          }
+        </div>
+        <div class="annual-grid">
+          @for (cell of annualCells; track $index) {
+            <div [class]="'acell ' + annualTier(cell.v) + (cell.peak ? ' peak' : '')"
+                 [title]="annualCellTitle(cell)">
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="annual-foot">
+        <a href="#" class="l">Aprenda como calculamos os incidentes →</a>
+        <span class="lg">
+          Menos
+          <span class="acell a0"></span>
+          <span class="acell a1"></span>
+          <span class="acell a2"></span>
+          <span class="acell a3"></span>
+          <span class="acell a4"></span>
+          Mais
+        </span>
+      </div>
+    </div>
+  </main>
+
+  <app-dock activeKey="heatmap"/>
+</div>

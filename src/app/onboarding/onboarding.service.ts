@@ -1,8 +1,11 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { OnboardingData, DEFAULT_DATA, deriveEpis, accentRgba, accentShade } from './models/onboarding.models';
 
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
+  private router = inject(Router);
+
   readonly data = signal<OnboardingData>({ ...DEFAULT_DATA });
   readonly step = signal(0);
   readonly direction = signal<'forward' | 'back'>('forward');
@@ -71,9 +74,29 @@ export class OnboardingService {
     this.step.update(s => s + 1);
   }
 
+  persistConfig(): void {
+    const d = this.data();
+    try {
+      localStorage.setItem('cypher.config', JSON.stringify({
+        company: d.company, cnpj: d.cnpj, sector: d.sector,
+        logoUrl: d.logoUrl, logoName: d.logoName,
+        accent: d.accent, theme: d.theme, epis: d.epis, cas: d.cas,
+      }));
+    } catch {}
+  }
+
+  openDashboard(): void {
+    this.persistConfig();
+    this.router.navigate(['/dashboard']);
+  }
+
   launch(): void {
     this.launching.set(true);
-    setTimeout(() => this.launched.set(true), 900);
+    setTimeout(() => {
+      this.launched.set(true);
+      this.persistConfig();
+      setTimeout(() => this.router.navigate(['/dashboard']), 2400);
+    }, 900);
   }
 
   reset(): void {

@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
-import { OnboardingComponent } from './onboarding/onboarding.component';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [OnboardingComponent],
-  template: `<app-onboarding/>`,
-  styles: [],
+  imports: [RouterOutlet],
+  template: `<router-outlet/>`,
 })
 export class App {}

@@ -1,0 +1,185 @@
+<div class="dash">
+  <app-chrome-topbar [cfg]="cfg()" page="Dashboard" [subtitle]="today()"/>
+
+  <main class="dcontent">
+    @if (!cfg()) {
+      <a routerLink="/" class="setup-banner">
+        <span class="sb-dot"></span>
+        <span class="sb-text">
+          <strong>Configuração pendente.</strong> Conclua o onboarding para personalizar marca, EPIs e validades.
+        </span>
+        <span class="sb-cta">Abrir onboarding →</span>
+      </a>
+    }
+
+    <!-- Greeting -->
+    <div class="greeting">
+      <div class="gtext">
+        <span class="hi">Bom dia, <em>Ana</em>.</span>
+        <span class="sub">
+          Hoje você tem 6 incidentes para revisar em
+          <strong style="color:var(--ink)">{{ plantName() }}</strong>.
+        </span>
+      </div>
+      <div class="gstatus">
+        <span class="dot"></span>
+        <span>Sistema operando normalmente · <strong>17 câmeras ativas</strong></span>
+      </div>
+    </div>
+
+    <!-- KPI Row -->
+    <section class="kpi-row">
+      <!-- Incidentes -->
+      <article class="kpi" style="--kpi-color: #EE4242">
+        <div class="kpi-row1">
+          <span class="kpi-label">Incidentes hoje</span>
+          <span class="kpi-ico">⚠</span>
+        </div>
+        <div>
+          <div class="kpi-val">6</div>
+          <div class="kpi-sub up"><strong>↑ 2</strong> vs ontem</div>
+        </div>
+      </article>
+
+      <!-- Conformidade -->
+      <article class="kpi" style="--kpi-color: var(--accent)">
+        <div class="kpi-row1">
+          <span class="kpi-label">Conformidade geral</span>
+          <svg class="kpi-ring" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="18" stroke="var(--line)" stroke-width="4" fill="none"/>
+            <circle cx="24" cy="24" r="18" stroke="var(--accent)" stroke-width="4" fill="none"
+                    stroke-linecap="round"
+                    [attr.stroke-dasharray]="kpiRingDash(18, 94.2)"
+                    [attr.stroke-dashoffset]="kpiRingOffset(18, 94.2)"
+                    transform="rotate(-90 24 24)"/>
+          </svg>
+        </div>
+        <div>
+          <div class="kpi-val">94.2<span class="denom">%</span></div>
+          <div class="kpi-sub">Meta: ≥ 98%</div>
+        </div>
+      </article>
+
+      <!-- Estações -->
+      <article class="kpi" style="--kpi-color: #34D07E">
+        <div class="kpi-row1">
+          <span class="kpi-label">Estações ativas</span>
+        </div>
+        <div>
+          <div class="kpi-val">42<span class="denom">/ 48</span></div>
+          <div class="kpi-sub warn">6 em alerta agora</div>
+        </div>
+      </article>
+
+      <!-- Linha parada -->
+      <article class="kpi" style="--kpi-color: #FFCE38">
+        <div class="kpi-row1">
+          <span class="kpi-label">Linha parada hoje</span>
+          <span class="kpi-ico">⚙</span>
+        </div>
+        <div>
+          <div class="kpi-val">18<span class="denom">min</span></div>
+          <div class="kpi-sub">≈ R$ 4.200 em impacto</div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Mid row: Heatmap mini + Alerts -->
+    <div class="mid-row">
+      <!-- Heatmap mini -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="ph-left">
+            <span class="ph-title">Mapa de Calor de Infrações</span>
+            <span class="ph-meta">Setor A · últimas 8h</span>
+          </div>
+          <div class="ph-right">
+            <span class="updated">atualizado há 3s</span>
+            <a routerLink="/heatmap" class="expand" title="Ver análise completa">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div class="heat-grid">
+          @for (t of heatData; track $index) {
+            @if (!t) {
+              <div class="heat-tile empty"></div>
+            } @else {
+              <div [class]="'heat-tile ' + heatClass(t.n)">
+                <span class="tid">{{ t.id }}</span>
+                <span class="tst">{{ heatLabel(t.n) }}</span>
+                @if (t.n >= 3) {
+                  <div class="ann">{{ t.n }} violações · CAM-{{ t.id.slice(-2) }} → <em>Ver câmera</em></div>
+                }
+              </div>
+            }
+          }
+        </div>
+        <div class="heat-legend">
+          <span class="lg"><span class="sw ok"></span>ok</span>
+          <span class="lg"><span class="sw low"></span>1 inf</span>
+          <span class="lg"><span class="sw mid"></span>2 inf</span>
+          <span class="lg"><span class="sw hi"></span>3+ inf</span>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="ph-left"><span class="ph-title">Alertas recentes</span></div>
+          <a class="link" href="#">Ver todos →</a>
+        </div>
+        <div class="alerts-list">
+          @for (a of alerts; track $index) {
+            <div [class]="'alert-row ' + a.sev">
+              <span class="a-time">{{ a.time }}</span>
+              <span class="a-station">{{ a.est }}</span>
+              <span class="a-type">{{ a.type }}</span>
+              <span class="a-sev">{{ a.sev === 'crit' ? 'CRÍTICO' : 'ALTO' }}</span>
+            </div>
+          }
+        </div>
+        <div class="alerts-foot">
+          <span class="l">2 alertas críticos ativos</span>
+          <a class="r" href="#">Resolver pendências →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Predictive chart -->
+    <div class="chart-panel">
+      <div class="chart-head">
+        <div class="ch-l">
+          <span class="t">Análise Preditiva · Infrações por Dia da Semana</span>
+          <span class="s">Padrão identificado: pico às quartas-feiras — recomendação de reforço preventivo</span>
+        </div>
+        <span class="ai-badge">IA</span>
+      </div>
+      <div class="bars">
+        <div class="mean" [style.bottom.%]="meanPct()"></div>
+        @for (b of barData; track $index) {
+          <div [class]="'bar-col' + (b.peak ? ' peak' : '')">
+            <span class="bar-val">{{ b.v }}</span>
+            <div class="bar" [style.height.%]="barPct(b.v)"></div>
+          </div>
+        }
+      </div>
+      <div class="bars-axis">
+        @for (b of barData; track $index) {
+          <span class="bd">{{ b.d }}</span>
+        }
+      </div>
+      <div class="insight">
+        <span class="diam">◆</span>
+        <span>
+          <strong>Recomendação:</strong> aumentar frequência de verificação presencial nas quartas-feiras,
+          especialmente no turno noturno. Pico semanal está 96% acima da média.
+        </span>
+      </div>
+    </div>
+  </main>
+
+  <app-dock activeKey="dashboard"/>
+</div>

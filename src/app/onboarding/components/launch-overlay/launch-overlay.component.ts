@@ -19,7 +19,7 @@ import { OnboardingService } from '../../onboarding.service';
       </div>
       <div style="display:flex;gap:12px;margin-top:8px">
         <button class="btn" (click)="state.reset()">Refazer onboarding</button>
-        <button class="btn primary">Abrir dashboard →</button>
+        <button class="btn primary" (click)="state.openDashboard()">Abrir dashboard →</button>
       </div>
     </div>
   `,

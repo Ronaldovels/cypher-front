@@ -86,9 +86,33 @@ function App() {
   };
   const skip = () => { setDirection('forward'); setStep(step + 1); };
 
+  const persistConfig = () => {
+    try {
+      localStorage.setItem('cypher.config', JSON.stringify({
+        company: data.company,
+        cnpj: data.cnpj,
+        sector: data.sector,
+        logoUrl: data.logoUrl,
+        logoName: data.logoName,
+        accent: data.accent,
+        theme: data.theme,
+        epis: data.epis,
+        cas: data.cas,
+      }));
+    } catch (e) {}
+  };
+  const openDashboard = () => {
+    persistConfig();
+    window.location.href = 'Cypher Dashboard.html';
+  };
   const launch = () => {
     setLaunching(true);
-    setTimeout(() => { setLaunched(true); }, 900);
+    setTimeout(() => {
+      setLaunched(true);
+      persistConfig();
+      // Auto-redirect after a beat so the success animation has time to land
+      setTimeout(openDashboard, 2400);
+    }, 900);
   };
   const reset = () => {
     setLaunched(false); setLaunching(false); setStep(0);
@@ -221,7 +245,7 @@ function App() {
           </div>
           <div style={{ display:'flex', gap: 12, marginTop: 8 }}>
             <button className="btn" onClick={reset}>Refazer onboarding</button>
-            <button className="btn primary">Abrir dashboard →</button>
+            <button className="btn primary" onClick={openDashboard}>Abrir dashboard →</button>
           </div>
         </div>
       )}
