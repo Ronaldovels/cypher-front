@@ -1,59 +1,121 @@
-# CypherFront
+# Cypher Front
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.11.
+🔐 **Cypher** é uma aplicação Angular 21 inovadora que oferece ferramentas avançadas de análise e visualização de dados. O projeto implementa um onboarding interativo, um dashboard dinâmico e um heatmap visual para monitoramento e análise de informações críticas.
 
-## Development server
+## 📋 Sobre o Projeto
 
-To start a local development server, run:
+Cypher Front é a interface frontend de uma suite de análise desenvolvida com Angular 21, apresentando:
+
+- **Onboarding Interativo**: Experiência de entrada intuitiva e guiada para novos usuários
+- **Dashboard**: Visualização consolidada de métricas e dados em tempo real
+- **Heatmap Dinâmico**: Mapa de calor com paleta de cores personalizável para análise visual
+- **Chrome TopBar**: Componente de navegação integrado ao estilo Chrome
+- **Dock de Navegação**: Interface flutuante para acesso rápido a funcionalidades
+
+## 🚀 Começando
+
+### Instalação
+
+Certifique-se de ter o Node.js e Angular CLI instalados:
+
+```bash
+npm install -g @angular/cli@21
+```
+
+Clone o repositório e instale as dependências:
+
+```bash
+git clone <repo-url>
+cd cypher-front
+npm install
+```
+
+### Servidor de Desenvolvimento
+
+Inicie o servidor local:
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Abra seu navegador e acesse `http://localhost:4200/`. A aplicação recarregará automaticamente quando você modificar os arquivos.
 
-## Code scaffolding
+## 🏗️ Estrutura do Projeto
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```
+src/app/
+├── onboarding/          # Módulo de onboarding com overlay interativo
+├── dashboard/           # Componente do dashboard principal
+├── heatmap/            # Componente de heatmap visual
+├── shared/             # Serviços e componentes compartilhados
+│   ├── chrome-topbar/  # Barra de navegação estilo Chrome
+│   ├── dock/           # Dock de navegação flutuante
+│   └── config.service.ts # Serviço de configuração
+└── Cypher/             # Componentes legacy em JSX
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 🛠️ Comandos Principais
+
+### Gerar Componentes
+
+```bash
+ng generate component nome-componente
+```
+
+Para listar todas as opções disponíveis:
 
 ```bash
 ng generate --help
 ```
 
-## Building
-
-To build the project run:
+### Build para Produção
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Os artefatos serão armazenados no diretório `dist/`. A build de produção otimiza automaticamente o desempenho da aplicação.
 
-## Running unit tests
+### Testes Unitários
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Execute testes com [Vitest](https://vitest.dev/):
 
 ```bash
 ng test
 ```
 
-## Running end-to-end tests
+### Testes End-to-End
 
-For end-to-end (e2e) testing, run:
+Para testes E2E:
 
 ```bash
 ng e2e
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## 📁 Branches
 
-## Additional Resources
+- **main**: Produção estável
+- **dev**: Desenvolvimento ativo com features em progresso
+- **hml**: Homologação/staging
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## 🔄 Fluxo de Trabalho
+
+1. Desenvolva na branch **dev**
+2. Crie pull requests para revisão
+3. Após aprovação, realize merge para **main**
+4. Deploy automático ou manual para produção
+
+## 📚 Recursos Adicionais
+
+- [Documentação Angular CLI](https://angular.dev/tools/cli)
+- [Angular 21 Guide](https://angular.dev)
+- [Vitest Documentation](https://vitest.dev/)
+
+## 📝 Licença
+
+Este projeto é propriedade da Asaas.
+
+---
+
+**Versão**: Angular 21.2.11  
+**Última atualização**: 2026-06-24
