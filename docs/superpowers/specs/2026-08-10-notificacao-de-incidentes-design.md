@@ -91,6 +91,7 @@ Artefato central que amarra as três frentes.
 {
   "incidentKey": "CAM-01:a3f9c2:track-7:20260810T143102482Z",
   "cameraId": "CAM-01",
+  "runId": "a3f9c2",
   "trackId": 7,
   "type": "FALL_RISK",
   "severity": 4,
@@ -111,6 +112,7 @@ Artefato central que amarra as três frentes.
 |---|---|---|
 | `incidentKey` | sim | chave de idempotência (§3.2) |
 | `cameraId` | sim | vem de `pose_config.yaml`, não do `PersonEvent` |
+| `runId` | sim | UUID curto da execução do pipeline; persistido em coluna própria |
 | `trackId` | sim | id do ByteTrack; único apenas dentro de um `runId` |
 | `type` | sim | `FALL_RISK` · `ERGONOMIC_RISK` · `ZONE_VIOLATION` · `EPI_VIOLATION` |
 | `severity` | sim | 0–4, valor cru preservado |
@@ -142,6 +144,29 @@ incidentKey = cameraId : runId : trackId : timestampDeAbertura
 
 Todos os campos são opcionais e aplicados individualmente — o mesmo endpoint serve ao fechamento do episódio e à chegada tardia do snapshot.
 
+### 3.4 Mapeamentos derivados
+
+**Categoria de postura → tipo de incidente** (aplicado no Python, ao abrir o episódio):
+
+| `PostureCategory` | `type` |
+|---|---|
+| `immediate_risk` | `FALL_RISK` |
+| `ergonomically_inadequate` | `ERGONOMIC_RISK` |
+| `critical_zone` | `ZONE_VIOLATION` |
+| `normal` | não gera incidente |
+
+`EPI_VIOLATION` não possui origem nesta entrega (§4.6).
+
+**Severidade → nível** (derivado no Java, a partir de `severity`; `AlertaNivel` é mantido apenas para compatibilidade e leitura humana):
+
+| `severity` | `nivel` |
+|---|---|
+| 0–1 | `BAIXO` |
+| 2 | `MEDIO` |
+| 3–4 | `ALTO` |
+
+**Endereçamento dos endpoints.** O `PATCH` usa `incidentKey` porque o pipeline Python nunca conhece o `id` gerado pelo banco. O `PUT .../status` usa `id` porque o front sempre o recebe no payload de resposta. A assimetria é deliberada.
+
 ---
 
 ## 4. `cypher-capture` — do `print()` ao incidente
@@ -169,7 +194,8 @@ Fila `queue.Queue(maxsize=N)` consumida por uma thread daemon.
 - Retry com backoff exponencial e jitter.
 - Após N falhas, o incidente é gravado em `outputs/incidents.jsonl`.
 - Na subida, o JSONL pendente é drenado antes de novos envios.
-- **Fila cheia descarta o item de menor severidade**, nunca o mais recente: um incidente de queda jamais deve ser perdido por causa de um backlog de alertas ergonômicos. A contagem de descartes é registrada em log.
+- **Fila cheia descarta o item de menor severidade**, nunca o mais recente: um incidente de queda jamais deve ser perdido por causa de um backlog de alertas ergonômicos. A contagem de descartes é registrada em log. Isso exige uma fila com política de descarte própria (`deque` sob lock ou `PriorityQueue`), já que `queue.Queue` só sabe bloquear ou levantar `Full`.
+- Apenas incidentes cuja severidade de abertura seja ≥ `min_severity` são enviados. Como escalação de categoria abre um episódio novo (§4.1), um risco que se agrava é reavaliado contra o limiar na abertura do novo incidente.
 
 ### 4.3 `MjpegServer`
 
@@ -291,7 +317,7 @@ A tabela de delivery é o que permite responder "o alerta chegou ao cliente?" �
 
 ### 6.2 `IncidentService`
 
-Na inicialização busca o histórico por HTTP; em seguida abre o `EventSource` e faz *prepend* dos incidentes recebidos, deduplicando por `incidentKey`. Mantém em memória os N mais recentes; o restante vem paginado sob demanda.
+Na inicialização busca o histórico por HTTP; em seguida abre o `EventSource` e faz *prepend* dos incidentes recebidos, deduplicando por `incidentKey`. Mantém em memória os 100 mais recentes; o restante vem paginado sob demanda.
 
 `KPI_DATA`, `ALERTS`, `BAR_DATA` e `HEAT_DATA` deixam de ser constantes em `dashboard.component.ts` e passam a ser `computed()` sobre o store e o `/summary`.
 
@@ -352,3 +378,16 @@ O heatmap atual usa estações `EST-01`…`EST-17`, que não existem no modelo d
 - Backend Spring Boot + H2 permanece a plataforma comprometida.
 - Execução em rede local; API, pipeline e browser mutuamente alcançáveis.
 - GPU disponível no host do pipeline (requisito já estabelecido para a meta de latência).
+
+## 11. Ordem de implementação
+
+O contrato de §3 é o ponto de sincronização: uma vez fixado, as três frentes avançam em paralelo. A ordem abaixo mantém cada etapa demonstrável isoladamente.
+
+1. **Java — modelo e ingestão.** Correções de §5.2, DTOs, idempotência, CORS. Verificável com `curl`, sem depender do Python.
+2. **Python — tracker e sink.** `IncidentTracker` + `HttpIncidentSink` contra a API real. Fim a fim de ingestão funcionando.
+3. **Java — SSE e `/summary`.** Push e agregação. Verificável com `curl -N`.
+4. **Angular — store e dashboard.** `IncidentService`, substituição dos mocks, badge de conexão.
+5. **Python — MJPEG.** `MjpegServer` + `LiveFeedComponent` no Angular.
+6. **Java — fan-out de webhook.** Assinaturas, deliveries, HMAC, retry.
+
+Os passos 1–4 entregam a funcionalidade vital completa; 5 e 6 são as duas exigências adicionais confirmadas no escopo (vídeo ao vivo e integração de saída).
