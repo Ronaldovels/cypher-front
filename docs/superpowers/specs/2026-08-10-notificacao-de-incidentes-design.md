@@ -411,7 +411,7 @@ O `LiveFeedComponent` (§6.4) recebe a câmera como input e o dashboard permite 
 
 **Python** — `IncidentTracker` sobre sequências sintéticas de estado: abre uma única vez por episódio, não repete por frame, fecha no momento correto, escala corretamente entre categorias, **funde reentradas dentro da janela**, **fecha tracks evictados** e **faz flush no encerramento**. Fila testada com um sink que falha deterministicamente. Sem GPU e sem modelo, no mesmo padrão dos 89 testes existentes.
 
-Teste de regressão sobre dados reais: o log de transições de `cenario2.mp4` (§4.1.2) vira fixture, travando o resultado em 3 incidentes e 0 órfãos. Isso protege a calibração contra mudanças futuras de threshold.
+Teste de regressão sobre dados reais: o log de transições de `cenario2.mp4` (§4.1.2) vira fixture, travando o resultado em **2 incidentes e 0 órfãos** — 1 `FALL_RISK` e 1 `ERGONOMIC_RISK`, ambos do `track#1`. A tabela de §4.1.2 mede 3 aberturas com janela de 15 s porque foi levantada **antes** do guard de `min_track_frames`; o guard descarta a terceira, que era o `track#4` de 12 frames de vida. Isso protege a calibração contra mudanças futuras de threshold.
 
 **Java** — idempotência do `POST`, publicação `AFTER_COMMIT`, assinatura HMAC, retry de `WebhookDelivery`, filtros e paginação do histórico.
 
