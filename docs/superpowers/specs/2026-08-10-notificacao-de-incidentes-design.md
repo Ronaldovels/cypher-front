@@ -293,6 +293,7 @@ GET    /api/v1/incidents              histórico paginado (since, camera, severi
 GET    /api/v1/incidents/stream       SSE — push para o dashboard
 PUT    /api/v1/incidents/{id}/status  operador reconhece (PENDENTE→REVISADO→RESOLVIDO)
 GET    /api/v1/summary                KPIs agregados do dashboard
+GET    /api/v1/cameras                id, nome e streamUrl de cada câmera (§6.5)
 ```
 
 `/summary` existe para evitar que o Angular baixe todo o histórico e agregue no browser. Ele alimenta os quatro KPIs, o heatmap por câmera e a série de sete dias, via `GROUP BY` no banco.
@@ -377,7 +378,13 @@ Ao reconectar, o serviço busca `GET /api/v1/incidents?since=<último recebido>`
 
 ### 6.5 Heatmap: a célula é a câmera
 
-O heatmap atual usa estações `EST-01`…`EST-17`, que não existem no modelo de dados — o incidente carrega `cameraId` e `zoneName`. **Decisão:** a célula do heatmap passa a representar uma câmera, com nome amigável fornecido por `/summary`. É o único mapeamento que não exige inventar uma entidade "estação" ausente do domínio.
+O heatmap atual usa estações `EST-01`…`EST-17`, que não existem no modelo de dados — o incidente carrega `cameraId` e `zoneName`. **Decisão:** a célula do heatmap representa uma câmera, com nome amigável vindo de `/api/v1/cameras`. É o único mapeamento que não exige inventar uma entidade "estação" ausente do domínio.
+
+Para que isso produza dados reais, a demonstração roda **3 a 4 processos do pipeline em paralelo**, cada um com `camera_id` e `stream_port` distintos, apontando para os clipes de validação disponíveis (`cenario.mp4`, `cenario2.mp4`, `cenario3.mp4`, `cenario4.mp4`). O heatmap fica com 3–4 células alimentadas por incidentes verdadeiros e a arquitetura multi-câmera prevista para setembro passa a ser exercitada de fato, sem hardware adicional.
+
+Consequência de projeto: o front precisa descobrir as câmeras e suas URLs de stream. Isso vem de `GET /api/v1/cameras`, servido a partir de uma lista estática em `application.yaml` (`id`, `nome`, `streamUrl`) — configuração, não protocolo de registro. Um pipeline que sobe e envia incidentes de um `cameraId` desconhecido tem seus incidentes aceitos normalmente e aparece na lista com o próprio id como nome; a configuração serve para dar nome amigável e URL de vídeo, não para autorizar ingestão.
+
+O `LiveFeedComponent` (§6.4) passa a receber a câmera como input, e o dashboard permite alternar entre elas.
 
 ---
 
@@ -423,10 +430,11 @@ Teste de regressão sobre dados reais: o log de transições de `cenario2.mp4` (
 
 ## 10. Premissas
 
-- Uma câmera na demonstração; o contrato carrega `cameraId` para não bloquear as 3–5 câmeras previstas para setembro.
+- Demonstração com 3–4 processos do pipeline em paralelo, um por clipe de validação, cada um com seu `cameraId` (§6.5). Cada processo é independente: não há coordenação entre eles além de apontarem para a mesma API.
 - Backend Spring Boot + H2 permanece a plataforma comprometida.
 - Execução em rede local; API, pipeline e browser mutuamente alcançáveis.
 - GPU disponível no host do pipeline (requisito já estabelecido para a meta de latência).
+- **Os 45 ms p95 medidos valem para um processo.** Rodando 3–4 pipelines na mesma GPU, a latência por processo sobe e o orçamento de 200 ms pode ser estourado. Para a demonstração isso é aceitável — as fontes são clipes gravados, não câmeras ao vivo, então o pipeline pode rodar mais devagar que o tempo real sem perder frames. Medir a latência multi-processo e relatá-la honestamente é tarefa da implementação; a meta de 200 ms permanece definida sobre **um** processo por GPU.
 
 ## 11. Ordem de implementação
 
@@ -434,9 +442,11 @@ O contrato de §3 é o ponto de sincronização: uma vez fixado, as três frente
 
 1. **Java — modelo e ingestão.** Correções de §5.2, DTOs, idempotência, CORS. Verificável com `curl`, sem depender do Python.
 2. **Python — tracker e sink.** `IncidentTracker` + `HttpIncidentSink` contra a API real. Fim a fim de ingestão funcionando.
-3. **Java — SSE e `/summary`.** Push e agregação. Verificável com `curl -N`.
-4. **Angular — store e dashboard.** `IncidentService`, substituição dos mocks, badge de conexão.
-5. **Python — MJPEG.** `MjpegServer` + `LiveFeedComponent` no Angular.
+3. **Java — SSE, `/summary` e `/cameras`.** Push e agregação. Verificável com `curl -N`.
+4. **Angular — store e dashboard.** `IncidentService`, substituição dos mocks, badge de conexão, heatmap por câmera.
+5. **Python — MJPEG.** `MjpegServer` + `LiveFeedComponent` com seletor de câmera.
 6. **Java — fan-out de webhook.** Assinaturas, deliveries, HMAC, retry.
 
 Os passos 1–4 entregam a funcionalidade vital completa; 5 e 6 são as duas exigências adicionais confirmadas no escopo (vídeo ao vivo e integração de saída).
+
+A demonstração multi-fonte (§6.5) só faz sentido a partir do passo 4; até lá, um processo apontando para um clipe basta para validar cada etapa.
