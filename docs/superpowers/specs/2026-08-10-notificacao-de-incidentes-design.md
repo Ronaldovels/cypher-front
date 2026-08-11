@@ -560,6 +560,8 @@ Decidido em E1, implementado em E4. Registrado agora porque um detalhe técnico 
 
 Endpoints públicos: apenas `/login` e o health check. O stream MJPEG do Python fica em rede interna e não é exposto ao público — E1 assume rede local (§10).
 
+**E1 roda sem autenticação alguma**: nenhum endpoint é protegido, nenhuma tela exige login, e o Spring Security não entra no `pom.xml`. Toda a tabela acima descreve o estado ao fim de E4. O que E1 faz é apenas não fechar portas — cookie desde já no cliente HTTP, e controllers que não assumem ausência de identidade do chamador.
+
 **Restrição sobre E1:** o `IncidentService` do Angular usa `withCredentials: true` desde já, e os controllers são escritos de modo que a introdução do Spring Security em E4 seja aditiva.
 
 ## 16. Gamificação positiva por equipe
