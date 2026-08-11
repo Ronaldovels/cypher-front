@@ -138,9 +138,12 @@ incidentKey = cameraId : runId : trackId : timestampDeAbertura
   "endedAt": "2026-08-10T14:31:09.140-03:00",
   "durationSeconds": 6.6,
   "peakSeverity": 4,
+  "closedReason": "state_exit",
   "snapshotUrl": "https://res.cloudinary.com/.../abc_annotated.jpg"
 }
 ```
+
+`closedReason` ∈ `state_exit` (saiu do alarme) · `escalated` (mudou de tipo) · `track_lost` (pessoa sumiu do quadro) · `pipeline_stopped` (encerramento). Um incidente fechado como `track_lost` ou `pipeline_stopped` tem duração de confiança menor, e o dashboard o marca como tal — é a diferença entre "o risco cessou" e "o sistema perdeu de vista".
 
 Todos os campos são opcionais e aplicados individualmente — o mesmo endpoint serve ao fechamento do episódio e à chegada tardia do snapshot.
 
@@ -179,13 +182,47 @@ Traduz transições de estado em episódios. O pipeline passa a marcar `posture_
 
 | Transição | Ação |
 |---|---|
-| `NORMAL → alarme` | abre incidente (`POST`) |
+| `NORMAL → alarme` | abre incidente (`POST`), sujeito à janela de merge (§4.1.1) |
 | `alarme → NORMAL` | fecha (`PATCH` com duração e severidade de pico) |
-| `alarme → alarme diferente` | fecha o anterior e abre um novo |
+| `alarme → alarme diferente` | fecha o anterior e abre/reabre o do novo tipo |
+| **track não visto por `evict_after_frames`** | fecha com `closedReason: track_lost` |
 
 Escalação (ergonômico → queda) é tratada como episódio distinto, não como edição: a mudança de natureza do risco é informação que o histórico deve preservar.
 
 O tracker acumula a **severidade de pico** durante o episódio, já que a severidade do frame de abertura raramente é a pior.
+
+**A quarta regra existe porque as três primeiras dependem de `classifier.update()` ser chamado de novo para aquele `person_id`.** O pipeline itera sobre `for pose in poses`: se a pessoa sai do quadro ou o ByteTrack perde o id sob oclusão, `update()` nunca mais é chamado, o estado permanece em alarme para sempre e o `PATCH` de fechamento não dispara. Um trabalhador que cai e é retirado do quadro deixaria no painel um `FALL_RISK` permanentemente aberto, sem duração e sem severidade de pico. O tracker mantém o frame da última aparição de cada track e faz *sweep* a cada frame.
+
+O mesmo vale no encerramento: o bloco `finally` de `run_pipeline.py` faz flush de todos os incidentes abertos com `closedReason: pipeline_stopped`. Sem isso, toda execução deixa incidentes órfãos — medido em §4.1.2.
+
+### 4.1.1 Janela de merge por track e tipo
+
+Se um par `(cameraId, trackId, type)` reabre dentro de `merge_window_seconds` do fechamento anterior, o tracker **reabre o mesmo incidente** (`PATCH` estendendo `endedAt` e `peakSeverity`) em vez de criar um novo. A janela é necessária, não opcional: sem ela um único evento real vira uma rajada de cards no dashboard.
+
+### 4.1.2 Medição que calibra a janela
+
+Executado o pipeline sobre `data/validation/cenario2.mp4` (1331 frames, ~30 fps, **2 quedas reais**, o mesmo clipe do ground truth com recall 0,986):
+
+| Janela de merge | Incidentes gerados | Merges | Órfãos ao fim |
+|---|---|---|---|
+| 0 s (sem merge) | **10** | 0 | 2 |
+| 2 s | 6 | 4 | 2 |
+| 5 s | 5 | 5 | 2 |
+| 10 s | 4 | 6 | 2 |
+| **15 s** | **3** | 7 | 2 |
+| 30 s | 3 | 7 | 2 |
+
+Sem janela, 2 quedas reais produzem 10 incidentes (8 `FALL_RISK` + 2 `ERGONOMIC_RISK`) — uma amplificação de 5×.
+
+A causa **não** é churn de id do ByteTrack: o `track#1` aparece em 1307 dos 1331 frames. É o mesmo track reentrando em alarme, porque a histerese (`exit_frames=45`) solta para `NORMAL` e reentra. Há ainda oscilação de categoria — entre os frames 327 e 349, o `track#1` alterna `immediate_risk → ergonomically_inadequate → immediate_risk → ergonomically_inadequate` em 22 frames.
+
+Isso reflete a precisão conhecidamente baixa do detector em `immediate_risk` — deliberada, já que a calibração priorizou recall, e com "gating temporal de queda para subir precisão" já registrado no cronograma pós-NEXT. A camada de notificação não corrige o detector; ela impede que a característica vire ruído no painel.
+
+**Default: `merge_window_seconds: 15`.** É o joelho da curva — 30 s não colapsa mais nada, o que significa que os 3 incidentes restantes estão separados por mais de 30 s e são episódios genuinamente distintos.
+
+Os 2 órfãos são constantes em toda a tabela: nenhuma janela de merge os resolve, apenas a regra de eviction e o flush no encerramento.
+
+**Guarda adicional:** tracks com menos de `min_track_frames` de vida não abrem incidente. A mesma execução registrou tracks espúrios de 1, 2 e 12 frames — um deles (`track#4`) abriria um `FALL_RISK` a 3 frames do fim do vídeo.
 
 ### 4.2 `HttpIncidentSink`
 
@@ -222,6 +259,9 @@ notify:
   camera_id: CAM-01
   api_url: http://localhost:8080/api/v1
   min_severity: 2
+  merge_window_seconds: 15    # §4.1.1 — calibrado em cenario2.mp4
+  evict_after_frames: 45      # track sumido por N frames = fecha como track_lost
+  min_track_frames: 15        # tracks mais curtos não abrem incidente
   queue_size: 256
   spill_path: outputs/incidents.jsonl
   stream_port: 8090
@@ -269,7 +309,9 @@ A entidade `Alerta` é **evoluída**, não substituída por uma entidade paralel
 | `nivel ∈ {BAIXO, MEDIO, ALTO}` | severidade 0–4 → 3 valores, com perda | persistir `severidade` (int) **e** derivar `nivel` |
 | `dataHora: LocalDateTime` | perde o offset | `OffsetDateTime` |
 
-Campos novos: `incidentKey` (unique), `runId`, `trackId`, `reason`, `posturaCategoria`, `rebaScore`, `actionLevel`, `zoneStatus`, `epiPresent`, `epiMissing`, `snapshotUrl`, `encerradoEm`, `duracaoSegundos`, `severidadePico`.
+Campos novos: `incidentKey` (unique), `runId`, `trackId`, `reason`, `posturaCategoria`, `rebaScore`, `actionLevel`, `zoneStatus`, `epiPresent`, `epiMissing`, `snapshotUrl`, `encerradoEm`, `duracaoSegundos`, `severidadePico`, `closedReason`.
+
+`epiPresent` e `epiMissing` são listas de String: mapeadas com `@ElementCollection` em tabela auxiliar (não `@Convert` para JSON, que impediria consultas por EPI ausente no futuro).
 
 O `status` passa a ter default `PENDENTE` atribuído pelo servidor. `AlertaController` deixa de receber e devolver a entidade JPA: entram `IncidentRequest` e `IncidentResponse` com Bean Validation. Hoje um cliente pode enviar `{"id": 42, "status": "RESOLVIDO"}` e sobrescrever um registro existente.
 
@@ -321,6 +363,8 @@ Na inicialização busca o histórico por HTTP; em seguida abre o `EventSource` 
 
 `KPI_DATA`, `ALERTS`, `BAR_DATA` e `HEAT_DATA` deixam de ser constantes em `dashboard.component.ts` e passam a ser `computed()` sobre o store e o `/summary`.
 
+`/summary` é buscado na inicialização e refeito quando chega um incidente pelo SSE, com debounce de 2 s para não disparar uma rajada de requisições durante um episódio ativo. Sem polling em intervalo fixo.
+
 ### 6.3 Estado de conexão visível
 
 Signal `'conectando' | 'ao vivo' | 'offline'` renderizado como badge. Num painel de segurança, silêncio não pode parecer calmaria: com o SSE caído, a tela fica indistinguível de "nenhum incidente hoje" — a falha mais perigosa possível neste dashboard.
@@ -347,12 +391,17 @@ O heatmap atual usa estações `EST-01`…`EST-17`, que não existem no modelo d
 | Assinante de webhook fora | Delivery pendente com backoff. Ingestão e dashboard não afetados. |
 | `POST` duplicado | `incidentKey` unique → `200` com o existente. Sem duplicata no painel. |
 | Cloudinary fora | Incidente persiste sem snapshot; `PATCH` tenta novamente depois. |
+| Track perdido (oclusão, saída de quadro) | Eviction após `evict_after_frames` fecha com `closedReason: track_lost`. Sem incidente eternamente aberto. |
+| Pipeline encerrado (`q`, Ctrl-C, fim da fonte) | `finally` faz flush dos abertos com `pipeline_stopped`. Medido: sem isso, `cenario2.mp4` deixa 2 órfãos. |
+| Reentrada em alarme do mesmo track | Janela de merge de 15 s reabre o mesmo incidente. Medido: 10 incidentes → 3. |
 
 ---
 
 ## 8. Estratégia de testes
 
-**Python** — `IncidentTracker` sobre sequências sintéticas de estado: abre uma única vez por episódio, não repete por frame, fecha no momento correto, escala corretamente entre categorias. Fila testada com um sink que falha deterministicamente. Sem GPU e sem modelo, no mesmo padrão dos 89 testes existentes.
+**Python** — `IncidentTracker` sobre sequências sintéticas de estado: abre uma única vez por episódio, não repete por frame, fecha no momento correto, escala corretamente entre categorias, **funde reentradas dentro da janela**, **fecha tracks evictados** e **faz flush no encerramento**. Fila testada com um sink que falha deterministicamente. Sem GPU e sem modelo, no mesmo padrão dos 89 testes existentes.
+
+Teste de regressão sobre dados reais: o log de transições de `cenario2.mp4` (§4.1.2) vira fixture, travando o resultado em 3 incidentes e 0 órfãos. Isso protege a calibração contra mudanças futuras de threshold.
 
 **Java** — idempotência do `POST`, publicação `AFTER_COMMIT`, assinatura HMAC, retry de `WebhookDelivery`, filtros e paginação do histórico.
 
