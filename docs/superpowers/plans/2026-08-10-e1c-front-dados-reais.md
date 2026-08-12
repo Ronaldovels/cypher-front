@@ -2,24 +2,29 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Substituir as constantes mockadas do dashboard por incidentes reais vindos da API, com push por SSE, estado de conexão visível e vídeo ao vivo.
+**Goal:** Substituir as constantes mockadas do dashboard por incidentes reais vindos da API, com push por SSE, estado de conexão visível e vídeo ao vivo — e, no caminho, dar ao app um dono único de tema, um modo de dados de exemplo e o sistema tipográfico Cypher Sans.
 
-**Architecture:** Um `IncidentService` baseado em signals concentra o estado: carrega o histórico por HTTP, abre o `EventSource` e faz *prepend* deduplicando por `incidentKey`. O `EventSource` é criado por uma fábrica injetável, o que torna o serviço testável sem depender de o ambiente de teste implementar a API. Componentes deixam de ter dados próprios e passam a ler `computed()` do serviço.
+**Architecture:** Um `IncidentService` baseado em signals concentra o estado: carrega o histórico por HTTP, abre o `EventSource` e faz *prepend* deduplicando por `incidentKey`. O `EventSource` é criado por uma fábrica injetável, o que torna o serviço testável sem depender de o ambiente de teste implementar a API. Componentes deixam de ter dados próprios e passam a ler `computed()` do serviço. O modo de dados de exemplo troca o **transporte**, não os serviços: um `HttpInterceptor` e uma fábrica de `EventSource` falsa, de modo que serviços, componentes e templates sejam idênticos nos dois modos.
 
-**Tech Stack:** Angular 21.2, TypeScript 5.9, signals, `provideHttpClient(withFetch())`, Vitest + jsdom (a serem ligados na Task 1).
+**Tech Stack:** Angular 21.2 **zoneless** (o projeto não tem `zone.js`; todo `TestBed` de componente precisa de `provideZonelessChangeDetection()`), TypeScript 5.9, signals, `provideHttpClient(withFetch())`, Vitest + jsdom (a serem ligados na Task 1).
 
-**Spec:** `docs/superpowers/specs/2026-08-10-notificacao-de-incidentes-design.md` §6, §7, §8, §15 (apenas a restrição sobre credenciais).
+**Specs:**
+- `docs/superpowers/specs/2026-08-10-notificacao-de-incidentes-design.md` §6, §7, §8, §15 (apenas a restrição sobre credenciais) — Tasks 4–7 e 9–12.
+- `docs/superpowers/specs/2026-08-12-tema-flag-mock-tipografia-design.md` §1, §2, §3 — Tasks 2, 3 e 8.
 
-**Depende de:** plano E1-A, Tasks 1–13 (a API precisa responder). O vídeo ao vivo da Task 8 depende do plano E1-B, Tasks 6–7.
+**Depende de:** plano E1-A, Tasks 1–13 (a API precisa responder), para as Tasks 5–7 e 9–12. O vídeo ao vivo da Task 9 depende do plano E1-B, Tasks 6–7. **As Tasks 2 e 3 não dependem de nada além do runner de testes** — são as primeiras justamente por isso, e a Task 3 nem disso.
 
 ## Global Constraints
 
 - **Repositório:** `/home/asaas/projects/challenge/cypher-front`. Todos os caminhos são relativos a essa raiz.
 - **Requisições com `withCredentials: true` desde já.** `EventSource` não aceita cabeçalho `Authorization`, então a autenticação de E4 será por cookie de sessão; conviver com dois mecanismos depois seria retrabalho (spec §15).
 - **Standalone components e signals**, seguindo o padrão do código existente (`ConfigService`, `DashboardComponent`). Nenhum NgModule novo.
-- **Estilos em SCSS**, `inlineStyleLanguage` já configurado. Não alterar `src/styles.scss` além do necessário para os estados novos.
-- **Nada de dados fabricados.** Toda constante mockada que sobreviver a este plano precisa estar rotulada em tela como dado de exemplo.
-- **Commits:** um por tarefa, em português, no formato do repo (`feat:`, `fix:`, `chore:`).
+- **Estilos em SCSS**, `inlineStyleLanguage` já configurado. `src/styles.scss` é alterado pela Task 3 (tipografia, deliberada) e pelos estados novos de conexão e vazio das demais — nada além disso.
+- **Nada de dados fabricados.** Toda constante mockada que sobreviver a este plano precisa estar rotulada em tela como dado de exemplo. Isso vale também para o modo mock da Task 8: quando `useMockData` está ligado, o badge de conexão diz **"dados de exemplo"**.
+- **Modo mock é opt-in no teste, nunca herdado do ambiente.** O alvo de teste usa a configuração `development`, onde `useMockData` é `true`. Todo `TestBed` que renderize o `ConnectionBadgeComponent` — direta ou indiretamente — declara `{ provide: USE_MOCK_DATA, useValue: false }`.
+- **Nada de `font-variation-settings` global.** É propriedade herdada e sobrepõe `font-weight` no mesmo eixo (CSS Fonts 4 §6.9); no `html` ela achataria as 25 declarações `font-weight: 700` e as 7 de `800` do app. Peso se controla por `font-weight`.
+- **Um dono só para o `<body>`.** Depois da Task 2, apenas o `ThemeService` escreve classe no `<body>`, e sempre por `classList`, nunca por atribuição de `className`.
+- **Commits:** um por tarefa, em português, no formato do repo (`feat:`, `fix:`, `chore:`), **sem linha de coautoria**.
 - **A API base em desenvolvimento é `http://localhost:8080/api/v1`.**
 
 ---
@@ -28,19 +33,38 @@
 
 ```
 src/environments/
-├── environment.ts                       CRIAR  produção
-└── environment.development.ts           CRIAR  desenvolvimento
+├── environment.ts                       CRIAR  produção        (useMockData: false)
+└── environment.development.ts           CRIAR  desenvolvimento (useMockData: true)
 
 src/app/shared/
+├── theme.service.ts                     CRIAR  dono único do tema (Task 2)
+├── theme.service.spec.ts                CRIAR
 ├── incident.models.ts                   CRIAR  tipos do contrato + helpers de severidade
 ├── incident.service.ts                  CRIAR  store de incidentes (HTTP + SSE)
 ├── incident.service.spec.ts             CRIAR
 ├── catalog.service.ts                   CRIAR  câmeras e estações
 ├── event-source.factory.ts              CRIAR  token injetável do EventSource
+├── mock/                                 CRIAR  modo dados de exemplo (Task 8)
+│   ├── fixtures.ts                              incidentes, summary, cameras, stations
+│   ├── mock-api.interceptor.ts                  responde os endpoints sem rede
+│   ├── mock-api.interceptor.spec.ts
+│   └── mock-event-source.ts                     EventSourceLike que emite num timer
+├── chrome-topbar/
+│   ├── chrome-topbar.component.ts       MODIFICAR  engrenagem no lugar do sol + toggle de tema
+│   └── chrome-topbar.component.spec.ts  CRIAR
 ├── connection-badge/                     CRIAR  badge de estado da conexão
-│   └── connection-badge.component.ts
+│   ├── connection-badge.component.ts
+│   └── connection-badge.component.spec.ts
 └── live-feed/                            CRIAR  vídeo ao vivo
-    └── live-feed.component.ts
+    ├── live-feed.component.ts
+    └── live-feed.component.spec.ts
+
+src/app/onboarding/
+├── onboarding.service.ts                MODIFICAR  para de escrever no <body>; theme sai de persistConfig
+├── onboarding.service.spec.ts           CRIAR
+├── models/onboarding.models.ts          MODIFICAR  theme sai de OnboardingData
+├── steps/step1-identity/*.ts|.html      MODIFICAR  toggle fala com ThemeService
+└── steps/step4-confirm/*.html           MODIFICAR  lê o tema do ThemeService
 
 src/app/dashboard/
 ├── dashboard.component.ts               MODIFICAR  remove KPI_DATA, ALERTS, BAR_DATA, HEAT_DATA
@@ -49,14 +73,17 @@ src/app/dashboard/
 
 src/app/heatmap/
 ├── heatmap.component.ts                 MODIFICAR  célula = estação
-└── heatmap.component.html               MODIFICAR
+├── heatmap.component.html               MODIFICAR
+└── heatmap.component.spec.ts            CRIAR
 
-src/app/app.config.ts                    MODIFICAR  provideHttpClient
-angular.json                             MODIFICAR  builder de testes
+src/app/shared/config.service.ts         MODIFICAR  para de escrever no <body>; theme sai de CypherConfig
+src/app/app.config.ts                    MODIFICAR  provideHttpClient + interceptor e SSE de mock
+src/styles.scss                          MODIFICAR  tipografia (Task 3), estados novos
+angular.json                             MODIFICAR  builder de testes, fileReplacements
 package.json                             MODIFICAR  vitest, jsdom
 ```
 
-**Por que essa divisão.** `incident.models.ts` não tem dependência de Angular — são tipos e funções puras, testáveis sem TestBed. `event-source.factory.ts` existe para que o serviço não construa um `EventSource` diretamente: sem essa costura, testar reconexão exigiria um ambiente de teste que implemente a API, o que nem todos implementam. `catalog.service.ts` é separado porque câmeras e estações mudam raramente e por motivos diferentes dos incidentes.
+**Por que essa divisão.** `incident.models.ts` não tem dependência de Angular — são tipos e funções puras, testáveis sem TestBed. `event-source.factory.ts` existe para que o serviço não construa um `EventSource` diretamente: sem essa costura, testar reconexão exigiria um ambiente de teste que implemente a API, o que nem todos implementam — e é a mesma costura que a Task 8 reaproveita para o modo mock. `catalog.service.ts` é separado porque câmeras e estações mudam raramente e por motivos diferentes dos incidentes. `theme.service.ts` não tem dependência nenhuma, de propósito: `ConfigService` e `OnboardingService` precisam injetá-lo sem criar ciclo. A pasta `mock/` fica isolada para que apagá-la inteira, no dia em que o modo sair, não deixe rastro nos serviços.
 
 ---
 
@@ -127,7 +154,676 @@ git commit -m "chore(test): liga o runner de testes com vitest e jsdom"
 
 ---
 
-## Task 2: Ambientes, cliente HTTP e tipos do contrato
+## Task 2: Tema — dono único, toggle e ícone honesto
+
+**Files:**
+- Create: `src/app/shared/theme.service.ts`
+- Create: `src/app/shared/theme.service.spec.ts`
+- Create: `src/app/onboarding/onboarding.service.spec.ts`
+- Create: `src/app/shared/chrome-topbar/chrome-topbar.component.spec.ts`
+- Modify: `src/app/shared/config.service.ts`
+- Modify: `src/app/onboarding/onboarding.service.ts`
+- Modify: `src/app/onboarding/models/onboarding.models.ts`
+- Modify: `src/app/onboarding/steps/step1-identity/step1-identity.component.ts`
+- Modify: `src/app/onboarding/steps/step1-identity/step1-identity.component.html`
+- Modify: `src/app/onboarding/steps/step4-confirm/step4-confirm.component.ts`
+- Modify: `src/app/onboarding/steps/step4-confirm/step4-confirm.component.html`
+- Modify: `src/app/shared/chrome-topbar/chrome-topbar.component.ts`
+
+**Interfaces:**
+- Consumes: nada.
+- Produces:
+  - `Theme = 'dark' | 'light'`.
+  - `ThemeService.theme: Signal<Theme>`, `.set(theme: Theme): void`, `.toggle(): void`.
+  - `CypherConfig` **sem** o campo `theme`.
+  - `OnboardingData` **sem** o campo `theme`.
+
+O botão da topbar que parece um toggle de tema não é um: o SVG em `chrome-topbar.component.ts` é um círculo com oito raios — um sol — dentro de um `<a routerLink="/">`. Quem quer trocar o tema clica nele e cai no wizard de onboarding. Não é bug de estado (os botões Claro/Escuro do step 1 não estão dentro de um `<form>`, então não há reload); é bug de affordance.
+
+Consertar a affordance esbarra num problema estrutural que precisa sair junto. Hoje `config.service.ts` e `onboarding.service.ts` escrevem `document.body.className` cada um por conta própria, por atribuição direta, e o tema só persiste ao concluir o wizard. Um toggle novo no dashboard que não passe por um dono único volta sozinho no próximo reload e entra em disputa com o `effect` do wizard.
+
+**`cypher.theme` passa a ser a única fonte de verdade, e o campo `theme` sai de `CypherConfig` e de `OnboardingData`.** Sem isso o tema mora em duas chaves de `localStorage` sem regra de escrita: concluir o wizard sobrescreveria um toggle feito no dashboard.
+
+**O `ThemeService` não usa `effect()`.** O app é zoneless, e um `effect` de construtor só rodaria depois de um `TestBed.tick()`. Escrever no `<body>` é um comando, não uma reação: `set()` faz na hora.
+
+- [ ] **Step 1: Escrever o teste que falha**
+
+Criar `src/app/shared/theme.service.spec.ts`:
+
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { ThemeService } from './theme.service';
+
+/** O serviço lê o localStorage na construção, então cada caso monta o seu. */
+function criar(): ThemeService {
+  TestBed.resetTestingModule();
+  TestBed.configureTestingModule({});
+  return TestBed.inject(ThemeService);
+}
+
+describe('ThemeService', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.body.className = '';
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    document.body.className = '';
+  });
+
+  it('sem nada gravado, começa no escuro', () => {
+    const service = criar();
+
+    expect(service.theme()).toBe('dark');
+    expect(document.body.classList.contains('theme-dark')).toBe(true);
+  });
+
+  it('troca a classe do body sem deixar a antiga para trás', () => {
+    const service = criar();
+
+    service.set('light');
+
+    expect(document.body.classList.contains('theme-light')).toBe(true);
+    expect(document.body.classList.contains('theme-dark')).toBe(false);
+  });
+
+  it('preserva outras classes do body', () => {
+    document.body.classList.add('impressao');
+    const service = criar();
+
+    service.set('light');
+
+    // Este é o teste que a atribuição direta de className não passaria.
+    expect(document.body.classList.contains('impressao')).toBe(true);
+  });
+
+  it('toggle alterna e persiste na hora, não ao concluir o wizard', () => {
+    const service = criar();
+
+    service.toggle();
+
+    expect(service.theme()).toBe('light');
+    expect(localStorage.getItem('cypher.theme')).toBe('light');
+  });
+
+  it('hidrata de cypher.theme', () => {
+    localStorage.setItem('cypher.theme', 'light');
+
+    expect(criar().theme()).toBe('light');
+  });
+
+  it('sem cypher.theme, migra do cypher.config legado', () => {
+    localStorage.setItem('cypher.config', JSON.stringify({ company: 'Acme', theme: 'light' }));
+
+    expect(criar().theme()).toBe('light');
+  });
+
+  it('cypher.theme ganha do legado', () => {
+    localStorage.setItem('cypher.theme', 'dark');
+    localStorage.setItem('cypher.config', JSON.stringify({ theme: 'light' }));
+
+    expect(criar().theme()).toBe('dark');
+  });
+
+  it('cypher.config corrompido não derruba o serviço', () => {
+    localStorage.setItem('cypher.config', '{isso nao e json');
+
+    expect(criar().theme()).toBe('dark');
+  });
+});
+```
+
+Criar `src/app/onboarding/onboarding.service.spec.ts`:
+
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { OnboardingService } from './onboarding.service';
+import { ThemeService } from '../shared/theme.service';
+
+describe('OnboardingService e o tema', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.body.className = '';
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    document.body.className = '';
+  });
+
+  it('o wizard enxerga o tema trocado fora dele', () => {
+    const theme = TestBed.inject(ThemeService);
+    const state = TestBed.inject(OnboardingService);
+
+    // Simula o toggle da topbar do dashboard, depois de o wizard já existir.
+    theme.set('light');
+
+    // Guardar uma cópia em data() não passaria aqui: o effect do serviço só
+    // reage a mudanças de data(), e data() não mudou.
+    expect(theme.theme()).toBe('light');
+    expect(state.data()).not.toHaveProperty('theme');
+  });
+
+  it('persistConfig não grava mais o tema em cypher.config', () => {
+    const state = TestBed.inject(OnboardingService);
+    state.updateData({ company: 'Acme' });
+
+    state.persistConfig();
+
+    const gravado = JSON.parse(localStorage.getItem('cypher.config')!);
+    expect(gravado.company).toBe('Acme');
+    expect(gravado).not.toHaveProperty('theme');
+  });
+});
+```
+
+Criar `src/app/shared/chrome-topbar/chrome-topbar.component.spec.ts`:
+
+```typescript
+import { provideZonelessChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { ChromeTopbarComponent } from './chrome-topbar.component';
+import { ThemeService } from '../theme.service';
+
+describe('ChromeTopbarComponent', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.body.className = '';
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideRouter([])],
+    });
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    document.body.className = '';
+  });
+
+  function montar() {
+    const fixture = TestBed.createComponent(ChromeTopbarComponent);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('tem um botão que troca o tema', () => {
+    const fixture = montar();
+    const theme = TestBed.inject(ThemeService);
+    const botao: HTMLButtonElement = fixture.nativeElement.querySelector('[data-test="theme-toggle"]');
+
+    expect(botao).not.toBeNull();
+    botao.click();
+
+    expect(theme.theme()).toBe('light');
+  });
+
+  it('o botão diz para onde vai, não onde está', () => {
+    const fixture = montar();
+    const botao: HTMLButtonElement = fixture.nativeElement.querySelector('[data-test="theme-toggle"]');
+
+    expect(botao.getAttribute('aria-label')).toBe('Mudar para tema claro');
+
+    botao.click();
+    fixture.detectChanges();
+
+    expect(botao.getAttribute('aria-label')).toBe('Mudar para tema escuro');
+  });
+
+  it('o link de reabrir onboarding não se apresenta mais como Configurações', () => {
+    const fixture = montar();
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-test="reopen-onboarding"]');
+
+    expect(link.getAttribute('href')).toBe('/');
+    expect(link.getAttribute('aria-label')).toBe('Reabrir configuração inicial');
+  });
+});
+```
+
+- [ ] **Step 2: Rodar o teste e confirmar que falha**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm test -- --watch=false
+```
+
+Esperado: FALHA — não resolve `./theme.service`, e `[data-test="theme-toggle"]` não existe.
+
+- [ ] **Step 3: Criar o `ThemeService`**
+
+Criar `src/app/shared/theme.service.ts`:
+
+```typescript
+import { Injectable, signal } from '@angular/core';
+
+export type Theme = 'dark' | 'light';
+
+/**
+ * Dono único do tema.
+ *
+ * Antes disso, ConfigService e OnboardingService escreviam
+ * `document.body.className` cada um por conta própria — e o tema só persistia
+ * ao concluir o wizard, então trocá-lo e recarregar perdia a escolha.
+ *
+ * Sem dependências, de propósito: ConfigService e OnboardingService precisam
+ * injetá-lo sem criar ciclo.
+ */
+@Injectable({ providedIn: 'root' })
+export class ThemeService {
+  private static readonly KEY = 'cypher.theme';
+  private static readonly LEGACY_KEY = 'cypher.config';
+
+  private readonly _theme = signal<Theme>(ThemeService.hydrate());
+
+  readonly theme = this._theme.asReadonly();
+
+  constructor() {
+    this.apply(this._theme());
+  }
+
+  set(theme: Theme): void {
+    this._theme.set(theme);
+    this.apply(theme);
+    try {
+      localStorage.setItem(ThemeService.KEY, theme);
+    } catch {
+      // Modo privativo ou storage cheio: o tema vale para esta sessão.
+    }
+  }
+
+  toggle(): void {
+    this.set(this._theme() === 'dark' ? 'light' : 'dark');
+  }
+
+  /**
+   * Escrever no body é comando, não reação: nada de effect().
+   *
+   * classList em vez de className porque atribuir className apagaria qualquer
+   * outra classe que alguém venha a pôr no body.
+   */
+  private apply(theme: Theme): void {
+    document.body.classList.remove('theme-dark', 'theme-light');
+    document.body.classList.add(`theme-${theme}`);
+  }
+
+  private static hydrate(): Theme {
+    try {
+      const direto = localStorage.getItem(ThemeService.KEY);
+      if (direto === 'dark' || direto === 'light') {
+        return direto;
+      }
+
+      // Migração de leitura: quem concluiu o onboarding antes desta mudança
+      // guardou o tema dentro de cypher.config. Ninguém volta a escrever lá.
+      const legado = localStorage.getItem(ThemeService.LEGACY_KEY);
+      const tema = legado ? (JSON.parse(legado) as { theme?: unknown }).theme : null;
+      if (tema === 'dark' || tema === 'light') {
+        return tema;
+      }
+    } catch {
+      // Storage indisponível ou config corrompida: cai no padrão.
+    }
+
+    return 'dark';
+  }
+}
+```
+
+- [ ] **Step 4: Tirar o tema do `ConfigService`**
+
+Em `src/app/shared/config.service.ts`, remover o campo da interface e a escrita no `<body>`. A interface passa a ser:
+
+```typescript
+export interface CypherConfig {
+  company: string;
+  cnpj: string;
+  sector: string;
+  logoUrl: string | null;
+  logoName: string;
+  accent: string;
+  epis: string[];
+  cas: Record<string, any>;
+}
+```
+
+e a linha `document.body.className = \`theme-${cfg.theme}\`;` sai do `effect`. O serviço continua dono do accent e não precisa injetar o `ThemeService` — com `theme` fora de `CypherConfig`, não sobra nada a delegar.
+
+- [ ] **Step 5: Tirar o tema do `OnboardingData`**
+
+Em `src/app/onboarding/models/onboarding.models.ts`, remover `theme: 'dark' | 'light';` da interface `OnboardingData` e `theme: 'dark',` de `DEFAULT_DATA`.
+
+Em `src/app/onboarding/onboarding.service.ts`, remover a linha `document.body.className = \`theme-${d.theme}\`;` do `effect` (o resto do `effect`, que cuida do accent, fica) e tirar `theme: d.theme,` do objeto gravado em `persistConfig()`.
+
+- [ ] **Step 6: Fazer o step 1 falar com o `ThemeService`**
+
+Em `src/app/onboarding/steps/step1-identity/step1-identity.component.ts`:
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { OnboardingService } from '../../onboarding.service';
+import { ThemeService } from '../../../shared/theme.service';
+import { SECTORS, PRESET_COLORS, cnpjMask } from '../../models/onboarding.models';
+
+@Component({
+  selector: 'app-step1-identity',
+  imports: [],
+  templateUrl: './step1-identity.component.html',
+})
+export class Step1IdentityComponent {
+  state = inject(OnboardingService);
+  private themeService = inject(ThemeService);
+
+  /** Lido direto do serviço: uma cópia em data() ficaria velha. */
+  theme = this.themeService.theme;
+
+  sectors = SECTORS;
+  presetColors = PRESET_COLORS;
+
+  onCnpj(e: Event) {
+    const v = (e.target as HTMLInputElement).value;
+    this.state.updateData({ cnpj: cnpjMask(v) });
+  }
+  onLogo(e: Event) {
+    const f = (e.target as HTMLInputElement).files?.[0];
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    this.state.updateData({ logoUrl: url, logoName: f.name });
+  }
+  setTheme(t: 'dark' | 'light') { this.themeService.set(t); }
+  setAccent(c: string) { this.state.updateData({ accent: c }); }
+}
+```
+
+Em `src/app/onboarding/steps/step1-identity/step1-identity.component.html`, as duas linhas do toggle:
+
+```html
+      <button [class.on]="theme() === 'light'" (click)="setTheme('light')">Claro</button>
+      <button [class.on]="theme() === 'dark'" (click)="setTheme('dark')">Escuro</button>
+```
+
+- [ ] **Step 7: Fazer o step 4 ler o tema do serviço**
+
+Em `src/app/onboarding/steps/step4-confirm/step4-confirm.component.ts`, acrescentar aos imports e à classe:
+
+```typescript
+import { ThemeService } from '../../../shared/theme.service';
+```
+
+```typescript
+  theme = inject(ThemeService).theme;
+```
+
+Em `src/app/onboarding/steps/step4-confirm/step4-confirm.component.html`, trocar a linha do accent:
+
+```html
+      <div class="kicker" style="font-size:11px">{{ state.data().accent.toUpperCase() }} · tema {{ theme() }}</div>
+```
+
+- [ ] **Step 8: Trocar o sol por uma engrenagem e acrescentar o toggle**
+
+Em `src/app/shared/chrome-topbar/chrome-topbar.component.ts`, substituir o bloco `<div class="tools">` inteiro:
+
+```html
+      <div class="tools">
+        <button class="icon-btn" aria-label="Notificações">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 16c0-7 1.5-10 6-10s6 3 6 10"/><path d="M4.5 16h15"/><path d="M10.5 19a1.5 1.5 0 0 0 3 0"/>
+          </svg>
+          @if (notifBadge() > 0) {
+            <span class="bdg">{{ notifBadge() }}</span>
+          }
+        </button>
+
+        <button class="icon-btn" data-test="theme-toggle"
+                [attr.aria-label]="temaEscuro() ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
+                (click)="alternarTema()">
+          @if (temaEscuro()) {
+            <!-- Sol: o destino do clique, não o estado atual. -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+            </svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.6 6.6 0 0 0 10.5 10.5z"/>
+            </svg>
+          }
+        </button>
+
+        <a routerLink="/" class="icon-btn" data-test="reopen-onboarding"
+           aria-label="Reabrir configuração inicial" title="Reabrir configuração inicial">
+          <!-- Engrenagem de verdade. O ícone anterior era um sol, e mandava
+               para o onboarding quem só queria trocar o tema. -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </a>
+
+        <div class="avatar">AG</div>
+      </div>
+```
+
+e, na classe:
+
+```typescript
+import { Component, input, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { ThemeService } from '../theme.service';
+```
+
+```typescript
+  private themeService = inject(ThemeService);
+
+  temaEscuro = computed(() => this.themeService.theme() === 'dark');
+
+  alternarTema(): void {
+    this.themeService.toggle();
+  }
+```
+
+- [ ] **Step 9: Rodar o teste e confirmar que passa**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm test -- --watch=false
+```
+
+Esperado: PASSA, 13 testes novos.
+
+- [ ] **Step 10: Confirmar que a build ainda funciona**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm run build
+```
+
+Esperado: build conclui. Se o compilador reclamar de `theme` em algum template ou componente que este plano não listou, é uma referência remanescente ao campo removido — trocar por `themeService.theme()`.
+
+- [ ] **Step 11: Conferir na mão**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm start
+```
+
+Em `http://localhost:4200/dashboard`, confirmar em ordem:
+
+1. Existem dois ícones distintos na topbar: um sol/lua (troca o tema) e uma engrenagem (vai para o onboarding).
+2. Clicar no sol troca o tema na hora, **sem sair da página**.
+3. Recarregar mantém o tema escolhido.
+4. Ir ao onboarding pela engrenagem: os botões Claro/Escuro do step 1 mostram o tema atual selecionado, não sempre "Escuro".
+
+- [ ] **Step 12: Commit**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front
+git add src/app/shared/theme.service.ts src/app/shared/theme.service.spec.ts \
+        src/app/shared/config.service.ts src/app/shared/chrome-topbar/ \
+        src/app/onboarding/
+git commit -m "fix: dono unico do tema, toggle no dashboard e engrenagem no lugar do sol"
+```
+
+---
+
+## Task 3: Tipografia Cypher Sans
+
+**Files:**
+- Modify: `src/styles.scss`
+
+**Interfaces:**
+- Consumes: nada.
+- Produces: tokens `--display`, `--ui` (novo), `--mono` e `--tracking-*` em `src/styles.scss`.
+
+Esta tarefa não tem teste unitário — tipografia se verifica olhando. Ela também não depende de nenhuma outra, nem do runner.
+
+Inventário do que existe hoje em `src/styles.scss` (690 linhas): **~70 declarações `var(--mono)` contra ~8 de `var(--display)`**, com tamanhos dominantes de 9px, 10px e 11px. A identidade real do app é JetBrains Mono em caixa alta com tracking largo. Inter Tight aparece em oito lugares e no `html, body` herdado.
+
+O arquivo `cypher-sans.css` de referência não pode ser aplicado literal. Três defeitos:
+
+1. **`html { font-variation-settings: 'wght' 420 }` no bloco de dark mode achataria todos os pesos.** A propriedade é herdada e sobrepõe `font-weight` no mesmo eixo (CSS Fonts 4 §6.9). O app tem 25 declarações `font-weight: 700` e 7 de `800`, e o tema padrão é o escuro.
+2. **O `@import` pede JetBrains Mono `400;600;700`, derrubando o peso 500** usado em `.kicker`, `.eyebrow-accent`, `.field label` e outros. E o import atual do app já está incompleto: carrega só `400;500;600` enquanto há ~15 classes em mono 700 e uma em 800 (`.station .sn`) — tudo sintetizado hoje. Verificado em 2026-08-12: a variable do JetBrains Mono cobre 100–800 (`wght@100..900` devolve HTTP 400).
+3. **O `@font-face` começa com `local('Montserrat')`**, então quem tiver Montserrat estático instalado ganha esse arquivo para a faixa 100–900 inteira e o navegador fabrica os pesos que faltam. A URL também está fixada em `v30`; o Google serve `v31`.
+
+**A decisão: três vozes.** Montserrat vem dos letreiros pintados do bairro Montserrat, em Buenos Aires — é fonte de sinalização, forte onde o painel *declara* e fraca onde ele *explica* (geométrica, larga, x-height menor que a do Inter Tight). Então: Cypher Sans no display, Inter Tight na UI, JetBrains Mono nos dados.
+
+- [ ] **Step 1: Trocar o `@import` e declarar a fonte**
+
+Em `src/styles.scss`, substituir o `@import url('https://fonts.googleapis.com/…')` do topo e o bloco `:root { … }` que vem logo depois — juntos, do `@import` até o `}` que fecha o `:root` — por:
+
+```scss
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Inter+Tight:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
+/* Cypher Sans é o nome de marca da Montserrat variable.
+   Sem local(): um Montserrat estático instalado na máquina venceria o arquivo
+   variable e o navegador fabricaria os pesos que faltassem — fake bold numa
+   manchete de 64px é visível. URL v31, conferida em 2026-08-12. */
+@font-face {
+  font-family: 'Cypher Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --accent: #F4622A;
+  --accent-soft: rgba(244, 98, 42, 0.14);
+  --accent-deep: #C84A18;
+
+  /* Três vozes:
+     display  o painel declara  — manchetes e os números grandes
+     ui       o painel explica  — texto corrido, formulários, chips
+     mono     o painel mede     — labels, badges, IDs, eixos */
+  --display: 'Cypher Sans', 'Montserrat', system-ui, sans-serif;
+  --ui: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Consolas, monospace;
+
+  --tracking-tighter: -0.045em;
+  --tracking-tight: -0.035em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.12em;
+  --tracking-widest: 0.22em;
+}
+```
+
+- [ ] **Step 2: Passar o corpo do app para a voz de UI**
+
+Na linha do `html, body`, trocar `font-family: var(--display)` por `font-family: var(--ui)`. O resto da declaração (incluindo `letter-spacing: -0.005em`, que é do Inter Tight) fica.
+
+Acrescentar logo abaixo, temporariamente:
+
+```scss
+/* CANÁRIO — remover no Step 6.
+   Faz um peso não carregado aparecer errado em vez de ser fabricado em
+   silêncio. Não vai para produção: numa rede de planta com o gstatic
+   bloqueado, degradar visivelmente é pior que degradar de leve. */
+html { font-synthesis-weight: none; }
+```
+
+- [ ] **Step 3: Trocar as três classes que continuam em Inter Tight**
+
+Como `html, body` agora resolve para `--ui`, quem tinha `var(--display)` e pertence à voz de UI precisa dizer isso explicitamente. Em `.sub`, `.dock-label` e `.dock-tooltip`, trocar `var(--display)` por `var(--ui)`.
+
+`.brand`, `.q`, `.summary-card .big` e `.stage-meta-tl/-tr/-bl/-br .big` mantêm `var(--display)` — agora resolvendo para Montserrat.
+
+- [ ] **Step 4: Dar a voz de display aos dois números grandes**
+
+`.kpi .kpi-val` e `.greeting .gtext .hi` herdavam a fonte do `body`, então a mudança do Step 2 os levaria para Inter Tight. São os dois números que o painel declara mais alto (48/800 e 28/800) e pertencem ao display. Acrescentar `font-family: var(--display);` às duas regras.
+
+`.station .sn` **fica em mono**: apesar dos 20px/800, o nome da estação pertence à voz de dados, junto do `.sid` logo acima dele.
+
+- [ ] **Step 5: Retocar os call-sites de display e ligar os números tabulares**
+
+Montserrat, com x-height menor e conjunto mais largo, não aceita os mesmos valores do Inter Tight. Valores de partida, a confirmar no Step 6:
+
+| Classe | Hoje | Partida |
+|---|---|---|
+| `.q` | `64px / 700 / -0.035em` | `66px / 700 / -0.04em` |
+| `.kpi .kpi-val` | `48px / 800 / -0.04em` | `48px / 800 / -0.045em` |
+| `.greeting .gtext .hi` | `28px / 800 / -0.03em` | `28px / 800 / -0.035em` |
+| `.brand` | `22px / 700 / -0.03em` | `22px / 700 / -0.035em` |
+
+E acrescentar ao fim do arquivo:
+
+```scss
+/* Números do painel: tabulares para não dançarem a cada atualização,
+   zero cortado e lining. font-variant-numeric é a propriedade de alto
+   nível — usar font-feature-settings aqui clobberia o que já existe. */
+.kpi .kpi-val,
+.bar-val,
+.rk-row .nm,
+.station .sn,
+.summary-card .big,
+.tkpi .tkpi-val {
+  font-variant-numeric: tabular-nums slashed-zero lining-nums;
+}
+```
+
+- [ ] **Step 6: Passe visual, nos dois temas**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm start
+```
+
+Percorrer, em `theme-dark` e `theme-light`:
+
+1. **Nenhum peso sintetizado.** DevTools › Elements › Computed › Rendered Fonts, sobre `.q` e `.kpi-val`: precisa dizer `Montserrat` com o peso pedido, e **não** "Synthetic bold".
+2. **Todos os pesos de mono carregaram.** `.kicker` continua distinto de `.rail-title` (500 vs 400), e os badges e IDs em 700 deixam de ser borrados.
+3. **Onboarding step 1** (`http://localhost:4200/`) — o herói `.q` não quebra em três linhas nem estoura a coluna de `1fr 1fr`.
+4. **Linha de KPIs** (`/dashboard`) — os quatro cartões cabem, o `48px` não estoura e "94.2 %" alinha na baseline com o denominador.
+5. **Heatmap** (`/heatmap`) — `.station .sn` legível dentro do tile de 76px. É o peso que mais muda: hoje é fabricado, passa a ser o 800 real do JetBrains Mono. Se ficar pesado demais, cair para 700.
+6. **Zero cortado.** Se o Montserrat não implementar a feature `zero`, `slashed-zero` é no-op silencioso e inofensivo — anotar o que se observou.
+
+Ajustar os valores do Step 5 conforme o que a tela mostrar. Depois, **remover o bloco canário do Step 2**.
+
+- [ ] **Step 7: Confirmar a build**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm run build
+```
+
+Esperado: build conclui. O orçamento de `anyComponentStyle` (4kB de aviso) não é afetado — a mudança inteira é em `styles.scss`, que entra no orçamento `initial` de 500kB.
+
+- [ ] **Step 8: Commit**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front
+git add src/styles.scss
+git commit -m "feat: sistema tipografico Cypher Sans em tres vozes"
+```
+
+---
+
+## Task 4: Ambientes, cliente HTTP e tipos do contrato
 
 **Files:**
 - Create: `src/environments/environment.ts`
@@ -135,12 +831,14 @@ git commit -m "chore(test): liga o runner de testes com vitest e jsdom"
 - Modify: `angular.json`
 - Modify: `src/app/app.config.ts`
 - Create: `src/app/shared/incident.models.ts`
+- Create: `src/app/shared/mock/use-mock-data.token.ts`
 - Test: `src/app/shared/incident.models.spec.ts`
 
 **Interfaces:**
 - Consumes: nada.
 - Produces:
-  - `environment: { production: boolean; apiUrl: string }`.
+  - `environment: { production: boolean; apiUrl: string; useMockData: boolean }`.
+  - `USE_MOCK_DATA` — `InjectionToken<boolean>`.
   - `IncidentType = 'FALL_RISK' | 'ERGONOMIC_RISK' | 'ZONE_VIOLATION' | 'EPI_VIOLATION'`.
   - `AlertaNivel`, `AlertaStatus`, `ClosedReason`, `Incident`, `Page<T>`, `Camera`, `Station`, `Summary`.
   - `severityClass(severity: number): 'ok' | 'low' | 'mid' | 'hi'`.
@@ -204,6 +902,8 @@ Criar `src/environments/environment.ts`:
 export const environment = {
   production: true,
   apiUrl: '/api/v1',
+  /** Nunca ligado em produção. O modo de exemplo existe para desenvolver sem backend. */
+  useMockData: false,
 };
 ```
 
@@ -213,7 +913,37 @@ Criar `src/environments/environment.development.ts`:
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080/api/v1',
+  /**
+   * Nasce ligado porque hoje não há backend rodando — é o motivo de a flag
+   * existir. Vira false quando o plano E1-A estiver de pé; a Task 12 faz
+   * essa virada como parte da verificação.
+   */
+  useMockData: true,
 };
+```
+
+Criar `src/app/shared/mock/use-mock-data.token.ts`:
+
+```typescript
+import { InjectionToken } from '@angular/core';
+
+import { environment } from '../../../environments/environment';
+
+/**
+ * Se o app está servindo dados de exemplo.
+ *
+ * Existe como token, e não como leitura direta de `environment`, por dois
+ * motivos: nenhum componente precisa conhecer o módulo de ambiente, e os
+ * testes conseguem forçar os dois modos.
+ *
+ * Atenção: o alvo de teste usa a configuração `development`, onde a flag é
+ * true. Toda spec que renderize o badge de conexão declara
+ * `{ provide: USE_MOCK_DATA, useValue: false }` — mock é opt-in no teste.
+ */
+export const USE_MOCK_DATA = new InjectionToken<boolean>('USE_MOCK_DATA', {
+  providedIn: 'root',
+  factory: () => environment.useMockData,
+});
 ```
 
 Em `angular.json`, dentro de `projects.cypher-front.architect.build.configurations.development`, acrescentar a substituição de arquivo:
@@ -391,20 +1121,20 @@ Esperado: build de produção conclui sem erro.
 ```bash
 cd /home/asaas/projects/challenge/cypher-front
 git add src/environments/ src/app/app.config.ts src/app/shared/incident.models.ts \
-        src/app/shared/incident.models.spec.ts angular.json
+        src/app/shared/incident.models.spec.ts src/app/shared/mock/ angular.json
 git commit -m "feat: ambientes, cliente HTTP e tipos do contrato de incidente"
 ```
 
 ---
 
-## Task 3: Store de incidentes por HTTP
+## Task 5: Store de incidentes por HTTP
 
 **Files:**
 - Create: `src/app/shared/incident.service.ts`
 - Create: `src/app/shared/incident.service.spec.ts`
 
 **Interfaces:**
-- Consumes: `Incident`, `Page` (Task 2).
+- Consumes: `Incident`, `Page` (Task 4).
 - Produces:
   - `IncidentService.incidents: Signal<Incident[]>` — os 100 mais recentes, mais novo primeiro.
   - `IncidentService.loadHistory(): void`.
@@ -638,16 +1368,17 @@ git commit -m "feat: store de incidentes com deduplicacao e limite em memoria"
 
 ---
 
-## Task 4: Push por SSE e estado de conexão
+## Task 6: Push por SSE e estado de conexão
 
 **Files:**
 - Create: `src/app/shared/event-source.factory.ts`
 - Modify: `src/app/shared/incident.service.ts`
 - Modify: `src/app/shared/incident.service.spec.ts`
 - Create: `src/app/shared/connection-badge/connection-badge.component.ts`
+- Create: `src/app/shared/connection-badge/connection-badge.component.spec.ts`
 
 **Interfaces:**
-- Consumes: `IncidentService` (Task 3).
+- Consumes: `IncidentService` (Task 5), `USE_MOCK_DATA` (Task 4).
 - Produces:
   - `EVENT_SOURCE_FACTORY` — `InjectionToken<(url: string) => EventSourceLike>`.
   - `EventSourceLike` — `{ addEventListener, close, onerror, onopen }`.
@@ -917,15 +1648,28 @@ Criar `src/app/shared/connection-badge/connection-badge.component.ts`:
 
 ```typescript
 import { Component, inject } from '@angular/core';
-import { IncidentService } from '../incident.service';
 
+import { IncidentService } from '../incident.service';
+import { USE_MOCK_DATA } from '../mock/use-mock-data.token';
+
+/**
+ * Estado da conexão — ou o aviso de que o painel está mostrando exemplos.
+ *
+ * A constraint do plano diz que dado fabricado precisa estar rotulado em tela.
+ * Este é o lugar onde a pessoa já olha para saber se pode confiar no que está
+ * vendo, então o aviso mora aqui em vez de num banner à parte.
+ */
 @Component({
   selector: 'app-connection-badge',
   template: `
-    <span class="conn" [class.live]="estado() === 'ao vivo'"
-          [class.off]="estado() === 'offline'">
-      <i class="dot"></i>{{ estado() }}
-    </span>
+    @if (exemplo) {
+      <span class="conn mock"><i class="dot"></i>dados de exemplo</span>
+    } @else {
+      <span class="conn" [class.live]="estado() === 'ao vivo'"
+            [class.off]="estado() === 'offline'">
+        <i class="dot"></i>{{ estado() }}
+      </span>
+    }
   `,
   styles: [`
     .conn { display: inline-flex; align-items: center; gap: 6px;
@@ -933,12 +1677,70 @@ import { IncidentService } from '../incident.service';
     .dot  { width: 7px; height: 7px; border-radius: 50%; background: #FFCE38; }
     .live .dot, .conn.live .dot { background: #34D07E; }
     .off  .dot, .conn.off  .dot { background: #EE4242; }
+    .mock { border: 1px dashed #FFCE38; border-radius: 999px;
+            padding: 2px 10px; color: #FFCE38; opacity: 1; }
   `],
 })
 export class ConnectionBadgeComponent {
   private service = inject(IncidentService);
+
+  /** Não muda em runtime: a flag é de build. */
+  readonly exemplo = inject(USE_MOCK_DATA);
+
   estado = this.service.connection;
 }
+```
+
+Criar `src/app/shared/connection-badge/connection-badge.component.spec.ts`:
+
+```typescript
+import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { EVENT_SOURCE_FACTORY, EventSourceLike } from '../event-source.factory';
+import { USE_MOCK_DATA } from '../mock/use-mock-data.token';
+import { ConnectionBadgeComponent } from './connection-badge.component';
+
+const SSE_INERTE: EventSourceLike = {
+  addEventListener: () => { }, close: () => { }, onopen: null, onerror: null,
+};
+
+function configurar(exemplo: boolean) {
+  TestBed.resetTestingModule();
+  TestBed.configureTestingModule({
+    providers: [
+      provideZonelessChangeDetection(),
+      provideHttpClient(withFetch()),
+      provideHttpClientTesting(),
+      { provide: EVENT_SOURCE_FACTORY, useValue: () => SSE_INERTE },
+      { provide: USE_MOCK_DATA, useValue: exemplo },
+    ],
+  });
+  const fixture = TestBed.createComponent(ConnectionBadgeComponent);
+  fixture.detectChanges();
+  return fixture;
+}
+
+describe('ConnectionBadgeComponent', () => {
+  beforeEach(() => TestBed.resetTestingModule());
+
+  it('em modo real, mostra o estado da conexão', () => {
+    const fixture = configurar(false);
+
+    expect(fixture.nativeElement.textContent).toContain('offline');
+    expect(fixture.nativeElement.textContent).not.toContain('dados de exemplo');
+  });
+
+  it('em modo de exemplo, avisa em tela em vez de fingir estar ao vivo', () => {
+    const fixture = configurar(true);
+
+    expect(fixture.nativeElement.textContent).toContain('dados de exemplo');
+    expect(fixture.nativeElement.textContent).not.toContain('ao vivo');
+  });
+});
 ```
 
 - [ ] **Step 4: Rodar o teste e confirmar que passa**
@@ -947,7 +1749,7 @@ export class ConnectionBadgeComponent {
 cd /home/asaas/projects/challenge/cypher-front && npm test -- --watch=false
 ```
 
-Esperado: PASSA, 9 testes novos.
+Esperado: PASSA, 11 testes novos (9 de SSE + 2 do badge).
 
 - [ ] **Step 5: Commit**
 
@@ -955,13 +1757,13 @@ Esperado: PASSA, 9 testes novos.
 cd /home/asaas/projects/challenge/cypher-front
 git add src/app/shared/event-source.factory.ts src/app/shared/incident.service.ts \
         src/app/shared/incident.service.spec.ts \
-        src/app/shared/connection-badge/connection-badge.component.ts
+        src/app/shared/connection-badge/
 git commit -m "feat: push por SSE com estado de conexao visivel e cobertura de lacuna"
 ```
 
 ---
 
-## Task 5: Catálogo e agregados
+## Task 7: Catálogo e agregados
 
 **Files:**
 - Create: `src/app/shared/catalog.service.ts`
@@ -970,7 +1772,7 @@ git commit -m "feat: push por SSE com estado de conexao visivel e cobertura de l
 - Modify: `src/app/shared/incident.service.spec.ts`
 
 **Interfaces:**
-- Consumes: `Camera`, `Station`, `Summary` (Task 2); `IncidentService` (Task 4).
+- Consumes: `Camera`, `Station`, `Summary` (Task 4); `IncidentService` (Task 6).
 - Produces:
   - `CatalogService.cameras: Signal<Camera[]>`, `.stations: Signal<Station[]>`, `.load(): void`.
   - `IncidentService.summary: Signal<Summary | null>`, `.loadSummary(): void`.
@@ -1179,14 +1981,406 @@ git commit -m "feat: catalogo de cameras e estacoes e agregados do dashboard"
 
 ---
 
-## Task 6: Vídeo ao vivo
+## Task 8: Modo de dados de exemplo
+
+**Files:**
+- Create: `src/app/shared/mock/fixtures.ts`
+- Create: `src/app/shared/mock/mock-api.interceptor.ts`
+- Create: `src/app/shared/mock/mock-api.interceptor.spec.ts`
+- Create: `src/app/shared/mock/mock-event-source.ts`
+- Modify: `src/app/app.config.ts`
+
+**Interfaces:**
+- Consumes: `Incident`, `Page`, `Camera`, `Station`, `Summary`, `USE_MOCK_DATA` (Task 4); `EventSourceLike`, `EVENT_SOURCE_FACTORY` (Task 6); os endpoints modelados nas Tasks 5–7.
+- Produces:
+  - `INCIDENTS: Incident[]`, `CAMERAS: Camera[]`, `STATIONS: Station[]`, `resumo(): Summary`, `agoraNaPlanta(): string`.
+  - `mockApiInterceptor: HttpInterceptorFn`.
+  - `mockEventSourceFactory: () => EventSourceLike`.
+
+**A costura é o transporte, não o serviço.** Duas implementações paralelas de `IncidentService` atrás de um token divergiriam: a de mock deixaria de exercitar o `upsert`, a deduplicação por `incidentKey`, o limite de 100 em memória e a cobertura de lacuna por `since`. Trocando o transporte, serviços, componentes e templates ficam idênticos nos dois modos — o modo de exemplo exercita o código real.
+
+Esta tarefa vem só agora, e não junto do `environment`, porque precisa dos contratos das Tasks 5–7 já modelados. Antes disso ela mockaria endpoints que ainda não existem.
+
+- [ ] **Step 1: Escrever o teste que falha**
+
+Criar `src/app/shared/mock/mock-api.interceptor.spec.ts`:
+
+```typescript
+import { HttpClient, provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { firstValueFrom } from 'rxjs';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { environment } from '../../../environments/environment';
+import { Camera, Incident, Page } from '../incident.models';
+import { INCIDENTS } from './fixtures';
+import { mockApiInterceptor } from './mock-api.interceptor';
+
+describe('mockApiInterceptor', () => {
+  let http: HttpClient;
+  let rede: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withFetch(), withInterceptors([mockApiInterceptor])),
+        provideHttpClientTesting(),
+      ],
+    });
+    http = TestBed.inject(HttpClient);
+    rede = TestBed.inject(HttpTestingController);
+  });
+
+  it('responde /incidents sem chegar na rede', async () => {
+    const page = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`));
+
+    expect(page.content.length).toBe(INCIDENTS.length);
+    rede.expectNone(() => true);
+  });
+
+  it('responde /cameras', async () => {
+    const cameras = await firstValueFrom(
+      http.get<Camera[]>(`${environment.apiUrl}/cameras`));
+
+    expect(cameras.length).toBeGreaterThan(0);
+  });
+
+  it('filtra por since, para a rebusca de reconexão ser testável à mão', async () => {
+    const maisAntigo = INCIDENTS.reduce((a, b) => a.detectedAt < b.detectedAt ? a : b);
+
+    const page = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`,
+        { params: { since: maisAntigo.detectedAt } }));
+
+    expect(page.content.length).toBeLessThan(INCIDENTS.length);
+    expect(page.content.every(i => i.detectedAt > maisAntigo.detectedAt)).toBe(true);
+  });
+
+  it('deixa passar o que não conhece', () => {
+    http.get(`${environment.apiUrl}/desconhecido`).subscribe();
+
+    rede.expectOne(`${environment.apiUrl}/desconhecido`);
+  });
+});
+```
+
+- [ ] **Step 2: Rodar o teste e confirmar que falha**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm test -- --watch=false
+```
+
+Esperado: FALHA — não resolve `./fixtures` nem `./mock-api.interceptor`.
+
+- [ ] **Step 3: Escrever as fixtures**
+
+Criar `src/app/shared/mock/fixtures.ts`:
+
+```typescript
+import { Camera, Incident, Station, Summary } from '../incident.models';
+
+/**
+ * Dados de exemplo do modo `useMockData`.
+ *
+ * Os instantes são de hoje para que os agregados façam sentido, e trazem o
+ * offset -03:00 como o backend real traz — `formatTime` lê a hora do próprio
+ * instante, então usar Z aqui mostraria o horário errado na tela.
+ */
+
+/** Agora, escrito no fuso da planta. */
+export function agoraNaPlanta(): string {
+  const d = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  return `${d.toISOString().slice(0, 19)}.000-03:00`;
+}
+
+function hoje(hhmm: string): string {
+  const d = new Date();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mes}-${dia}T${hhmm}:00.000-03:00`;
+}
+
+type Molde = Omit<Incident,
+  'id' | 'incidentKey' | 'cameraId' | 'type' | 'severity' | 'nivel' | 'descricao' | 'detectedAt'>;
+
+const MOLDE: Molde = {
+  runId: 'run-exemplo',
+  trackId: 1,
+  reason: 'exemplo',
+  postureCategory: 'neutral',
+  rebaScore: 3,
+  actionLevel: 1,
+  zoneName: null,
+  zoneStatus: 'outside',
+  epiPresent: [],
+  epiMissing: [],
+  snapshotUrl: null,
+  endedAt: null,
+  durationSeconds: null,
+  peakSeverity: null,
+  closedReason: null,
+  status: 'PENDENTE',
+};
+
+export const CAMERAS: Camera[] = [
+  { id: 'CAM-01', nome: 'Esteira · frontal', estacaoId: 'EST-01', streamUrl: null },
+  { id: 'CAM-02', nome: 'Prensa · lateral', estacaoId: 'EST-02', streamUrl: null },
+  { id: 'CAM-03', nome: 'Expedição · alto', estacaoId: 'EST-03', streamUrl: null },
+];
+
+export const STATIONS: Station[] = [
+  { id: 'EST-01', nome: 'Esteira de montagem', setor: 'montagem', ativa: true, cameras: [] },
+  { id: 'EST-02', nome: 'Prensa hidráulica', setor: 'estamparia', ativa: true, cameras: [] },
+  { id: 'EST-03', nome: 'Doca de expedição', setor: 'logística', ativa: true, cameras: [] },
+];
+
+export const INCIDENTS: Incident[] = [
+  { ...MOLDE, id: 5, incidentKey: 'exemplo-5', cameraId: 'CAM-02', type: 'FALL_RISK',
+    severity: 4, nivel: 'ALTO', descricao: 'Queda detectada', detectedAt: hoje('14:31'),
+    reason: 'fallen_sustained', postureCategory: 'immediate_risk', rebaScore: 11,
+    actionLevel: 4, peakSeverity: 4 },
+  { ...MOLDE, id: 4, incidentKey: 'exemplo-4', cameraId: 'CAM-01', type: 'EPI_VIOLATION',
+    severity: 3, nivel: 'ALTO', descricao: 'Capacete ausente', detectedAt: hoje('13:45'),
+    epiMissing: ['HELMET'], epiPresent: ['VEST'], peakSeverity: 3 },
+  { ...MOLDE, id: 3, incidentKey: 'exemplo-3', cameraId: 'CAM-03', type: 'ZONE_VIOLATION',
+    severity: 2, nivel: 'MEDIO', descricao: 'Entrada em zona de risco',
+    detectedAt: hoje('12:10'), zoneName: 'Zona 3 · empilhadeiras', zoneStatus: 'inside',
+    status: 'REVISADO', peakSeverity: 2 },
+  { ...MOLDE, id: 2, incidentKey: 'exemplo-2', cameraId: 'CAM-01', type: 'ERGONOMIC_RISK',
+    severity: 1, nivel: 'BAIXO', descricao: 'Postura inadequada sustentada',
+    detectedAt: hoje('10:22'), postureCategory: 'bent_over', rebaScore: 7,
+    actionLevel: 2, durationSeconds: 42, endedAt: hoje('10:23'),
+    closedReason: 'STATE_EXIT', status: 'RESOLVIDO', peakSeverity: 1 },
+  { ...MOLDE, id: 1, incidentKey: 'exemplo-1', cameraId: 'CAM-02', type: 'EPI_VIOLATION',
+    severity: 2, nivel: 'MEDIO', descricao: 'Luvas ausentes', detectedAt: hoje('08:05'),
+    epiMissing: ['GLOVES'], status: 'RESOLVIDO', peakSeverity: 2 },
+];
+
+/** Calculado das fixtures, para os KPIs não contradizerem a lista de incidentes. */
+export function resumo(): Summary {
+  const estacaoDe = (cameraId: string) =>
+    CAMERAS.find(c => c.id === cameraId)?.estacaoId ?? null;
+
+  return {
+    incidentesHoje: INCIDENTS.length,
+    incidentesOntem: 4,
+    criticosHoje: INCIDENTS.filter(i => i.severity >= 3).length,
+    pendentes: INCIDENTS.filter(i => i.status === 'PENDENTE').length,
+    heatmap: STATIONS.map(s => ({
+      estacaoId: s.id,
+      nome: s.nome,
+      setor: s.setor,
+      incidentes: INCIDENTS.filter(i => estacaoDe(i.cameraId) === s.id).length,
+    })),
+    ultimosSeteDias: Array.from({ length: 7 }, (_, k) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - k));
+      const anteriores = [8, 5, 12, 4, 9, 3];
+      return {
+        dia: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+        incidentes: k === 6 ? INCIDENTS.length : anteriores[k],
+      };
+    }),
+  };
+}
+```
+
+- [ ] **Step 4: Escrever o interceptor**
+
+Criar `src/app/shared/mock/mock-api.interceptor.ts`:
+
+```typescript
+import { HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse } from '@angular/common/http';
+import { Observable, delay, of } from 'rxjs';
+
+import { environment } from '../../../environments/environment';
+import { CAMERAS, INCIDENTS, STATIONS, resumo } from './fixtures';
+
+/** Atraso curto, para que os estados de carregamento sejam exercitados. */
+const ATRASO_MS = 150;
+
+/**
+ * Responde os endpoints do painel a partir de fixtures, sem rede.
+ *
+ * Trocar o transporte em vez do serviço é o que mantém `IncidentService`,
+ * componentes e templates idênticos nos dois modos: o modo de exemplo
+ * exercita o código de verdade, inclusive deduplicação e limite em memória.
+ */
+export const mockApiInterceptor: HttpInterceptorFn = (
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+): Observable<HttpEvent<unknown>> => {
+  const corpo = responder(req);
+  if (corpo === undefined) {
+    return next(req);
+  }
+  return of(new HttpResponse({ status: 200, body: corpo })).pipe(delay(ATRASO_MS));
+};
+
+function responder(req: HttpRequest<unknown>): unknown | undefined {
+  const base = environment.apiUrl;
+
+  if (req.method === 'GET' && req.url === `${base}/incidents`) {
+    // Comparação de string funciona porque todas as fixtures trazem o mesmo
+    // offset -03:00; com offsets misturados isto precisaria de Date.
+    const since = req.params.get('since');
+    const lista = since ? INCIDENTS.filter(i => i.detectedAt > since) : INCIDENTS;
+    return {
+      content: lista, totalElements: lista.length,
+      totalPages: 1, number: 0, size: lista.length,
+    };
+  }
+
+  if (req.method === 'GET' && req.url === `${base}/summary`) return resumo();
+  if (req.method === 'GET' && req.url === `${base}/cameras`) return CAMERAS;
+  if (req.method === 'GET' && req.url === `${base}/stations`) return STATIONS;
+
+  const prefixo = `${base}/incidents/`;
+  const sufixo = '/status';
+  if (req.method === 'PUT' && req.url.startsWith(prefixo) && req.url.endsWith(sufixo)) {
+    const id = Number(req.url.slice(prefixo.length, -sufixo.length));
+    const alvo = INCIDENTS.find(i => i.id === id);
+    return alvo ? { ...alvo, status: (req.body as { status: string }).status } : undefined;
+  }
+
+  return undefined;
+}
+```
+
+- [ ] **Step 5: Escrever o `EventSource` falso**
+
+Criar `src/app/shared/mock/mock-event-source.ts`:
+
+```typescript
+import { EventSourceLike } from '../event-source.factory';
+import { Incident } from '../incident.models';
+import { INCIDENTS, agoraNaPlanta } from './fixtures';
+
+const INTERVALO_MS = 8000;
+
+/**
+ * EventSource falso.
+ *
+ * Emite um incidente novo de tempos em tempos para que o push por SSE seja
+ * visível sem backend. Implementa o mesmo `EventSourceLike` que a Task 6
+ * definiu, então nada muda no `IncidentService`.
+ */
+export class MockEventSource implements EventSourceLike {
+  onopen: ((event: Event) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+
+  private listeners = new Map<string, (event: MessageEvent) => void>();
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private contador = 0;
+
+  constructor() {
+    // No próximo tick: quem nos criou ainda está registrando os listeners.
+    setTimeout(() => {
+      this.onopen?.(new Event('open'));
+      this.timer = setInterval(() => this.emitir(), INTERVALO_MS);
+    });
+  }
+
+  addEventListener(type: string, listener: (event: MessageEvent) => void): void {
+    this.listeners.set(type, listener);
+  }
+
+  close(): void {
+    if (this.timer !== null) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  private emitir(): void {
+    this.contador++;
+    const molde = INCIDENTS[this.contador % INCIDENTS.length];
+    const incidente: Incident = {
+      ...molde,
+      id: 1000 + this.contador,
+      incidentKey: `exemplo-vivo-${this.contador}`,
+      detectedAt: agoraNaPlanta(),
+      status: 'PENDENTE',
+    };
+    this.listeners.get('incident')?.({ data: JSON.stringify(incidente) } as MessageEvent);
+  }
+}
+
+export const mockEventSourceFactory = (): EventSourceLike => new MockEventSource();
+```
+
+- [ ] **Step 6: Ligar os dois no `app.config.ts`**
+
+Substituir `src/app/app.config.ts`:
+
+```typescript
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
+
+import { environment } from '../environments/environment';
+import { routes } from './app.routes';
+import { EVENT_SOURCE_FACTORY } from './shared/event-source.factory';
+import { mockApiInterceptor } from './shared/mock/mock-api.interceptor';
+import { mockEventSourceFactory } from './shared/mock/mock-event-source';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes),
+    provideHttpClient(
+      withFetch(),
+      withInterceptors(environment.useMockData ? [mockApiInterceptor] : []),
+    ),
+    ...(environment.useMockData
+      ? [{ provide: EVENT_SOURCE_FACTORY, useValue: mockEventSourceFactory }]
+      : []),
+  ],
+};
+```
+
+- [ ] **Step 7: Rodar o teste e confirmar que passa**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm test -- --watch=false
+```
+
+Esperado: PASSA, 4 testes novos, e **a suíte inteira continua verde**. Se alguma spec de componente começar a falhar mostrando "dados de exemplo", falta o `{ provide: USE_MOCK_DATA, useValue: false }` — o alvo de teste usa a configuração `development`, onde a flag é `true`.
+
+- [ ] **Step 8: Conferir na mão**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && npm start
+```
+
+Com `useMockData: true` em `environment.development.ts`, em `http://localhost:4200/dashboard`:
+
+1. O badge de conexão diz **"dados de exemplo"**, em âmbar tracejado — não "ao vivo".
+2. A lista de recentes traz os cinco incidentes de exemplo, com as horas do dia de hoje.
+3. Um incidente novo aparece no topo a cada ~8 s, sem refresh.
+4. Os KPIs batem com a lista: "Incidentes hoje" cresce junto.
+
+- [ ] **Step 9: Commit**
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front
+git add src/app/shared/mock/ src/app/app.config.ts
+git commit -m "feat: modo de dados de exemplo por interceptor e EventSource falso"
+```
+
+---
+
+## Task 9: Vídeo ao vivo
 
 **Files:**
 - Create: `src/app/shared/live-feed/live-feed.component.ts`
 - Create: `src/app/shared/live-feed/live-feed.component.spec.ts`
 
 **Interfaces:**
-- Consumes: `Camera` (Task 2), `CatalogService` (Task 5).
+- Consumes: `Camera` (Task 4), `CatalogService` (Task 7).
 - Produces: `LiveFeedComponent` — seletor `app-live-feed`, input `camera: Camera | null`.
 
 O protocolo MJPEG dispensa qualquer biblioteca de player: um `<img [src]>` basta. O tratamento de `(error)` existe porque a câmera pode estar fora do ar e a tela precisa dizer isso, não mostrar um quadrado quebrado.
@@ -1352,7 +2546,7 @@ git commit -m "feat: componente de video ao vivo por MJPEG com estado indisponiv
 
 ---
 
-## Task 7: Dashboard sem dados fabricados
+## Task 10: Dashboard sem dados fabricados
 
 **Files:**
 - Modify: `src/app/dashboard/dashboard.component.ts`
@@ -1360,7 +2554,7 @@ git commit -m "feat: componente de video ao vivo por MJPEG com estado indisponiv
 - Create: `src/app/dashboard/dashboard.component.spec.ts`
 
 **Interfaces:**
-- Consumes: `IncidentService` (Tasks 3–5), `CatalogService` (Task 5), `ConnectionBadgeComponent` (Task 4), `LiveFeedComponent` (Task 6).
+- Consumes: `IncidentService` (Tasks 5–7), `CatalogService` (Task 7), `ConnectionBadgeComponent` (Task 6), `LiveFeedComponent` (Task 9), `USE_MOCK_DATA` (Task 4).
 - Produces: `DashboardComponent` sem nenhuma constante de dados.
 
 Hoje `KPI_DATA`, `ALERTS`, `BAR_DATA` e `HEAT_DATA` são constantes exportadas do componente. Todas saem.
@@ -1380,6 +2574,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from '../shared/event-source.factory';
 import { IncidentService } from '../shared/incident.service';
+import { USE_MOCK_DATA } from '../shared/mock/use-mock-data.token';
 import { DashboardComponent } from './dashboard.component';
 
 const SSE_INERTE: EventSourceLike = {
@@ -1400,6 +2595,9 @@ describe('DashboardComponent', () => {
         provideHttpClient(withFetch()),
         provideHttpClientTesting(),
         { provide: EVENT_SOURCE_FACTORY, useValue: () => SSE_INERTE },
+        // O alvo de teste usa a configuração development, onde useMockData é
+        // true. Sem esta linha o badge diria "dados de exemplo".
+        { provide: USE_MOCK_DATA, useValue: false },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -1664,7 +2862,7 @@ git commit -m "feat: dashboard alimentado por incidentes reais em vez de constan
 
 ---
 
-## Task 8: Heatmap por estação
+## Task 11: Heatmap por estação
 
 **Files:**
 - Modify: `src/app/heatmap/heatmap.component.ts`
@@ -1672,7 +2870,7 @@ git commit -m "feat: dashboard alimentado por incidentes reais em vez de constan
 - Create: `src/app/heatmap/heatmap.component.spec.ts`
 
 **Interfaces:**
-- Consumes: `IncidentService.summary` (Task 5), `CatalogService` (Task 5).
+- Consumes: `IncidentService.summary` (Task 7), `CatalogService` (Task 7).
 - Produces: `HeatmapComponent` com `celulas: Signal<StationCell[]>`.
 
 A célula do heatmap é a **estação**, agregando os incidentes de todas as câmeras que a cobrem (spec §6.5). As estações `EST-01`…`EST-17` do mock não eram ficção do dashboard — eram uma entidade desenhada e nunca modelada.
@@ -1851,13 +3049,34 @@ git commit -m "feat: heatmap com a estacao como celula, alimentado pelos agregad
 
 ---
 
-## Task 9: Verificação de ponta a ponta
+## Task 12: Verificação de ponta a ponta
 
-**Files:** nenhuma alteração de código. Esta tarefa é verificação.
+**Files:**
+- Modify: `src/environments/environment.development.ts`
+- Create: `docs/e1c-verificacao.md`
 
 **Interfaces:**
 - Consumes: planos E1-A (Tasks 1–13) e E1-B (Tasks 1–8) concluídos.
 - Produces: confirmação de que a funcionalidade vital funciona ponta a ponta.
+
+- [ ] **Step 0: Desligar o modo de exemplo**
+
+Até aqui `environment.development.ts` está com `useMockData: true`. A verificação é contra a API real, então:
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front
+sed -i 's/useMockData: true/useMockData: false/' src/environments/environment.development.ts
+git add src/environments/environment.development.ts
+git commit -m "chore: desliga o modo de dados de exemplo agora que a API responde"
+```
+
+Confirmar o resultado antes de seguir:
+
+```bash
+grep useMockData src/environments/environment.development.ts
+```
+
+Esperado: `useMockData: false,`.
 
 - [ ] **Step 1: Subir os três lados**
 
@@ -1919,6 +3138,14 @@ git commit -m "docs: resultado da verificacao ponta a ponta de E1"
 
 E1 está completa: o pipeline detecta, a API persiste e distribui, o dashboard mostra ao vivo, e o webhook entrega a assinantes externos.
 
+Além disso, três coisas que não eram de E1 e ficaram resolvidas no caminho:
+
+- **O tema tem um dono só.** `ThemeService` é o único que escreve no `<body>`, `cypher.theme` é a única fonte de verdade, e o toggle vive na topbar do dashboard — onde a pessoa já tentava clicar. A engrenagem faz o que o ícone diz.
+- **Dá para rodar o front sem backend.** `useMockData` liga um interceptor e um `EventSource` falso; serviços e componentes não sabem a diferença. Quando está ligado, o badge diz "dados de exemplo" — dado fabricado nunca passa por real.
+- **O app tem sistema tipográfico.** Cypher Sans declara, Inter Tight explica, JetBrains Mono mede. E os pesos 700/800 de mono, que eram sintetizados desde sempre, passam a ser os de verdade.
+
 O que continua mockado e **precisa estar rotulado em tela como dado de exemplo**, se sobreviver: qualquer painel do onboarding que ainda use `OPTIONS` e `ROLE_PRESETS` fixos — esses são catálogo de EPIs, não dados operacionais, e viram cadastro real em E2.
+
+Fica registrado como dívida conhecida, fora do escopo deste plano: `ConfigService` e `OnboardingService` ainda escrevem `--accent` cada um por conta própria. Hoje não produz bug, porque os `effect` só reagem às próprias fontes e o wizard não está montado no dashboard — mas é o mesmo padrão do problema do tema. Se o accent ganhar um controle fora do wizard, vira o mesmo trabalho da Task 2.
 
 Próximo: E2 (cadastro de estações e câmeras, hardening de RTSP).
