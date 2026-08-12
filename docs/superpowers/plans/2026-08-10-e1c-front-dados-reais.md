@@ -645,7 +645,15 @@ Esperado: PASSA, 13 testes novos.
 cd /home/asaas/projects/challenge/cypher-front && npm run build
 ```
 
-Esperado: build conclui. Se o compilador reclamar de `theme` em algum template ou componente que este plano não listou, é uma referência remanescente ao campo removido — trocar por `themeService.theme()`.
+Esperado: build conclui.
+
+Confirmar que não sobrou referência ao campo removido:
+
+```bash
+cd /home/asaas/projects/challenge/cypher-front && grep -rn "\.theme" src/app
+```
+
+Esperado: só os acessos ao **serviço** (`themeService.theme`, `theme()`), nenhum a `data().theme` ou `cfg.theme`. Os três lugares que liam o campo eram `step1-identity.component.html` (linhas do toggle), `step4-confirm.component.html` (linha do accent) e `onboarding.service.ts` (o objeto de `persistConfig`) — todos tratados nos Steps 5 a 7. Se aparecer um quarto, é um template que este plano não listou: trocar por `themeService.theme()` do mesmo jeito.
 
 - [ ] **Step 11: Conferir na mão**
 
