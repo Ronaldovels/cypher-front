@@ -1,13 +1,39 @@
 /* Cypher · Onboarding — global styles */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Inter+Tight:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
+/* Cypher Sans é o nome de marca da Montserrat variable.
+   Sem local(): um Montserrat estático instalado na máquina venceria o arquivo
+   variable e o navegador fabricaria os pesos que faltassem — fake bold numa
+   manchete de 64px é visível. URL v31, conferida em 2026-08-12. */
+@font-face {
+  font-family: 'Cypher Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 :root {
   --accent: #F4622A;
   --accent-soft: rgba(244, 98, 42, 0.14);
   --accent-deep: #C84A18;
-  --display: 'Inter Tight', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Três vozes:
+     display  o painel declara  — manchetes e os números grandes
+     ui       o painel explica  — texto corrido, formulários, chips
+     mono     o painel mede     — labels, badges, IDs, eixos */
+  --display: 'Cypher Sans', 'Montserrat', system-ui, sans-serif;
+  --ui: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Consolas, monospace;
+
+  --tracking-tighter: -0.045em;
+  --tracking-tight: -0.035em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.12em;
+  --tracking-widest: 0.22em;
 }
 
 .theme-dark {
@@ -24,7 +50,7 @@
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--display); -webkit-font-smoothing: antialiased; letter-spacing: -0.005em; transition: background 0.3s ease, color 0.3s ease; }
+html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--ui); -webkit-font-smoothing: antialiased; letter-spacing: -0.005em; transition: background 0.3s ease, color 0.3s ease; }
 button { font-family: inherit; color: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; color: inherit; }
 
@@ -35,7 +61,7 @@ input, select, textarea { font-family: inherit; color: inherit; }
 .theme-light .topbar { background: rgba(255,255,255,0.4); }
 .theme-dark .topbar  { background: rgba(13,15,20,0.6); }
 
-.brand { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.03em; }
+.brand { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.035em; }
 .brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .brand-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.14em; padding-left: 16px; margin-left: 4px; border-left: 1px solid var(--line-2); }
 
@@ -56,9 +82,9 @@ input, select, textarea { font-family: inherit; color: inherit; }
 .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); font-weight: 500; }
 .eyebrow-accent { display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); font-weight: 500; }
 .eyebrow-accent::before { content: ''; width: 24px; height: 1px; background: var(--accent); }
-.q { font-family: var(--display); font-weight: 700; font-size: 64px; line-height: 1.0; letter-spacing: -0.035em; margin: 18px 0 14px; text-wrap: balance; }
+.q { font-family: var(--display); font-weight: 700; font-size: 66px; line-height: 1.0; letter-spacing: -0.04em; margin: 18px 0 14px; text-wrap: balance; }
 .q em { font-style: normal; color: var(--accent); }
-.sub { font-family: var(--display); font-weight: 400; font-size: 18px; line-height: 1.45; color: var(--ink-2); max-width: 640px; }
+.sub { font-family: var(--ui); font-weight: 400; font-size: 18px; line-height: 1.45; color: var(--ink-2); max-width: 640px; }
 
 /* ─── FORM CONTROLS ─── */
 .field { display: flex; flex-direction: column; gap: 8px; }
@@ -323,7 +349,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dcontent { padding:28px 40px 40px 40px; display:flex; flex-direction:column; gap:24px; max-width:1600px; margin:0 auto; width:100%; }
 .greeting { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; }
 .greeting .gtext { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
-.greeting .gtext .hi { font-size:28px; font-weight:800; letter-spacing:-0.03em; }
+.greeting .gtext .hi { font-family: var(--display); font-size:28px; font-weight:800; letter-spacing:-0.035em; }
 .greeting .gtext .hi em { font-style:normal; color:var(--accent); }
 .greeting .gtext .sub { font-size:15px; font-weight:500; color:var(--ink-2); letter-spacing:-0.01em; }
 .greeting .gstatus { display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; color:var(--ink-mute); letter-spacing:0.04em; padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface); }
@@ -345,7 +371,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .kpi .kpi-row1 { display:flex; align-items:flex-start; justify-content:space-between; }
 .kpi .kpi-label { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-ghost); }
 .kpi .kpi-ico { font-size:18px; opacity:0.28; color:var(--kpi-color,var(--accent)); }
-.kpi .kpi-val { font-size:48px; font-weight:800; line-height:1; letter-spacing:-0.04em; color:var(--kpi-color,var(--accent)); font-variant-numeric:tabular-nums; display:flex; align-items:baseline; gap:12px; }
+.kpi .kpi-val { font-family: var(--display); font-size:48px; font-weight:800; line-height:1; letter-spacing:-0.045em; color:var(--kpi-color,var(--accent)); font-variant-numeric:tabular-nums; display:flex; align-items:baseline; gap:12px; }
 .kpi .kpi-val .denom { font-size:22px; color:var(--ink-mute); font-weight:700; }
 .kpi .kpi-sub { font-size:11px; font-weight:500; color:var(--ink-mute); letter-spacing:-0.005em; display:flex; align-items:center; gap:6px; margin-top:8px; }
 .kpi .kpi-sub.up { color:#EE4242; }
@@ -460,7 +486,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dock-item { position:relative; display:flex; flex-direction:column; align-items:center; gap:5px; width:52px; border:0; background:transparent; padding:0; cursor:pointer; transition:transform .18s cubic-bezier(.3,.1,.3,1); text-decoration:none; }
 .dock-icon { position:relative; width:40px; height:40px; border-radius:11px; background:var(--surface-2); border:1px solid transparent; color:var(--ink-ghost); display:flex; align-items:center; justify-content:center; transition:all .18s cubic-bezier(.2,0,0,1); }
 .dock-icon svg { width:20px; height:20px; stroke-width:1.5; transition:stroke-width .12s; }
-.dock-label { font-family:var(--display); font-size:9px; font-weight:500; letter-spacing:0.02em; color:var(--ink-ghost); white-space:nowrap; transition:color .15s; }
+.dock-label { font-family:var(--ui); font-size:9px; font-weight:500; letter-spacing:0.02em; color:var(--ink-ghost); white-space:nowrap; transition:color .15s; }
 .dock-item:hover .dock-icon { background:var(--surface-hi); border-color:var(--line-2); color:var(--ink-2); transform:scale(1.22) translateY(-6px); box-shadow:0 12px 20px rgba(0,0,0,0.4); }
 .dock-item:hover .dock-label { color:var(--ink-mute); }
 .dock-wrap:not(.vertical) .dock-item:hover + .dock-item .dock-icon,
@@ -469,7 +495,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dock-item.active .dock-icon svg { stroke-width:1.8; }
 .dock-item.active .dock-label { color:var(--accent); font-weight:600; }
 .dock-item.active::after { content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--accent); box-shadow:0 0 6px var(--accent); }
-.dock-tooltip { position:absolute; bottom:calc(100% + 14px); left:50%; transform:translateX(-50%) translateY(4px) scale(0.95); background:rgba(22,26,34,0.94); backdrop-filter:blur(8px); border:1px solid var(--line-2); color:var(--ink); font-family:var(--display); font-size:11px; font-weight:500; letter-spacing:-0.005em; padding:4px 10px; border-radius:8px; white-space:nowrap; opacity:0; pointer-events:none; transition:all .18s cubic-bezier(.3,.1,.3,1); box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:2; }
+.dock-tooltip { position:absolute; bottom:calc(100% + 14px); left:50%; transform:translateX(-50%) translateY(4px) scale(0.95); background:rgba(22,26,34,0.94); backdrop-filter:blur(8px); border:1px solid var(--line-2); color:var(--ink); font-family:var(--ui); font-size:11px; font-weight:500; letter-spacing:-0.005em; padding:4px 10px; border-radius:8px; white-space:nowrap; opacity:0; pointer-events:none; transition:all .18s cubic-bezier(.3,.1,.3,1); box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:2; }
 .dock-tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:4px solid transparent; border-top-color:rgba(22,26,34,0.94); }
 .dock-item:hover .dock-tooltip { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
 .dock-wrap.dragging .dock-tooltip { opacity:0 !important; }
@@ -687,4 +713,16 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
   .hp-content { grid-template-columns:1fr; padding:20px; }
   .filterbar   { padding:0 20px; gap:8px; }
   .zone-grid   { grid-template-columns:repeat(4,1fr) !important; }
+}
+
+/* Números do painel: tabulares para não dançarem a cada atualização,
+   zero cortado e lining. font-variant-numeric é a propriedade de alto
+   nível — usar font-feature-settings aqui clobberia o que já existe. */
+.kpi .kpi-val,
+.bar-val,
+.rk-row .nm,
+.station .sn,
+.summary-card .big,
+.tkpi .tkpi-val {
+  font-variant-numeric: tabular-nums slashed-zero lining-nums;
 }
