@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { OnboardingService } from '../../onboarding.service';
+import { ThemeService } from '../../../shared/theme.service';
 import { SECTORS, PRESET_COLORS, cnpjMask } from '../../models/onboarding.models';
 
 @Component({
@@ -9,6 +10,11 @@ import { SECTORS, PRESET_COLORS, cnpjMask } from '../../models/onboarding.models
 })
 export class Step1IdentityComponent {
   state = inject(OnboardingService);
+  private themeService = inject(ThemeService);
+
+  /** Lido direto do serviço: uma cópia em data() ficaria velha. */
+  theme = this.themeService.theme;
+
   sectors = SECTORS;
   presetColors = PRESET_COLORS;
 
@@ -22,6 +28,6 @@ export class Step1IdentityComponent {
     const url = URL.createObjectURL(f);
     this.state.updateData({ logoUrl: url, logoName: f.name });
   }
-  setTheme(t: 'dark' | 'light') { this.state.updateData({ theme: t }); }
+  setTheme(t: 'dark' | 'light') { this.themeService.set(t); }
   setAccent(c: string) { this.state.updateData({ accent: c }); }
 }

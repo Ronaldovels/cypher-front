@@ -1,5 +1,6 @@
 import { Component, inject, computed } from '@angular/core';
 import { OnboardingService } from '../../onboarding.service';
+import { ThemeService } from '../../../shared/theme.service';
 import { EPI_LIST } from '../../models/onboarding.models';
 
 @Component({
@@ -8,6 +9,7 @@ import { EPI_LIST } from '../../models/onboarding.models';
 })
 export class Step4ConfirmComponent {
   state = inject(OnboardingService);
+  theme = inject(ThemeService).theme;
 
   selected = computed(() => EPI_LIST.filter(e => this.state.data().epis.includes(e.key)));
   casCount = computed(() => Object.values(this.state.data().cas).filter(v => v && v.ca).length);

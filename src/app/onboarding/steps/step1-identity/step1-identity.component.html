@@ -80,8 +80,8 @@
   <div class="field" style="grid-column:1/-1">
     <label>Tema da plataforma</label>
     <div class="theme-toggle">
-      <button [class.on]="state.data().theme === 'light'" (click)="setTheme('light')">Claro</button>
-      <button [class.on]="state.data().theme === 'dark'" (click)="setTheme('dark')">Escuro</button>
+      <button [class.on]="theme() === 'light'" (click)="setTheme('light')">Claro</button>
+      <button [class.on]="theme() === 'dark'" (click)="setTheme('dark')">Escuro</button>
     </div>
   </div>
 </div>

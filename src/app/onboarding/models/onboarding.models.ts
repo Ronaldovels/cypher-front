@@ -5,7 +5,6 @@ export interface OnboardingData {
   logoUrl: string;
   logoName: string;
   accent: string;
-  theme: 'dark' | 'light';
   epis: string[];
   cas: Record<string, CaEntry>;
   picks: Record<string, string>;
@@ -133,7 +132,7 @@ export const ROLE_PRESETS: RolePreset[] = [
 
 export const DEFAULT_DATA: OnboardingData = {
   company: '', cnpj: '', sector: '', logoUrl: '', logoName: '',
-  accent: '#F4622A', theme: 'dark', epis: [], cas: {}, picks: {},
+  accent: '#F4622A', epis: [], cas: {}, picks: {},
 };
 
 export function deriveEpis(picks: Record<string, string>): string[] {
