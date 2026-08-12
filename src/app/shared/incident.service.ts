@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 
 import { environment } from '../../environments/environment';
-import { AlertaStatus, Incident, Page } from './incident.models';
+import { EVENT_SOURCE_FACTORY, EventSourceLike } from './event-source.factory';
+import { AlertaStatus, ConnectionState, Incident, Page } from './incident.models';
 
 /**
  * Store de incidentes.
@@ -21,6 +22,18 @@ export class IncidentService {
 
   /** Instante do mais recente conhecido, usado para cobrir a lacuna do SSE. */
   readonly lastSeenAt = computed(() => this._incidents()[0]?.detectedAt ?? null);
+
+  private eventSourceFactory = inject(EVENT_SOURCE_FACTORY);
+  private stream: EventSourceLike | null = null;
+  private readonly _connection = signal<ConnectionState>('offline');
+
+  /**
+   * Estado da conexão, renderizado como badge.
+   *
+   * Num painel de segurança, silêncio não pode parecer calmaria: com o SSE
+   * caído a tela fica idêntica a "nenhum incidente hoje".
+   */
+  readonly connection = this._connection.asReadonly();
 
   loadHistory(since?: string): void {
     const params: Record<string, string> = { size: String(IncidentService.MAX_IN_MEMORY) };
@@ -57,5 +70,42 @@ export class IncidentService {
         next: atualizado => this.upsert(atualizado),
         error: () => { /* mantém o estado anterior; nada é inventado na tela */ },
       });
+  }
+
+  connect(): void {
+    if (this.stream) {
+      return;
+    }
+    this._connection.set('conectando');
+    const stream = this.eventSourceFactory(`${environment.apiUrl}/incidents/stream`);
+
+    stream.onopen = () => {
+      const estavaOffline = this._connection() === 'offline';
+      this._connection.set('ao vivo');
+      if (estavaOffline) {
+        // Reconexão: cobre o que aconteceu enquanto a conexão esteve fora.
+        this.loadHistory(this.lastSeenAt() ?? undefined);
+      }
+    };
+    stream.onerror = () => this._connection.set('offline');
+
+    stream.addEventListener('incident', event => this.receber(event));
+    stream.addEventListener('incident-changed', event => this.receber(event));
+
+    this.stream = stream;
+  }
+
+  disconnect(): void {
+    this.stream?.close();
+    this.stream = null;
+    this._connection.set('offline');
+  }
+
+  private receber(event: MessageEvent): void {
+    try {
+      this.upsert(JSON.parse(event.data) as Incident);
+    } catch {
+      // Payload malformado não pode derrubar o painel.
+    }
   }
 }
