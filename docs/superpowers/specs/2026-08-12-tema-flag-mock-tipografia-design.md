@@ -58,23 +58,33 @@ Regras:
 
 - Aplica o tema com `classList.remove('theme-dark', 'theme-light')` + `classList.add(...)`, nunca por
   atribuição de `className`. Outras classes no `<body>` sobrevivem.
-- **Persiste em `set()`**, não ao concluir o wizard. Chave nova: `cypher.theme`.
+- **Persiste em `set()`**, não ao concluir o wizard. Chave: `cypher.theme`.
 - **Hidratação, nesta ordem:** `localStorage['cypher.theme']` → `localStorage['cypher.config'].theme`
-  (legado, de quem já concluiu o onboarding antes desta mudança) → `'dark'`. Sem o degrau do meio,
-  quem já usava o app perderia a escolha na primeira carga depois do deploy.
+  (legado, de quem concluiu o onboarding antes desta mudança) → `'dark'`. Sem o degrau do meio, quem
+  já usava o app perderia a escolha na primeira carga depois do deploy. É migração de leitura, só:
+  ninguém volta a escrever em `cypher.config.theme`.
 - Sem dependências. Isso mantém `ConfigService` e `OnboardingService` livres para injetá-lo sem ciclo.
 
-**`ConfigService`** deixa de tocar no `<body>`. Continua responsável pelo accent (`--accent`,
-`--accent-soft`, `--accent-deep`) e, ao carregar ou salvar uma config, delega o tema com
-`themeService.set(cfg.theme)`.
+**`cypher.theme` é a única fonte de verdade.** O campo `theme` sai de `CypherConfig` e de
+`OnboardingData`. Sem isso o tema passa a morar em duas chaves de `localStorage` sem regra de escrita:
+concluir o wizard sobrescreveria um toggle feito no dashboard, e as duas cópias divergiriam em
+silêncio até o próximo `save()` ressuscitar a antiga.
 
-**`OnboardingService`** deixa de tocar no `<body>`. Duas mudanças:
+Consequências, todas pequenas:
 
-- O `effect` que lia `data().theme` passa a chamar `themeService.set(d.theme)`. A prévia ao vivo do
-  wizard continua funcionando, e agora persiste — quem clica "Claro" e abandona o wizard fica no claro,
-  que é o que a pessoa pediu.
-- `DEFAULT_DATA.theme` deixa de ser o valor inicial: o wizard nasce com `themeService.theme()`, para
-  que os botões Claro/Escuro reflitam o estado real.
+- `ConfigService` deixa de tocar no `<body>` e de carregar `theme`. Continua dono do accent
+  (`--accent`, `--accent-soft`, `--accent-deep`).
+- `OnboardingService` deixa de tocar no `<body>` e `persistConfig()` para de gravar `theme`.
+- **O step 1 fala com o `ThemeService` direto**, não com `data()`: `setTheme(t)` vira
+  `themeService.set(t)`, e o `[class.on]` dos botões lê `themeService.theme()`. Guardar uma cópia em
+  `data()` é o que criaria o bug seguinte — `OnboardingService` é singleton e seu `effect` só reage a
+  mudanças de `data()`, então trocar o tema no dashboard e reabrir o wizard mostraria o botão errado,
+  porque `data()` não mudou.
+- O step 4 (`step4-confirm.component.html`) mostra `tema {{ state.data().theme }}`; passa a ler
+  `themeService.theme()`.
+
+Esse arranjo mantém a prévia ao vivo do wizard e a torna persistente: quem clica "Claro" e abandona o
+wizard fica no claro, que é o que a pessoa pediu.
 
 **`ChromeTopbarComponent`** — duas correções no bloco `.tools`:
 
@@ -100,6 +110,11 @@ O ícone do toggle mostra **o destino**, não o estado atual: no tema escuro apa
 `chrome-topbar.component.spec.ts`:
 - existe um botão de tema, e clicar nele troca o tema no serviço
 - o link de reabrir onboarding continua apontando para `/` e não é mais rotulado "Configurações"
+
+`onboarding.service.spec.ts` — o caminho que o desenho antigo quebrava:
+- trocar o tema fora do wizard e depois montar o step 1 mostra o botão certo selecionado
+  (o teste que uma cópia em `data()` não passaria)
+- `persistConfig()` não grava `theme` em `cypher.config`
 
 ---
 
@@ -134,6 +149,15 @@ motivo de a flag existir. Vira `false` quando E1-A estiver de pé.
 
 **`USE_MOCK_DATA`** — `InjectionToken<boolean>` com `factory: () => environment.useMockData`. Existe
 para que os testes possam forçar os dois modos; nenhum componente lê `environment` direto.
+
+**Nos testes, o modo real é o padrão — e isso precisa ser explícito.** O alvo de teste usa
+`buildTarget: cypher-front:build:development`, e o `fileReplacements` do `angular.json` troca
+`environment.ts` por `environment.development.ts`, onde `useMockData` é `true`. Ou seja, a factory do
+token devolveria `true` em toda spec que não sobrescrevesse. Todo `TestBed` que renderize o
+`ConnectionBadgeComponent` — direta ou indiretamente, o que inclui `dashboard.component.spec.ts` —
+declara `{ provide: USE_MOCK_DATA, useValue: false }`. Mock é opt-in no teste, nunca herdado do
+ambiente. Sem essa regra, a Task 8 entra e os testes da Task 10 passam a afirmar coisas sobre um badge
+num modo que ninguém escolheu.
 
 **`mockApiInterceptor`** responde `GET /incidents`, `GET /summary`, `GET /cameras`, `GET /stations` e
 `PUT /incidents/:id/status` a partir de `fixtures.ts`, com um atraso curto para que os estados de
@@ -193,18 +217,24 @@ herança do `body`: `.kpi .kpi-val` (48/800/-0.04em), `.greeting .hi` (28/800/-0
 ### Três defeitos em aplicar `cypher-sans.css` literal
 
 **1. `font-variation-settings` no `html` achata todos os pesos.** O bloco de dark mode do arquivo faz
-`html { font-variation-settings: 'wght' 420 }`, e o `@font-face` faz `'wght' 400`. Essa propriedade é
-herdada e, pela CSS Fonts 4 §6.9, **sobrepõe `font-weight`** no mesmo eixo. O app tem 25 declarações
-`font-weight: 700` e 7 de `800`, e o tema padrão é o escuro: todo negrito do app renderizaria a 420.
-**Nenhum `font-variation-settings` global.** Peso se controla por `font-weight`, que a variable font
-honra na faixa 100–900.
+`html { font-variation-settings: 'wght' 420 }`. Como *propriedade*, ela é herdada e, pela CSS Fonts 4
+§6.9, **sobrepõe `font-weight`** no mesmo eixo. O app tem 25 declarações `font-weight: 700` e 7 de
+`800`, e o tema padrão é o escuro: todo negrito do app renderizaria a 420. **Nenhum
+`font-variation-settings` global.** Peso se controla por `font-weight`, que a variable font honra na
+faixa 100–900.
+
+(O `'wght' 400` dentro do `@font-face` é outra coisa — ali é *descritor*, define o default do eixo e
+não se propaga para os elementos; o mapeamento de `font-weight: 100 900` continua mandando. Sai
+junto por ser ruído, não por ser defeito.)
 
 **2. O `@import` do exemplo derruba o JetBrains Mono 500 — e o import de hoje já está incompleto.** O
 exemplo pede `wght@400;600;700`, mas o app usa 500 em `.kicker`, `.eyebrow-accent`, `.field label`,
 `.filterbar .fb-label`, `.tkpi-trend` e outros. Pior: o import atual do app carrega só `400;500;600`,
 enquanto há ~15 classes em mono 700 (`.rk-row .id`, `.alert-row .a-station`, `.heat-tile .tid`,
 `.a-sev`, `.bar-val`, `.ai-badge`, `.dock-badge`, `.zone-label`…) e uma em 800 (`.station .sn`).
-**Todo esse peso é sintetizado hoje.** O import correto é a união: `400;500;600;700;800`.
+**Todo esse peso é sintetizado hoje.** O import correto é a união: `400;500;600;700;800`. Verificado
+em 2026-08-12: a variable do JetBrains Mono cobre 100–800 (`wght@100..900` devolve HTTP 400), então o
+800 do `.station .sn` passa a existir de verdade.
 
 **3. O `@font-face` força pesos sintetizados e está desatualizado.** O `src` começa com
 `local('Montserrat'), local('Montserrat-Regular')`: quem tiver Montserrat *estático* instalado ganha
@@ -252,8 +282,15 @@ Nenhum arquivo de componente muda; o diff inteiro é `src/styles.scss`.
 - `font-variant-numeric: tabular-nums slashed-zero lining-nums` nas classes de número:
   `.kpi .kpi-val`, `.bar-val`, `.rk-row .nm`, `.station .sn`, `.summary-card .big`, `.tkpi-val`.
   Propriedade de alto nível, não `font-feature-settings` — assim não clobbera nada.
-- `font-synthesis-weight: none` no `html`. Serve de canário: se um peso não carregar, ele aparece
-  errado em vez de ser silenciosamente fabricado.
+
+**Entra durante o passe visual e sai antes do commit:**
+
+- `font-synthesis-weight: none` no `html`. É o canário que faz um peso não carregado aparecer errado
+  em vez de ser fabricado em silêncio — exatamente o defeito que passou despercebido nos 700/800 de
+  mono até hoje. Mas ele **não vai para produção**: numa rede de planta com o gstatic bloqueado, o
+  fallback é `system-ui` com poucos pesos, e degradar visivelmente é pior que degradar de leve. Usar
+  para achar o problema, remover depois. A checagem de "Rendered Fonts" no passe de verificação é o
+  que segura a regressão daqui pra frente.
 
 **Fica de fora, e por quê:**
 
