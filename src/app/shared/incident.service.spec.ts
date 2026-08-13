@@ -267,4 +267,16 @@ describe('IncidentService — SSE', () => {
     expect(service.incidents()[0].incidentKey).toBe('k-bom');
     expect(service.connection()).toBe('ao vivo');
   });
+
+  it('erro do store não se disfarça de payload malformado', () => {
+    service.connect();
+    criados[0].abrir();
+    // Precisa de um incidente já no store: com a lista vazia, o comparador do
+    // sort nunca é chamado para um único elemento, e o TypeError não aparece.
+    criados[0].emitir('incident', incidente({ incidentKey: 'k-existente' }));
+
+    // JSON válido, forma errada: isto é bug de contrato, não payload corrompido,
+    // e precisa aparecer em vez de sumir no catch do parse.
+    expect(() => criados[0].emitirBruto('incident', '{"incidentKey":"k-torto"}')).toThrow();
+  });
 });

@@ -102,10 +102,15 @@ export class IncidentService {
   }
 
   private receber(event: MessageEvent): void {
+    let incidente: Incident;
     try {
-      this.upsert(JSON.parse(event.data) as Incident);
+      incidente = JSON.parse(event.data) as Incident;
     } catch {
       // Payload malformado não pode derrubar o painel.
+      return;
     }
+    // Fora do try de propósito: um erro aqui é bug do store, não payload ruim,
+    // e engoli-lo junto com o parse deixaria esse bug invisível.
+    this.upsert(incidente);
   }
 }
