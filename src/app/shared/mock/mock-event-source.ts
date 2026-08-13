@@ -1,6 +1,6 @@
 import { EventSourceLike } from '../event-source.factory';
 import { Incident } from '../incident.models';
-import { INCIDENTS, agoraNaPlanta } from './fixtures';
+import { EMITIDOS, INCIDENTS, agoraNaPlanta } from './fixtures';
 
 const INTERVALO_MS = 8000;
 
@@ -16,12 +16,14 @@ export class MockEventSource implements EventSourceLike {
   onerror: ((event: Event) => void) | null = null;
 
   private listeners = new Map<string, (event: MessageEvent) => void>();
+  private abertura: ReturnType<typeof setTimeout> | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private contador = 0;
 
   constructor() {
     // No próximo tick: quem nos criou ainda está registrando os listeners.
-    setTimeout(() => {
+    this.abertura = setTimeout(() => {
+      this.abertura = null;
       this.onopen?.(new Event('open'));
       this.timer = setInterval(() => this.emitir(), INTERVALO_MS);
     });
@@ -32,6 +34,13 @@ export class MockEventSource implements EventSourceLike {
   }
 
   close(): void {
+    // Sem isto, um close() antes do primeiro tick não cancela o onopen
+    // pendente — ele dispara depois assim mesmo e reabre a conexão que quem
+    // chamou close() já considerava encerrada.
+    if (this.abertura !== null) {
+      clearTimeout(this.abertura);
+      this.abertura = null;
+    }
     if (this.timer !== null) {
       clearInterval(this.timer);
       this.timer = null;
@@ -48,6 +57,10 @@ export class MockEventSource implements EventSourceLike {
       detectedAt: agoraNaPlanta(),
       status: 'PENDENTE',
     };
+    // Registrado para o interceptor achar este incidente num PUT de status —
+    // sem isto, mudar o status de um incidente que chegou ao vivo cai na
+    // rede e falha em silêncio.
+    EMITIDOS.push(incidente);
     this.listeners.get('incident')?.({ data: JSON.stringify(incidente) } as MessageEvent);
   }
 }

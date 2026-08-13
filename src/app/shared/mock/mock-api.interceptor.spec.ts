@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../../environments/environment';
 import { Camera, Incident, Page } from '../incident.models';
-import { INCIDENTS } from './fixtures';
+import { EMITIDOS, INCIDENTS, agoraNaPlanta, resumo } from './fixtures';
 import { mockApiInterceptor } from './mock-api.interceptor';
 
 describe('mockApiInterceptor', () => {
@@ -55,5 +55,35 @@ describe('mockApiInterceptor', () => {
     http.get(`${environment.apiUrl}/desconhecido`).subscribe();
 
     rede.expectOne(`${environment.apiUrl}/desconhecido`);
+  });
+
+  it('responde PUT de status de um incidente emitido ao vivo sem chegar na rede, preservando o incidentKey', async () => {
+    const vivo: Incident = {
+      ...INCIDENTS[0],
+      id: 9001,
+      incidentKey: 'exemplo-vivo-teste',
+      status: 'PENDENTE',
+    };
+    EMITIDOS.push(vivo);
+
+    const atualizado = await firstValueFrom(
+      http.put<Incident>(`${environment.apiUrl}/incidents/9001/status`, { status: 'REVISADO' }));
+
+    expect(atualizado.incidentKey).toBe('exemplo-vivo-teste');
+    expect(atualizado.status).toBe('REVISADO');
+    rede.expectNone(() => true);
+  });
+
+  it('resumo().incidentesOntem bate com o dia de ontem em ultimosSeteDias', () => {
+    const r = resumo();
+    const ontem = r.ultimosSeteDias[r.ultimosSeteDias.length - 2];
+
+    expect(r.incidentesOntem).toBe(ontem.incidentes);
+  });
+
+  it('todo detectedAt de INCIDENTS é anterior a agoraNaPlanta()', () => {
+    const agora = agoraNaPlanta();
+
+    expect(INCIDENTS.every(i => i.detectedAt < agora)).toBe(true);
   });
 });

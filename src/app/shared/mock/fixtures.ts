@@ -8,17 +8,38 @@ import { Camera, Incident, Station, Summary } from '../incident.models';
  * instante, então usar Z aqui mostraria o horário errado na tela.
  */
 
-/** Agora, escrito no fuso da planta. */
-export function agoraNaPlanta(): string {
-  const d = new Date(Date.now() - 3 * 60 * 60 * 1000);
+/** "Agora", já deslocado para o fuso da planta — fonte única de tempo do módulo. */
+function agora(): Date {
+  return new Date(Date.now() - 3 * 60 * 60 * 1000);
+}
+
+function instante(deltaMs: number): string {
+  const d = new Date(agora().getTime() - deltaMs);
   return `${d.toISOString().slice(0, 19)}.000-03:00`;
 }
 
-function hoje(hhmm: string): string {
-  const d = new Date();
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-  const dia = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${mes}-${dia}T${hhmm}:00.000-03:00`;
+/** Agora, escrito no fuso da planta. */
+export function agoraNaPlanta(): string {
+  return instante(0);
+}
+
+/**
+ * Um instante de N minutos atrás, escrito no fuso da planta.
+ *
+ * Relativo a `agoraNaPlanta()`, não à data local da máquina: assim todo
+ * incidente do histórico fica mais antigo que qualquer incidente emitido ao
+ * vivo pelo `MockEventSource`, em qualquer hora do dia e em qualquer fuso de
+ * quem roda o app — o que uma hora de parede fixa (ex.: "14:31") não garante.
+ */
+function minutosAtras(n: number): string {
+  return instante(n * 60 * 1000);
+}
+
+/** Rótulo AAAA-MM-DD do dia N atrás, no mesmo relógio deslocado de `agora()`. */
+function diaAtras(n: number): string {
+  const d = agora();
+  d.setUTCDate(d.getUTCDate() - n);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
 type Molde = Omit<Incident,
@@ -55,27 +76,43 @@ export const STATIONS: Station[] = [
   { id: 'EST-03', nome: 'Doca de expedição', setor: 'logística', ativa: true, cameras: [] },
 ];
 
+// Espaçamento relativo a "agora", do mais novo para o mais velho — nunca hora
+// de parede fixa, para o mais recente do histórico ficar sempre atrás de
+// qualquer incidente emitido ao vivo (que nasce em minutosAtras(0)).
 export const INCIDENTS: Incident[] = [
   { ...MOLDE, id: 5, incidentKey: 'exemplo-5', cameraId: 'CAM-02', type: 'FALL_RISK',
-    severity: 4, nivel: 'ALTO', descricao: 'Queda detectada', detectedAt: hoje('14:31'),
+    severity: 4, nivel: 'ALTO', descricao: 'Queda detectada', detectedAt: minutosAtras(12),
     reason: 'fallen_sustained', postureCategory: 'immediate_risk', rebaScore: 11,
     actionLevel: 4, peakSeverity: 4 },
   { ...MOLDE, id: 4, incidentKey: 'exemplo-4', cameraId: 'CAM-01', type: 'EPI_VIOLATION',
-    severity: 3, nivel: 'ALTO', descricao: 'Capacete ausente', detectedAt: hoje('13:45'),
+    severity: 3, nivel: 'ALTO', descricao: 'Capacete ausente', detectedAt: minutosAtras(90),
     epiMissing: ['HELMET'], epiPresent: ['VEST'], peakSeverity: 3 },
   { ...MOLDE, id: 3, incidentKey: 'exemplo-3', cameraId: 'CAM-03', type: 'ZONE_VIOLATION',
     severity: 2, nivel: 'MEDIO', descricao: 'Entrada em zona de risco',
-    detectedAt: hoje('12:10'), zoneName: 'Zona 3 · empilhadeiras', zoneStatus: 'inside',
+    detectedAt: minutosAtras(200), zoneName: 'Zona 3 · empilhadeiras', zoneStatus: 'inside',
     status: 'REVISADO', peakSeverity: 2 },
   { ...MOLDE, id: 2, incidentKey: 'exemplo-2', cameraId: 'CAM-01', type: 'ERGONOMIC_RISK',
     severity: 1, nivel: 'BAIXO', descricao: 'Postura inadequada sustentada',
-    detectedAt: hoje('10:22'), postureCategory: 'bent_over', rebaScore: 7,
-    actionLevel: 2, durationSeconds: 42, endedAt: hoje('10:23'),
+    detectedAt: minutosAtras(320), postureCategory: 'bent_over', rebaScore: 7,
+    actionLevel: 2, durationSeconds: 60, endedAt: minutosAtras(319),
     closedReason: 'STATE_EXIT', status: 'RESOLVIDO', peakSeverity: 1 },
   { ...MOLDE, id: 1, incidentKey: 'exemplo-1', cameraId: 'CAM-02', type: 'EPI_VIOLATION',
-    severity: 2, nivel: 'MEDIO', descricao: 'Luvas ausentes', detectedAt: hoje('08:05'),
-    epiMissing: ['GLOVES'], status: 'RESOLVIDO', peakSeverity: 2 },
+    severity: 2, nivel: 'MEDIO', descricao: 'Luvas ausentes', detectedAt: minutosAtras(480),
+    epiMissing: ['GLOVES'], durationSeconds: 300, endedAt: minutosAtras(475),
+    closedReason: 'STATE_EXIT', status: 'RESOLVIDO', peakSeverity: 2 },
 ];
+
+/**
+ * Incidentes que o EventSource falso já emitiu.
+ *
+ * O interceptor precisa deles para que reconhecer um incidente que chegou ao
+ * vivo funcione igual a reconhecer um do histórico — sem isto, o PUT cai na
+ * rede e falha em silêncio justamente nos incidentes que a demo mostra.
+ */
+export const EMITIDOS: Incident[] = [];
+
+/** Contagens dos seis dias anteriores a hoje, do mais antigo para o mais recente. */
+const DIAS_ANTERIORES = [8, 5, 12, 4, 9, 3];
 
 /** Calculado das fixtures, para os KPIs não contradizerem a lista de incidentes. */
 export function resumo(): Summary {
@@ -84,7 +121,7 @@ export function resumo(): Summary {
 
   return {
     incidentesHoje: INCIDENTS.length,
-    incidentesOntem: 4,
+    incidentesOntem: DIAS_ANTERIORES[DIAS_ANTERIORES.length - 1],
     criticosHoje: INCIDENTS.filter(i => i.severity >= 3).length,
     pendentes: INCIDENTS.filter(i => i.status === 'PENDENTE').length,
     heatmap: STATIONS.map(s => ({
@@ -93,14 +130,9 @@ export function resumo(): Summary {
       setor: s.setor,
       incidentes: INCIDENTS.filter(i => estacaoDe(i.cameraId) === s.id).length,
     })),
-    ultimosSeteDias: Array.from({ length: 7 }, (_, k) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - k));
-      const anteriores = [8, 5, 12, 4, 9, 3];
-      return {
-        dia: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
-        incidentes: k === 6 ? INCIDENTS.length : anteriores[k],
-      };
-    }),
+    ultimosSeteDias: Array.from({ length: 7 }, (_, k) => ({
+      dia: diaAtras(6 - k),
+      incidentes: k === 6 ? INCIDENTS.length : DIAS_ANTERIORES[k],
+    })),
   };
 }

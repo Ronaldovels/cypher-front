@@ -2,7 +2,7 @@ import { HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse 
 import { Observable, delay, of } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { CAMERAS, INCIDENTS, STATIONS, resumo } from './fixtures';
+import { CAMERAS, EMITIDOS, INCIDENTS, STATIONS, resumo } from './fixtures';
 
 /** Atraso curto, para que os estados de carregamento sejam exercitados. */
 const ATRASO_MS = 150;
@@ -47,7 +47,11 @@ function responder(req: HttpRequest<unknown>): unknown | undefined {
   const sufixo = '/status';
   if (req.method === 'PUT' && req.url.startsWith(prefixo) && req.url.endsWith(sufixo)) {
     const id = Number(req.url.slice(prefixo.length, -sufixo.length));
-    const alvo = INCIDENTS.find(i => i.id === id);
+    // Também busca em EMITIDOS: um incidente que chegou ao vivo por SSE não
+    // está em INCIDENTS, e um PUT de status nele não pode cair na rede.
+    const alvo = [...INCIDENTS, ...EMITIDOS].find(i => i.id === id);
+    // `{ ...alvo, ... }` já preserva o incidentKey do alvo — não sobrescrever
+    // é o que impede o store duplicar a linha (ele deduplica por essa chave).
     return alvo ? { ...alvo, status: (req.body as { status: string }).status } : undefined;
   }
 
