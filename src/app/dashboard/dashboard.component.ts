@@ -1,51 +1,62 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ConfigService } from '../shared/config.service';
+
+import { CatalogService } from '../shared/catalog.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
+import { ConfigService } from '../shared/config.service';
+import { ConnectionBadgeComponent } from '../shared/connection-badge/connection-badge.component';
 import { DockComponent } from '../shared/dock/dock.component';
-
-export const KPI_DATA = [
-  { label: 'Incidentes hoje', val: '6', sub: '↑ 2 vs ontem', sub_class: 'up', ico: '⚠', color: '#EE4242' },
-  { label: 'Conformidade geral', val: '94.2', denom: '%', sub: 'Meta: ≥ 98%', pct: 94.2, color: 'var(--accent)' },
-  { label: 'Estações ativas', val: '42', denom: '/ 48', sub: '6 em alerta agora', sub_class: 'warn', color: '#34D07E' },
-  { label: 'Linha parada hoje', val: '18', denom: 'min', sub: '≈ R$ 4.200 em impacto', ico: '⚙', color: '#FFCE38' },
-];
-
-export const HEAT_DATA = [
-  { id: 'EST-01', n: 0 }, { id: 'EST-02', n: 1 }, { id: 'EST-03', n: 3 }, null, { id: 'EST-04', n: 1 },
-  { id: 'EST-05', n: 0 }, { id: 'EST-06', n: 2 }, { id: 'EST-07', n: 0 }, { id: 'EST-08', n: 1 }, { id: 'EST-09', n: 3 },
-  null, null, { id: 'EST-10', n: 0 }, { id: 'EST-11', n: 1 }, { id: 'EST-12', n: 0 },
-  { id: 'EST-13', n: 2 }, { id: 'EST-14', n: 0 }, { id: 'EST-15', n: 0 }, { id: 'EST-16', n: 0 }, { id: 'EST-17', n: 1 },
-];
-
-export const ALERTS = [
-  { time: '14:31', est: 'EST-04', type: 'Capacete ausente', sev: 'crit' },
-  { time: '13:45', est: 'EST-09', type: 'Zona de risco',    sev: 'crit' },
-  { time: '12:10', est: 'EST-03', type: 'Óculos ausente',   sev: 'high' },
-  { time: '11:58', est: 'EST-03', type: 'Capacete ausente', sev: 'high' },
-  { time: '10:22', est: 'EST-09', type: 'Luvas ausentes',   sev: 'high' },
-];
-
-export const BAR_DATA = [
-  { d: 'Seg', v: 8 }, { d: 'Ter', v: 5 }, { d: 'Qua', v: 12, peak: true },
-  { d: 'Qui', v: 4 }, { d: 'Sex', v: 9 }, { d: 'Sáb', v: 3 }, { d: 'Dom', v: 2 },
-];
-const MAX_V = 14;
+import { IncidentService } from '../shared/incident.service';
+import { LiveFeedComponent } from '../shared/live-feed/live-feed.component';
+import { formatTime, incidentLabel, severityClass } from '../shared/incident.models';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [ChromeTopbarComponent, DockComponent, RouterLink],
+  imports: [
+    ChromeTopbarComponent, DockComponent, RouterLink,
+    ConnectionBadgeComponent, LiveFeedComponent,
+  ],
   templateUrl: './dashboard.component.html',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit, OnDestroy {
   private cfgService = inject(ConfigService);
+  private incidentService = inject(IncidentService);
+  private catalogService = inject(CatalogService);
+
   cfg = this.cfgService.config;
 
-  kpiData  = KPI_DATA;
-  heatData = HEAT_DATA;
-  alerts   = ALERTS;
-  barData  = BAR_DATA;
-  maxV     = MAX_V;
+  readonly conexao = this.incidentService.connection;
+  readonly cameras = this.catalogService.cameras;
+
+  /** Câmera exibida no feed. Sem seleção explícita, a primeira do catálogo. */
+  readonly cameraAtual = computed(() => this.cameras()[0] ?? null);
+
+  readonly resumo = this.incidentService.summary;
+
+  readonly incidentesHoje = computed(() => this.resumo()?.incidentesHoje ?? 0);
+  readonly criticosHoje = computed(() => this.resumo()?.criticosHoje ?? 0);
+  readonly pendentes = computed(() => this.resumo()?.pendentes ?? 0);
+
+  readonly variacaoVsOntem = computed(() => {
+    const resumo = this.resumo();
+    if (!resumo) {
+      return 'sem dados';
+    }
+    const delta = resumo.incidentesHoje - resumo.incidentesOntem;
+    if (delta === 0) {
+      return 'igual a ontem';
+    }
+    return `${delta > 0 ? '↑' : '↓'} ${Math.abs(delta)} vs ontem`;
+  });
+
+  readonly heatData = computed(() => this.resumo()?.heatmap ?? []);
+  readonly barData = computed(() => this.resumo()?.ultimosSeteDias ?? []);
+
+  readonly maxV = computed(() =>
+    Math.max(1, ...this.barData().map(d => d.incidentes)));
+
+  /** Os cinco mais recentes, para a lista lateral. */
+  readonly recentes = computed(() => this.incidentService.incidents().slice(0, 5));
 
   today = computed(() => {
     const now = new Date();
@@ -54,19 +65,52 @@ export class DashboardComponent {
 
   plantName = computed(() => this.cfg()?.company || 'sua planta');
 
-  heatClass(n: number): string {
-    return n === 0 ? 'ok' : n === 1 ? 'low' : n === 2 ? 'mid' : 'hi';
-  }
-  heatLabel(n: number): string {
-    return n === 0 ? 'ok' : n === 1 ? '1 inf' : n === 2 ? '2 inf' : `${n} inf`;
+  ngOnInit(): void {
+    this.catalogService.load();
+    this.incidentService.loadHistory();
+    this.incidentService.loadSummary();
+    this.incidentService.connect();
   }
 
-  barPct(v: number): number { return (v / this.maxV) * 100; }
+  ngOnDestroy(): void {
+    this.incidentService.disconnect();
+  }
+
+  // Helpers de apresentação, reexportados para o template.
+  hora = formatTime;
+  rotulo = incidentLabel;
+
+  heatClass(incidentes: number): string {
+    return severityClass(Math.min(incidentes, 4));
+  }
+
+  heatLabel(incidentes: number): string {
+    return incidentes === 0 ? 'ok' : `${incidentes} inf`;
+  }
+
+  barPct(v: number): number {
+    return (v / this.maxV()) * 100;
+  }
+
   meanPct(): number {
-    const sum = BAR_DATA.reduce((a, b) => a + b.v, 0);
-    return (sum / BAR_DATA.length / MAX_V) * 100;
+    const dados = this.barData();
+    if (!dados.length) {
+      return 0;
+    }
+    const soma = dados.reduce((a, b) => a + b.incidentes, 0);
+    return (soma / dados.length / this.maxV()) * 100;
   }
 
-  kpiRingDash(r: number, pct: number): number { return 2 * Math.PI * r; }
-  kpiRingOffset(r: number, pct: number): number { return 2 * Math.PI * r * (1 - pct / 100); }
+  kpiRingDash(r: number): number {
+    return 2 * Math.PI * r;
+  }
+
+  kpiRingOffset(r: number, pct: number): number {
+    return 2 * Math.PI * r * (1 - pct / 100);
+  }
+
+  diaCurto(iso: string): string {
+    const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    return dias[new Date(`${iso}T12:00:00`).getDay()];
+  }
 }
