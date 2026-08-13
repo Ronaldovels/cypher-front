@@ -94,14 +94,138 @@ describe('DashboardComponent', () => {
 
     expect(fixture.nativeElement.querySelector('app-connection-badge')).not.toBeNull();
   });
+});
 
-  it('não renderiza os literais fabricados que o mock antigo escrevia na tela', () => {
+/**
+ * Fake controlável do EventSource, para exercitar abertura e queda de conexão
+ * nos testes de guarda abaixo. `SSE_INERTE` (usado no describe acima) nunca
+ * dispara `onopen`/`onerror`, então não serve para esses casos.
+ */
+class EventSourceFake implements EventSourceLike {
+  onopen: ((event: Event) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+
+  addEventListener(_type: string, _listener: (event: MessageEvent) => void): void { }
+  close(): void { }
+
+  abrir(): void {
+    this.onopen?.(new Event('open'));
+  }
+
+  falhar(): void {
+    this.onerror?.(new Event('error'));
+  }
+}
+
+/**
+ * Rede de segurança para as correções de dado fabricado desta task. Cada
+ * asserção aqui precisa falhar se a correção correspondente for revertida —
+ * a primeira versão desta rede (um único teste de `textContent.not.toContain`
+ * com uma lista de strings) não cumpria isso: `'17 câmeras'` nunca aparece no
+ * template (que sempre disse "câmeras cadastradas"), e o teste passava com
+ * qualquer uma das oito correções desfeita. Esta versão prende cada item na
+ * condição real que a correção estabeleceu.
+ */
+describe('DashboardComponent — guardas contra dado fabricado', () => {
+  let http: HttpTestingController;
+  let stream: EventSourceFake;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        provideHttpClient(withFetch()),
+        provideHttpClientTesting(),
+        {
+          provide: EVENT_SOURCE_FACTORY,
+          useValue: () => {
+            stream = new EventSourceFake();
+            return stream;
+          },
+        },
+        { provide: USE_MOCK_DATA, useValue: false },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  it('item 2 — dock não renderiza badge nem bolinha de alerta fabricados', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
 
-    const texto = (fixture.nativeElement.textContent as string) ?? '';
-    for (const literal of ['Ana', '17 câmeras', '94.2', 'média 6.1', 'Turno A']) {
-      expect(texto).not.toContain(literal);
-    }
+    expect(fixture.nativeElement.querySelector('.dock-badge')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.dock-dot')).toBeNull();
+  });
+
+  it('item 6 — topbar não renderiza avatar fabricado', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.avatar')).toBeNull();
+  });
+
+  it('item 3 — pendentes não é apresentado como recorte de "hoje"', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 4, incidentesOntem: 2, criticosHoje: 1, pendentes: 3,
+      heatmap: [], ultimosSeteDias: [],
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Hoje você tem');
+  });
+
+  it('item 4 — SSE aberto não é apresentado como planta operando normalmente', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    stream.abrir();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Sistema operando normalmente');
+  });
+
+  it('item 5 — conexão caída avisa que a lista pode estar incompleta, em vez de "nenhum incidente"', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    stream.falhar();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('sem conexão');
+  });
+
+  it('item 8 — status da saudação conta câmeras sem alegar que estão sendo monitoradas', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    const status = (fixture.nativeElement.querySelector('.gstatus') as HTMLElement | null)
+      ?.textContent ?? '';
+    expect(status).not.toContain('monitorada');
+  });
+
+  it('item 1 — linha de média some sem dados, e o título traz o valor real quando há dados', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.mean')).toBeNull();
+
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [],
+      ultimosSeteDias: [
+        { dia: '2026-08-10', incidentes: 4 },
+        { dia: '2026-08-11', incidentes: 8 },
+      ],
+    });
+    fixture.detectChanges();
+
+    const mean = fixture.nativeElement.querySelector('.mean') as HTMLElement | null;
+    expect(mean).not.toBeNull();
+    expect(mean!.getAttribute('title'))
+      .toBe(`média ${fixture.componentInstance.mediaDiaria().toFixed(1)}`);
   });
 });

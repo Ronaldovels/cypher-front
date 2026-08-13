@@ -79,9 +79,9 @@ export class ChromeTopbarComponent {
   cfg    = input<any>(null);
   page   = input<string>('Dashboard');
   subtitle = input<string>('');
-  shift  = input<string | null>('Turno A · 06:00–14:00');
+  shift  = input<string | null>(null);
   live   = input<boolean>(true);
-  notifBadge = input<number>(6);
+  notifBadge = input<number>(0);
 
   private themeService = inject(ThemeService);
 

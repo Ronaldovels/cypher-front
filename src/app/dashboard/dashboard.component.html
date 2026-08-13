@@ -182,7 +182,9 @@
         </div>
       </div>
       <div class="bars">
-        <div class="mean" [style.bottom.%]="meanPct()" [title]="'média ' + mediaDiaria().toFixed(1)"></div>
+        @if (barData().length) {
+          <div class="mean" [style.bottom.%]="meanPct()" [title]="'média ' + mediaDiaria().toFixed(1)"></div>
+        }
         @for (b of barData(); track b.dia) {
           <div class="bar-col">
             <span class="bar-val">{{ b.incidentes }}</span>
