@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from './event-source.factory';
-import { AlertaStatus, ConnectionState, Incident, Page } from './incident.models';
+import { AlertaStatus, ConnectionState, Incident, Page, Summary } from './incident.models';
 
 /**
  * Store de incidentes.
@@ -34,6 +34,32 @@ export class IncidentService {
    * caído a tela fica idêntica a "nenhum incidente hoje".
    */
   readonly connection = this._connection.asReadonly();
+
+  private readonly _summary = signal<Summary | null>(null);
+  private summaryTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly summary = this._summary.asReadonly();
+
+  loadSummary(): void {
+    this.http.get<Summary>(`${environment.apiUrl}/summary`, { withCredentials: true })
+      .subscribe({ next: s => this._summary.set(s), error: () => { } });
+  }
+
+  /**
+   * Reagenda o recálculo dos agregados.
+   *
+   * Debounce de 2 s: durante um episódio ativo chegam vários eventos em
+   * sequência, e uma requisição por evento viraria rajada.
+   */
+  private scheduleSummaryRefresh(): void {
+    if (this.summaryTimer !== null) {
+      clearTimeout(this.summaryTimer);
+    }
+    this.summaryTimer = setTimeout(() => {
+      this.summaryTimer = null;
+      this.loadSummary();
+    }, 2000);
+  }
 
   loadHistory(since?: string): void {
     const params: Record<string, string> = { size: String(IncidentService.MAX_IN_MEMORY) };
@@ -112,5 +138,6 @@ export class IncidentService {
     // Fora do try de propósito: um erro aqui é bug do store, não payload ruim,
     // e engoli-lo junto com o parse deixaria esse bug invisível.
     this.upsert(incidente);
+    this.scheduleSummaryRefresh();
   }
 }

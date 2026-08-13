@@ -122,6 +122,20 @@ describe('IncidentService', () => {
 
     expect(service.lastSeenAt()).toBe('2026-08-10T12:00:00-03:00');
   });
+
+  it('carrega os agregados do dashboard', () => {
+    service.loadSummary();
+
+    const req = http.expectOne(`${environment.apiUrl}/summary`);
+    req.flush({
+      incidentesHoje: 3, incidentesOntem: 1, criticosHoje: 2, pendentes: 4,
+      heatmap: [{ estacaoId: 'EST-01', nome: 'Esteira', setor: 'montagem', incidentes: 2 }],
+      ultimosSeteDias: [{ dia: '2026-08-10', incidentes: 3 }],
+    });
+
+    expect(service.summary()?.incidentesHoje).toBe(3);
+    expect(service.summary()?.heatmap[0].estacaoId).toBe('EST-01');
+  });
 });
 
 class EventSourceFake implements EventSourceLike {
