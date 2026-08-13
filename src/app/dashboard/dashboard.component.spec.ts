@@ -94,4 +94,14 @@ describe('DashboardComponent', () => {
 
     expect(fixture.nativeElement.querySelector('app-connection-badge')).not.toBeNull();
   });
+
+  it('não renderiza os literais fabricados que o mock antigo escrevia na tela', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    const texto = (fixture.nativeElement.textContent as string) ?? '';
+    for (const literal of ['Ana', '17 câmeras', '94.2', 'média 6.1', 'Turno A']) {
+      expect(texto).not.toContain(literal);
+    }
+  });
 });

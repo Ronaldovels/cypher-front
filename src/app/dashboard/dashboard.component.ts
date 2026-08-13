@@ -55,6 +55,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly maxV = computed(() =>
     Math.max(1, ...this.barData().map(d => d.incidentes)));
 
+  /** Média diária real do período, para o rótulo não afirmar número fixo. */
+  readonly mediaDiaria = computed(() => {
+    const dados = this.barData();
+    if (!dados.length) {
+      return 0;
+    }
+    return dados.reduce((a, b) => a + b.incidentes, 0) / dados.length;
+  });
+
   /** Os cinco mais recentes, para a lista lateral. */
   readonly recentes = computed(() => this.incidentService.incidents().slice(0, 5));
 

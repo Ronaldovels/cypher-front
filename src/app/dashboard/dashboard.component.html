@@ -19,28 +19,19 @@
         <span class="hi">Bom dia.</span>
         <span class="sub">
           @if (pendentes() === 0) {
-            Hoje não há incidentes pendentes para revisar em
+            Não há incidentes pendentes de revisão em
           } @else if (pendentes() === 1) {
-            Hoje você tem <strong>1 incidente</strong> pendente para revisar em
+            Você tem <strong>1 incidente</strong> pendente de revisão em
           } @else {
-            Hoje você tem <strong>{{ pendentes() }} incidentes</strong> pendentes para revisar em
+            Você tem <strong>{{ pendentes() }} incidentes</strong> pendentes de revisão em
           }
           <strong style="color:var(--ink)">{{ plantName() }}</strong>.
         </span>
       </div>
       <div class="gstatus">
         <app-connection-badge />
-        <span class="dot"
-              [style.background]="conexao() === 'ao vivo' ? '#34D07E' : conexao() === 'offline' ? '#EE4242' : '#FFCE38'"></span>
         <span>
-          @if (conexao() === 'ao vivo') {
-            Sistema operando normalmente
-          } @else if (conexao() === 'conectando') {
-            Conectando ao sistema
-          } @else {
-            Sistema fora do ar
-          }
-          · <strong>{{ cameras().length }} câmera{{ cameras().length === 1 ? '' : 's' }} monitorada{{ cameras().length === 1 ? '' : 's' }}</strong>
+          <strong>{{ cameras().length }} câmera{{ cameras().length === 1 ? '' : 's' }} cadastrada{{ cameras().length === 1 ? '' : 's' }}</strong>
         </span>
       </div>
     </div>
@@ -149,7 +140,13 @@
               <span class="a-sev">{{ inc.nivel }}</span>
             </div>
           } @empty {
-            <div class="vazio">nenhum incidente no período</div>
+            @if (conexao() === 'offline') {
+              <div class="vazio">sem conexão — a lista pode estar incompleta</div>
+            } @else if (conexao() === 'conectando') {
+              <div class="vazio">conectando…</div>
+            } @else {
+              <div class="vazio">nenhum incidente no período</div>
+            }
           }
         </div>
         <div class="alerts-foot">
@@ -185,7 +182,7 @@
         </div>
       </div>
       <div class="bars">
-        <div class="mean" [style.bottom.%]="meanPct()"></div>
+        <div class="mean" [style.bottom.%]="meanPct()" [title]="'média ' + mediaDiaria().toFixed(1)"></div>
         @for (b of barData(); track b.dia) {
           <div class="bar-col">
             <span class="bar-val">{{ b.incidentes }}</span>

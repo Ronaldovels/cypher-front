@@ -432,6 +432,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .alert-row .a-sev     { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.16em; color:#fff; padding:3px 8px; border-radius:4px; white-space:nowrap; }
 .alert-row.crit .a-sev { background:#EE4242; }
 .alert-row.high .a-sev { background:#FFCE38; color:#1a1407; }
+.alert-row:not(.crit):not(.high) .a-sev { background:#34D07E; color:#0a2115; }
 .alerts-foot { margin-top:14px; padding-top:14px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
 .alerts-foot .l { font-size:11px; color:var(--ink-mute); }
 .alerts-foot .r { font-size:12px; color:var(--accent); font-weight:600; text-decoration:none; }
@@ -454,7 +455,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .bar-col.peak .bar { background:linear-gradient(180deg,#EE4242 0%,#EE4242 4px,rgba(238,66,66,0.18) 4px); }
 .bar-col.peak::before { content:'PICO'; position:absolute; top:-18px; font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.16em; color:#EE4242; background:rgba(238,66,66,0.14); border:1px solid rgba(238,66,66,0.4); border-radius:4px; padding:2px 6px; }
 .bars .mean { position:absolute; left:0; right:0; border-top:1px dashed var(--line-3); pointer-events:none; }
-.bars .mean::after { content:'média 6.1'; position:absolute; right:-4px; top:-16px; font-family:var(--mono); font-size:9px; color:var(--ink-ghost); letter-spacing:0.08em; }
 .bars-axis { display:grid; grid-template-columns:repeat(7,1fr); gap:18px; padding:0 4px; margin-top:8px; }
 .bars-axis .bd { text-align:center; font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-ghost); }
 .insight { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); display:flex; align-items:flex-start; gap:12px; font-size:13px; color:var(--ink-2); font-weight:500; letter-spacing:-0.005em; line-height:1.5; }
