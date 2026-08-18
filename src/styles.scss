@@ -707,6 +707,12 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .annual-foot .l:hover { color:var(--accent); }
 .annual-foot .lg { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:9px; color:var(--ink-ghost); letter-spacing:0.08em; }
 
+/* Selo de "dado de exemplo" — painéis do heatmap sem endpoint possível em E1
+   (matriz temporal e histórico anual). Só selo + opacidade, sem tipografia
+   nova: reaproveita as variáveis de fonte já existentes. */
+.sample-seal { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); border:1px dashed var(--line-3); border-radius:999px; padding:4px 12px; }
+.sample-content { opacity:0.55; }
+
 /* Heatmap responsive */
 .theme-light .temp-cell.h0 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
 @media (max-width:1100px) {
