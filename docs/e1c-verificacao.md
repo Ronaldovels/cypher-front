@@ -45,7 +45,10 @@ push. Durante o run 2 chegaram **17 eventos** pelo stream, em dois nomes de
 evento: `incident` e `incident-changed`. `connect()` assina os dois
 (`incident.service.ts:118-119`), então nenhum é perdido.
 
-Agregados antes → depois do run 2, do mesmo endpoint:
+Agregados antes → depois do run 2, do mesmo endpoint. A coluna "antes" foi
+capturada com o run 1 ainda em execução — é por isso que EST-01 também sobe
+(2 → 3) num run da CAM-02. Não é ruído no que a tabela afirma, mas "antes" aqui
+significa "no meio do run 1", não "banco em repouso".
 
 | Campo | Antes | Depois |
 |---|---|---|
@@ -63,8 +66,10 @@ da entrega, a tela dizia "8 incidentes pendentes hoje" com `incidentesHoje: 0`.
 ## Caminho do vídeo
 
 Com o pipeline no ar, `http://127.0.0.1:8090/stream` devolve
-`200 multipart/x-mixed-replace; boundary=cypherframe` e **14 MB de JPEG em 4
-segundos** — quadros de verdade, não um handshake vazio.
+`200 multipart/x-mixed-replace; boundary=cypherframe`. Em 4 segundos de captura
+vieram 14.124.597 bytes contendo **81 marcadores SOI de JPEG e 81 boundaries
+`--cypherframe`** — os números casam, ou seja 81 quadros completos (~20 fps), não
+um handshake vazio nem bytes soltos.
 
 Depois de cada pipeline encerrar, a porta correspondente passa a recusar conexão
 (código `000` no curl): 8090 após o run 1, 8091 após o run 2. É o estado que

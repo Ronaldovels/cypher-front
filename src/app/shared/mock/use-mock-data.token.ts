@@ -9,9 +9,11 @@ import { environment } from '../../../environments/environment';
  * motivos: nenhum componente precisa conhecer o módulo de ambiente, e os
  * testes conseguem forçar os dois modos.
  *
- * Atenção: o alvo de teste usa a configuração `development`, onde a flag é
- * true. Toda spec que renderize o badge de conexão declara
- * `{ provide: USE_MOCK_DATA, useValue: false }` — mock é opt-in no teste.
+ * Atenção: toda spec que renderize o badge de conexão declara
+ * `{ provide: USE_MOCK_DATA, useValue: false }` — mock é opt-in no teste, nunca
+ * herdado do ambiente. Hoje a flag de `development` já é false, então esquecer o
+ * provider passaria pelo motivo errado; a declaração explícita é o que mantém a
+ * spec correta se alguém religar a flag para desenvolver local.
  */
 export const USE_MOCK_DATA = new InjectionToken<boolean>('USE_MOCK_DATA', {
   providedIn: 'root',
