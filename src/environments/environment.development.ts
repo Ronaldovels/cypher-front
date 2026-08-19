@@ -6,5 +6,5 @@ export const environment = {
    * existir. Vira false quando o plano E1-A estiver de pé; a Task 12 faz
    * essa virada como parte da verificação.
    */
-  useMockData: true,
+  useMockData: false,
 };
