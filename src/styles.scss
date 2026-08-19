@@ -710,7 +710,11 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 /* Selo de "dado de exemplo" — painéis do heatmap sem endpoint possível em E1
    (matriz temporal e histórico anual). Só selo + opacidade, sem tipografia
    nova: reaproveita as variáveis de fonte já existentes. */
-.sample-seal { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); border:1px dashed var(--line-3); border-radius:999px; padding:4px 12px; }
+/* O selo usa --ink-2, e nao --ink-mute: em 10px sobre --surface o mute da 4.02:1
+   no tema escuro, abaixo do AA. Este rotulo e justamente o que impede alguem de
+   confundir dado de exemplo com dado real, entao ele nao pode ser o texto menos
+   legivel da tela. Com --ink-2 sao 9.15:1 no escuro e 11.39:1 no claro. */
+.sample-seal { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-2); border:1px dashed var(--line-3); border-radius:999px; padding:4px 12px; }
 .sample-content { opacity:0.55; }
 
 /* Heatmap responsive */

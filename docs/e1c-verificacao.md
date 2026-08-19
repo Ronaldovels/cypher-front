@@ -99,6 +99,23 @@ Honestidade sobre o alcance:
    de 76px) e o check da Task 2 (dois ícones distintos, o toggle não navegar,
    tema sobreviver ao reload).
 
+## Achado da revisão final, corrigido
+
+A revisão de fim de branch pegou um defeito real nas costuras: `.sample-seal` —
+o selo "dado de exemplo" — herdava `--ink-mute`, que em 10px sobre `--surface`
+rende **4.02:1 no tema escuro**, abaixo do mínimo AA de 4.5:1. O tema escuro é o
+padrão do app. Justamente o rótulo cuja função é impedir que alguém confunda dado
+de exemplo com dado real era o texto menos legível do painel. Trocado por
+`--ink-2`: 9.15:1 no escuro, 11.39:1 no claro. Razões conferidas por cálculo,
+não por impressão.
+
+As outras duas costuras revisadas estão limpas: o token `USE_MOCK_DATA` é
+declarado explicitamente nas três specs que renderizam o badge e ninguém mais lê
+`environment.useMockData` fora de `app.config.ts`; e `ThemeService.apply()` é o
+único ponto do app que escreve em `document.body` — a revisão confirmou que esta
+branch removeu as duas escritas concorrentes que existiam em `OnboardingService`
+e `ConfigService`.
+
 ## Divergência encontrada
 
 O bundle de produção **carrega as fixtures de exemplo mortas**. `useMockData` é
