@@ -25,7 +25,6 @@ export class OnboardingService {
       document.documentElement.style.setProperty('--accent', d.accent);
       document.documentElement.style.setProperty('--accent-soft', accentRgba(d.accent, 0.14));
       document.documentElement.style.setProperty('--accent-deep', accentShade(d.accent, -0.2));
-      document.body.className = `theme-${d.theme}`;
     });
   }
 
@@ -80,7 +79,7 @@ export class OnboardingService {
       localStorage.setItem('cypher.config', JSON.stringify({
         company: d.company, cnpj: d.cnpj, sector: d.sector,
         logoUrl: d.logoUrl, logoName: d.logoName,
-        accent: d.accent, theme: d.theme, epis: d.epis, cas: d.cas,
+        accent: d.accent, epis: d.epis, cas: d.cas,
       }));
     } catch {}
   }

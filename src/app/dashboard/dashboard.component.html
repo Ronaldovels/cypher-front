@@ -1,5 +1,6 @@
 <div class="dash">
-  <app-chrome-topbar [cfg]="cfg()" page="Dashboard" [subtitle]="today()"/>
+  <app-chrome-topbar [cfg]="cfg()" page="Dashboard" [subtitle]="today()"
+                      [live]="conexao() === 'ao vivo'" [notifBadge]="pendentes()" [shift]="null"/>
 
   <main class="dcontent">
     @if (!cfg()) {
@@ -15,71 +16,74 @@
     <!-- Greeting -->
     <div class="greeting">
       <div class="gtext">
-        <span class="hi">Bom dia, <em>Ana</em>.</span>
+        <span class="hi">Bom dia.</span>
         <span class="sub">
-          Hoje você tem 6 incidentes para revisar em
+          @if (pendentes() === 0) {
+            Não há incidentes pendentes de revisão em
+          } @else if (pendentes() === 1) {
+            Você tem <strong>1 incidente</strong> pendente de revisão em
+          } @else {
+            Você tem <strong>{{ pendentes() }} incidentes</strong> pendentes de revisão em
+          }
           <strong style="color:var(--ink)">{{ plantName() }}</strong>.
         </span>
       </div>
       <div class="gstatus">
-        <span class="dot"></span>
-        <span>Sistema operando normalmente · <strong>17 câmeras ativas</strong></span>
+        <app-connection-badge />
+        <span>
+          <strong>{{ cameras().length }} câmera{{ cameras().length === 1 ? '' : 's' }} cadastrada{{ cameras().length === 1 ? '' : 's' }}</strong>
+        </span>
       </div>
     </div>
 
     <!-- KPI Row -->
     <section class="kpi-row">
-      <!-- Incidentes -->
+      <!-- Incidentes hoje -->
       <article class="kpi" style="--kpi-color: #EE4242">
         <div class="kpi-row1">
           <span class="kpi-label">Incidentes hoje</span>
           <span class="kpi-ico">⚠</span>
         </div>
         <div>
-          <div class="kpi-val">6</div>
-          <div class="kpi-sub up"><strong>↑ 2</strong> vs ontem</div>
+          <div class="kpi-val">{{ incidentesHoje() }}</div>
+          <div class="kpi-sub" [class.up]="incidentesHoje() > (resumo()?.incidentesOntem ?? 0)">
+            <strong>{{ variacaoVsOntem() }}</strong>
+          </div>
         </div>
       </article>
 
-      <!-- Conformidade -->
+      <!-- Críticos hoje -->
       <article class="kpi" style="--kpi-color: var(--accent)">
         <div class="kpi-row1">
-          <span class="kpi-label">Conformidade geral</span>
-          <svg class="kpi-ring" viewBox="0 0 48 48">
-            <circle cx="24" cy="24" r="18" stroke="var(--line)" stroke-width="4" fill="none"/>
-            <circle cx="24" cy="24" r="18" stroke="var(--accent)" stroke-width="4" fill="none"
-                    stroke-linecap="round"
-                    [attr.stroke-dasharray]="kpiRingDash(18, 94.2)"
-                    [attr.stroke-dashoffset]="kpiRingOffset(18, 94.2)"
-                    transform="rotate(-90 24 24)"/>
-          </svg>
+          <span class="kpi-label">Críticos hoje</span>
+          <span class="kpi-ico">🛑</span>
         </div>
         <div>
-          <div class="kpi-val">94.2<span class="denom">%</span></div>
-          <div class="kpi-sub">Meta: ≥ 98%</div>
+          <div class="kpi-val">{{ criticosHoje() }}</div>
+          <div class="kpi-sub">de {{ incidentesHoje() }} no total</div>
         </div>
       </article>
 
-      <!-- Estações -->
-      <article class="kpi" style="--kpi-color: #34D07E">
-        <div class="kpi-row1">
-          <span class="kpi-label">Estações ativas</span>
-        </div>
-        <div>
-          <div class="kpi-val">42<span class="denom">/ 48</span></div>
-          <div class="kpi-sub warn">6 em alerta agora</div>
-        </div>
-      </article>
-
-      <!-- Linha parada -->
+      <!-- Pendentes -->
       <article class="kpi" style="--kpi-color: #FFCE38">
         <div class="kpi-row1">
-          <span class="kpi-label">Linha parada hoje</span>
-          <span class="kpi-ico">⚙</span>
+          <span class="kpi-label">Pendentes de revisão</span>
         </div>
         <div>
-          <div class="kpi-val">18<span class="denom">min</span></div>
-          <div class="kpi-sub">≈ R$ 4.200 em impacto</div>
+          <div class="kpi-val">{{ pendentes() }}</div>
+          <div class="kpi-sub">aguardando avaliação</div>
+        </div>
+      </article>
+
+      <!-- Câmeras -->
+      <article class="kpi" style="--kpi-color: #34D07E">
+        <div class="kpi-row1">
+          <span class="kpi-label">Câmeras monitoradas</span>
+          <span class="kpi-ico">⎈</span>
+        </div>
+        <div>
+          <div class="kpi-val">{{ cameras().length }}</div>
+          <div class="kpi-sub">cadastradas no catálogo</div>
         </div>
       </article>
     </section>
@@ -91,10 +95,8 @@
         <div class="panel-head">
           <div class="ph-left">
             <span class="ph-title">Mapa de Calor de Infrações</span>
-            <span class="ph-meta">Setor A · últimas 8h</span>
           </div>
           <div class="ph-right">
-            <span class="updated">atualizado há 3s</span>
             <a routerLink="/heatmap" class="expand" title="Ver análise completa">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
@@ -103,18 +105,16 @@
           </div>
         </div>
         <div class="heat-grid">
-          @for (t of heatData; track $index) {
-            @if (!t) {
-              <div class="heat-tile empty"></div>
-            } @else {
-              <div [class]="'heat-tile ' + heatClass(t.n)">
-                <span class="tid">{{ t.id }}</span>
-                <span class="tst">{{ heatLabel(t.n) }}</span>
-                @if (t.n >= 3) {
-                  <div class="ann">{{ t.n }} violações · CAM-{{ t.id.slice(-2) }} → <em>Ver câmera</em></div>
-                }
-              </div>
-            }
+          @for (cell of heatData(); track cell.estacaoId) {
+            <div [class]="'heat-tile ' + heatClass(cell.incidentes)">
+              <span class="tid">{{ cell.nome }}</span>
+              <span class="tst">{{ heatLabel(cell.incidentes) }}</span>
+              @if (cell.incidentes >= 3) {
+                <div class="ann">{{ cell.incidentes }} violações · <em>Ver câmera</em></div>
+              }
+            </div>
+          } @empty {
+            <div class="vazio">sem estações cadastradas</div>
           }
         </div>
         <div class="heat-legend">
@@ -132,51 +132,72 @@
           <a class="link" href="#">Ver todos →</a>
         </div>
         <div class="alerts-list">
-          @for (a of alerts; track $index) {
-            <div [class]="'alert-row ' + a.sev">
-              <span class="a-time">{{ a.time }}</span>
-              <span class="a-station">{{ a.est }}</span>
-              <span class="a-type">{{ a.type }}</span>
-              <span class="a-sev">{{ a.sev === 'crit' ? 'CRÍTICO' : 'ALTO' }}</span>
+          @for (inc of recentes(); track inc.incidentKey) {
+            <div [class]="'alert-row ' + (inc.nivel === 'ALTO' ? 'crit' : inc.nivel === 'MEDIO' ? 'high' : '')">
+              <span class="a-time">{{ hora(inc.detectedAt) }}</span>
+              <span class="a-station">{{ inc.cameraId }}</span>
+              <span class="a-type">{{ rotulo(inc.type) }}</span>
+              <span class="a-sev">{{ inc.nivel }}</span>
             </div>
+          } @empty {
+            @if (conexao() === 'offline') {
+              <div class="vazio">sem conexão — a lista pode estar incompleta</div>
+            } @else if (conexao() === 'conectando') {
+              <div class="vazio">conectando…</div>
+            } @else {
+              <div class="vazio">nenhum incidente no período</div>
+            }
           }
         </div>
         <div class="alerts-foot">
-          <span class="l">2 alertas críticos ativos</span>
+          <span class="l">
+            {{ criticosHoje() }} alerta{{ criticosHoje() === 1 ? '' : 's' }} crítico{{ criticosHoje() === 1 ? '' : 's' }} hoje
+          </span>
           <a class="r" href="#">Resolver pendências →</a>
         </div>
       </div>
     </div>
 
-    <!-- Predictive chart -->
+    <!-- Live feed -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="ph-left">
+          <span class="ph-title">Câmera ao vivo</span>
+          @if (cameraAtual(); as cam) {
+            <span class="ph-meta">{{ cam.nome }}</span>
+          }
+        </div>
+      </div>
+      <div style="flex:1; min-height:240px; position:relative; border-radius:10px; overflow:hidden; background:var(--surface-2);">
+        <app-live-feed [camera]="cameraAtual()" />
+      </div>
+    </div>
+
+    <!-- Weekly chart -->
     <div class="chart-panel">
       <div class="chart-head">
         <div class="ch-l">
-          <span class="t">Análise Preditiva · Infrações por Dia da Semana</span>
-          <span class="s">Padrão identificado: pico às quartas-feiras — recomendação de reforço preventivo</span>
+          <span class="t">Infrações por Dia · Últimos 7 Dias</span>
+          <span class="s">Contagem de incidentes registrados por dia</span>
         </div>
-        <span class="ai-badge">IA</span>
       </div>
       <div class="bars">
-        <div class="mean" [style.bottom.%]="meanPct()"></div>
-        @for (b of barData; track $index) {
-          <div [class]="'bar-col' + (b.peak ? ' peak' : '')">
-            <span class="bar-val">{{ b.v }}</span>
-            <div class="bar" [style.height.%]="barPct(b.v)"></div>
+        @if (barData().length) {
+          <div class="mean" [style.bottom.%]="meanPct()" [title]="'média ' + mediaDiaria().toFixed(1)"></div>
+        }
+        @for (b of barData(); track b.dia) {
+          <div class="bar-col">
+            <span class="bar-val">{{ b.incidentes }}</span>
+            <div class="bar" [style.height.%]="barPct(b.incidentes)"></div>
           </div>
+        } @empty {
+          <div class="vazio">sem dados do período</div>
         }
       </div>
       <div class="bars-axis">
-        @for (b of barData; track $index) {
-          <span class="bd">{{ b.d }}</span>
+        @for (b of barData(); track b.dia) {
+          <span class="bd">{{ diaCurto(b.dia) }}</span>
         }
-      </div>
-      <div class="insight">
-        <span class="diam">◆</span>
-        <span>
-          <strong>Recomendação:</strong> aumentar frequência de verificação presencial nas quartas-feiras,
-          especialmente no turno noturno. Pico semanal está 96% acima da média.
-        </span>
       </div>
     </div>
   </main>

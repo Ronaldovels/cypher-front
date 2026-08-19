@@ -17,8 +17,8 @@ const SNAP_ZONES: SnapZone[] = [
 
 const ITEMS: (DockItem | null)[] = [
   { key: 'dashboard', label: 'Dashboard',     route: '/dashboard' },
-  { key: 'live',      label: 'Ao Vivo',       alertDot: true },
-  { key: 'alerts',    label: 'Alertas',       badge: 6 },
+  { key: 'live',      label: 'Ao Vivo' },
+  { key: 'alerts',    label: 'Alertas' },
   null,
   { key: 'heatmap',   label: 'Heatmap',       route: '/heatmap' },
   { key: 'history',   label: 'Histórico' },

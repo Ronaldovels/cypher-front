@@ -20,7 +20,15 @@
       "Bash(cd \"/tmp\")",
       "Bash(npx @angular/cli@21 new cypher-front --routing=false --style=scss --skip-git --standalone --skip-tests)",
       "Bash(cp *)",
-      "Bash(npx @angular/cli@21 build --configuration development)"
+      "Bash(npx @angular/cli@21 build --configuration development)",
+      "Bash(npm list *)",
+      "Bash(npm audit *)",
+      "Bash(npm outdated *)",
+      "Bash(npm install *)",
+      "Bash(npm start *)",
+      "Bash(curl -s http://localhost:4200/)",
+      "Bash(kill %1)",
+      "Bash(git push *)"
     ]
   }
 }

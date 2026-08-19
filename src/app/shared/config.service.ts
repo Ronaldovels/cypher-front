@@ -8,7 +8,6 @@ export interface CypherConfig {
   logoUrl: string | null;
   logoName: string;
   accent: string;
-  theme: string;
   epis: string[];
   cas: Record<string, any>;
 }
@@ -25,7 +24,6 @@ export class ConfigService {
       document.documentElement.style.setProperty('--accent', cfg.accent);
       document.documentElement.style.setProperty('--accent-soft', accentRgba(cfg.accent, 0.14));
       document.documentElement.style.setProperty('--accent-deep', accentShade(cfg.accent, -0.12));
-      document.body.className = `theme-${cfg.theme}`;
     });
   }
 
