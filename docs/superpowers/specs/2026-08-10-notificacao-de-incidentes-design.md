@@ -531,7 +531,7 @@ gestor · desktop
   /incidentes/:id          E3   detalhe — snapshot, REBA, zona, EPIs, ações
   /estacoes                E3   grade de feeds ao vivo
   /config/estacoes         E2   cadastro de estações e câmeras
-  /config/epis             E2   EPIs monitorados
+  /config/epis             --   EPIs monitorados (adiado — ver abaixo)
   /config/equipe           E4   equipes, alocação e permissões
   /placar                  E5   conformidade, metas e sequências por equipe
   /relatorios              E6   exportação
@@ -541,6 +541,8 @@ operador · kiosk na estação
 ```
 
 `/config/epis` existe porque hoje a configuração de EPIs só é acessível refazendo o onboarding: o `ConfigService` grava em `localStorage` e nunca mais é editável.
+
+**Adiada em 2026-08-20, durante o design de E2** (ver `2026-08-20-cadastro-e-cameras-design.md` §10). Esta tela estava mapeada para E2 e saiu: a configuração de EPIs não tem consumidor — `EPI_VIOLATION` não dispara porque o `exp.pt` só possui classes de presença, e o backend não lê a lista. Fica **condicionada ao retreino do detector com classes `no_*`**, item do cronograma pós-NEXT; entra na mesma entrega que esse retreino, quando passar a existir algo que a consuma.
 
 O kiosk do operador é a única tela sem navegação — abre numa estação e permanece nela.
 
