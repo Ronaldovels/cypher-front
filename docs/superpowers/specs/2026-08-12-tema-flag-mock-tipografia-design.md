@@ -1,7 +1,7 @@
 # Tema, flag de dados mockados e sistema tipográfico — Design
 
 **Data:** 2026-08-12
-**Escopo:** três ajustes ao plano `docs/superpowers/plans/2026-08-10-e1c-front-dados-reais.md`, levantados na revisão dele.
+**Escopo:** três ajustes ao plano `docs/superpowers/plans/e1/2026-08-10-e1c-front-dados-reais.md`, levantados na revisão dele.
 **Repositório:** `/home/asaas/projects/challenge/cypher-front`
 
 Os três são independentes entre si. Dois deles (tema e tipografia) não dependem da API e podem ser feitos antes de qualquer coisa de E1-C.
