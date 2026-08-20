@@ -1,0 +1,88 @@
+<section class="cadastro">
+  @if (erro()) {
+    <p class="erro" role="alert">{{ erro() }}</p>
+  }
+
+  <div class="forms">
+    <form class="card" (submit)="$event.preventDefault(); salvarEstacao()">
+      <h3>Nova estação</h3>
+      <label>Código
+        <input [value]="novaEstacao().id" placeholder="EST-01"
+               (input)="novaEstacao.set({ ...novaEstacao(), id: ($any($event.target).value || '').toUpperCase() })" />
+      </label>
+      <label>Nome
+        <input [value]="novaEstacao().nome" placeholder="Esteira de montagem"
+               (input)="novaEstacao.set({ ...novaEstacao(), nome: $any($event.target).value })" />
+      </label>
+      <label>Setor
+        <input [value]="novaEstacao().setor" placeholder="montagem"
+               (input)="novaEstacao.set({ ...novaEstacao(), setor: $any($event.target).value })" />
+      </label>
+      <button type="submit" [disabled]="salvando()">Cadastrar estação</button>
+    </form>
+
+    <form class="card" (submit)="$event.preventDefault(); salvarCamera()">
+      <h3>Nova câmera</h3>
+      <label>Código
+        <input [value]="novaCamera().id" placeholder="CAM-01"
+               (input)="novaCamera.set({ ...novaCamera(), id: ($any($event.target).value || '').toUpperCase() })" />
+      </label>
+      <label>Nome
+        <input [value]="novaCamera().nome" placeholder="Esteira - frontal"
+               (input)="novaCamera.set({ ...novaCamera(), nome: $any($event.target).value })" />
+      </label>
+      <label>Estação
+        <select [value]="novaCamera().estacaoId"
+                (change)="novaCamera.set({ ...novaCamera(), estacaoId: $any($event.target).value })">
+          <option value="">Escolha…</option>
+          @for (e of estacoes(); track e.id) {
+            @if (e.ativa) { <option [value]="e.id">{{ e.id }} · {{ e.nome }}</option> }
+          }
+        </select>
+      </label>
+      <label>URL do stream
+        <input [value]="novaCamera().streamUrl" placeholder="http://127.0.0.1:8090/stream"
+               (input)="novaCamera.set({ ...novaCamera(), streamUrl: $any($event.target).value })" />
+      </label>
+      <label>Fonte de captura
+        <input [value]="novaCamera().fonte"
+               placeholder="rtsp://&#36;&#123;CAM01_USER&#125;:&#36;&#123;CAM01_PASS&#125;&#64;10.0.0.7/stream"
+               (input)="novaCamera.set({ ...novaCamera(), fonte: $any($event.target).value })" />
+      </label>
+      <p class="ajuda">
+        Use <code>&#36;&#123;VARIAVEL&#125;</code> para usuário e senha. O valor é lido do ambiente
+        do computador que roda o pipeline — a senha nunca é gravada no servidor.
+      </p>
+      <button type="submit" [disabled]="salvando()">Cadastrar câmera</button>
+    </form>
+  </div>
+
+  <div class="lista">
+    <h3>Cadastrado</h3>
+    @for (e of estacoes(); track e.id) {
+      <div class="estacao" [class.inativa]="!e.ativa">
+        <div class="linha">
+          <strong>{{ e.id }}</strong>
+          <span>{{ e.nome }}</span>
+          <span class="setor">{{ e.setor || 'sem setor' }}</span>
+          @if (e.ativa) {
+            <button type="button" (click)="desativarEstacao(e.id)">desativar</button>
+          } @else {
+            <button type="button" (click)="reativarEstacao(e.id)">reativar</button>
+          }
+        </div>
+        @for (c of e.cameras; track c.id) {
+          <div class="camera">
+            <span>{{ c.id }}</span>
+            <span>{{ c.nome }}</span>
+            <button type="button" (click)="desativarCamera(c.id)">desativar</button>
+          </div>
+        } @empty {
+          <p class="vazio">nenhuma câmera nesta estação — o sistema não vê nada aqui</p>
+        }
+      </div>
+    } @empty {
+      <p class="vazio">nenhuma estação cadastrada ainda</p>
+    }
+  </div>
+</section>
