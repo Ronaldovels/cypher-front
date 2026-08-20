@@ -1,4 +1,4 @@
-import { Camera, Incident, Station, Summary } from '../incident.models';
+import { Camera, CameraAdmin, Incident, Station, Summary } from '../incident.models';
 
 /**
  * Dados de exemplo do modo `useMockData`.
@@ -136,3 +136,24 @@ export function resumo(): Summary {
     })),
   };
 }
+
+/**
+ * Estado mutável do catálogo no modo de exemplo.
+ *
+ * O interceptor precisa de escrita para que as telas de cadastro sejam
+ * desenvolvíveis sem backend. As constantes acima seguem sendo a semente;
+ * estas são a cópia que muda.
+ */
+export let STATIONS_MUTAVEL: Station[] = [];
+export let CAMERAS_MUTAVEL: CameraAdmin[] = [];
+
+export function resetMockCatalog(): void {
+  STATIONS_MUTAVEL = STATIONS.map(s => ({ ...s, cameras: [...s.cameras] }));
+  CAMERAS_MUTAVEL = CAMERAS.map(c => ({
+    ...c,
+    fonte: `rtsp://\${${c.id.replace('-', '_')}_USER}@10.0.0.7/stream`,
+    ativa: true,
+  }));
+}
+
+resetMockCatalog();
