@@ -26,7 +26,7 @@ const ITEMS: (DockItem | null)[] = [
   { key: 'team',      label: 'Colaboradores' },
   { key: 'invite',    label: 'Cadastrar' },
   null,
-  { key: 'config',    label: 'Configurações' },
+  { key: 'config',    label: 'Configurações',   route: '/config/estacoes' },
 ];
 
 function nearestZone(x: number, y: number): DockPos {

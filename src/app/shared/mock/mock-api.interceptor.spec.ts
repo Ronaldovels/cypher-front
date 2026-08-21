@@ -179,6 +179,17 @@ describe('mockApiInterceptor — escritas', () => {
     expect(camera.fonte).toContain('${U}');
   });
 
+  it('resumo().heatmap reflete o catalogo mutavel: aparece ao cadastrar e some ao desativar', async () => {
+    await esperar(cliente.post(`${environment.apiUrl}/stations`,
+      { id: 'EST-90', nome: 'Nova', setor: null }));
+
+    expect(resumo().heatmap.map(h => h.estacaoId)).toContain('EST-90');
+
+    await esperar(cliente.delete(`${environment.apiUrl}/stations/EST-90`));
+
+    expect(resumo().heatmap.map(h => h.estacaoId)).not.toContain('EST-90');
+  });
+
   it('reset devolve as fixtures ao estado inicial', async () => {
     await esperar(cliente.post(`${environment.apiUrl}/stations`,
       { id: 'EST-90', nome: 'Nova', setor: null }));

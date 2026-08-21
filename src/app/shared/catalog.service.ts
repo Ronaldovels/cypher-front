@@ -10,8 +10,9 @@ import {
 /**
  * Câmeras e estações.
  *
- * Fonte única do catálogo para dashboard, heatmap e cadastro: recarregar aqui
- * atualiza as três telas, sem código de sincronização entre elas.
+ * Fonte única do catálogo para dashboard e cadastro: recarregar aqui
+ * atualiza as duas telas, sem código de sincronização entre elas. O heatmap
+ * lê o resumo de `IncidentService`, atualizado à parte por navegação/polling.
  */
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
