@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { OnboardingData, DEFAULT_DATA, deriveEpis, accentRgba, accentShade } from './models/onboarding.models';
+import { OnboardingData, DEFAULT_DATA, STEPS, deriveEpis, accentRgba, accentShade } from './models/onboarding.models';
 
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
@@ -37,24 +37,38 @@ export class OnboardingService {
     this.data.update(d => ({ ...d, picks, epis }));
   }
 
+  /**
+   * Valida por **chave**, nunca por índice.
+   *
+   * A versão anterior decidia por posição (`s === 1` validava EPIs). Inserir
+   * um passo no meio fazia a regra errada rodar no passo errado, sem nenhum
+   * erro aparecer — exatamente o tipo de defeito que só aparece na demo.
+   */
   validateStep(s: number): boolean {
+    const key = STEPS[s]?.key;
     const d = this.data();
     const e: Record<string, string> = {};
-    if (s === 0) {
+
+    if (key === 'identity') {
       if (!d.company.trim()) e['company'] = 'Nome obrigatório';
       if (d.cnpj && d.cnpj.replace(/\D/g, '').length < 14) e['cnpj'] = 'CNPJ incompleto';
       if (!d.sector) e['sector'] = 'Selecione um setor';
     }
-    if (s === 1) {
+
+    if (key === 'epis') {
       if (d.epis.length === 0) e['epis'] = 'Selecione pelo menos 1 EPI';
     }
+
+    // 'stations' não bloqueia: bloquear tornaria o onboarding um beco sem
+    // saída quando a API está fora. O aviso vive na tela do passo.
+
     this.errors.set(e);
     return Object.keys(e).length === 0;
   }
 
   next(): void {
     if (!this.validateStep(this.step())) return;
-    if (this.step() < 3) {
+    if (this.step() < STEPS.length - 1) {
       this.direction.set('forward');
       this.step.update(s => s + 1);
     }
