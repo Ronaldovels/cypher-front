@@ -19,12 +19,12 @@ describe('DockComponent', () => {
     expect(fixture.componentInstance.items.find(i => i?.key === 'live')?.route).toBe('/estacoes');
   });
 
-  it('liga "Alertas" e "Histórico" à timeline de incidentes', () => {
+  it('liga "Alertas" à timeline de incidentes, sem duplicar como "Histórico"', () => {
     const fixture = TestBed.createComponent(DockComponent);
     fixture.detectChanges();
 
     expect(fixture.componentInstance.items.find(i => i?.key === 'alerts')?.route).toBe('/incidentes');
-    expect(fixture.componentInstance.items.find(i => i?.key === 'history')?.route).toBe('/incidentes');
+    expect(fixture.componentInstance.items.find(i => i?.key === 'history')).toBeUndefined();
   });
 
   it('itens com rota renderizam como link, não botão', () => {
