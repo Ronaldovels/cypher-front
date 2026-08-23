@@ -17,11 +17,11 @@ const SNAP_ZONES: SnapZone[] = [
 
 const ITEMS: (DockItem | null)[] = [
   { key: 'dashboard', label: 'Dashboard',     route: '/dashboard' },
-  { key: 'live',      label: 'Ao Vivo' },
-  { key: 'alerts',    label: 'Alertas' },
+  { key: 'live',      label: 'Ao Vivo',       route: '/estacoes' },
+  { key: 'alerts',    label: 'Alertas',       route: '/incidentes' },
   null,
   { key: 'heatmap',   label: 'Heatmap',       route: '/heatmap' },
-  { key: 'history',   label: 'Histórico' },
+  { key: 'history',   label: 'Histórico',     route: '/incidentes' },
   null,
   { key: 'team',      label: 'Colaboradores' },
   { key: 'invite',    label: 'Cadastrar' },
