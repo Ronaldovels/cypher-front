@@ -1,81 +1,90 @@
 <section class="cadastro">
   @if (erro()) {
-    <p class="erro" role="alert">{{ erro() }}</p>
+    <p class="alerta" role="alert">{{ erro() }}</p>
   }
 
   <div class="forms">
-    <form class="card" (submit)="$event.preventDefault(); salvarEstacao()">
-      <h3>Nova estação</h3>
-      <label>Código
-        <input [value]="novaEstacao().id" placeholder="EST-01"
+    <form class="cardform" (submit)="$event.preventDefault(); salvarEstacao()">
+      <h3 class="cardform-title">Nova estação</h3>
+      <div class="field">
+        <label>Código</label>
+        <input class="input" [value]="novaEstacao().id" placeholder="EST-01"
                (input)="novaEstacao.set({ ...novaEstacao(), id: ($any($event.target).value || '').toUpperCase() })" />
-      </label>
-      <label>Nome
-        <input [value]="novaEstacao().nome" placeholder="Esteira de montagem"
+      </div>
+      <div class="field">
+        <label>Nome</label>
+        <input class="input" [value]="novaEstacao().nome" placeholder="Esteira de montagem"
                (input)="novaEstacao.set({ ...novaEstacao(), nome: $any($event.target).value })" />
-      </label>
-      <label>Setor
-        <input [value]="novaEstacao().setor" placeholder="montagem"
+      </div>
+      <div class="field">
+        <label>Setor</label>
+        <input class="input" [value]="novaEstacao().setor" placeholder="montagem"
                (input)="novaEstacao.set({ ...novaEstacao(), setor: $any($event.target).value })" />
-      </label>
-      <button type="submit" [disabled]="salvando()">Cadastrar estação</button>
+      </div>
+      <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar estação</button>
     </form>
 
-    <form class="card" (submit)="$event.preventDefault(); salvarCamera()">
-      <h3>Nova câmera</h3>
-      <label>Código
-        <input [value]="novaCamera().id" placeholder="CAM-01"
+    <form class="cardform" (submit)="$event.preventDefault(); salvarCamera()">
+      <h3 class="cardform-title">Nova câmera</h3>
+      <div class="field">
+        <label>Código</label>
+        <input class="input" [value]="novaCamera().id" placeholder="CAM-01"
                (input)="novaCamera.set({ ...novaCamera(), id: ($any($event.target).value || '').toUpperCase() })" />
-      </label>
-      <label>Nome
-        <input [value]="novaCamera().nome" placeholder="Esteira - frontal"
+      </div>
+      <div class="field">
+        <label>Nome</label>
+        <input class="input" [value]="novaCamera().nome" placeholder="Esteira - frontal"
                (input)="novaCamera.set({ ...novaCamera(), nome: $any($event.target).value })" />
-      </label>
-      <label>Estação
-        <select [value]="novaCamera().estacaoId"
+      </div>
+      <div class="field">
+        <label>Estação</label>
+        <select class="select" [value]="novaCamera().estacaoId"
                 (change)="novaCamera.set({ ...novaCamera(), estacaoId: $any($event.target).value })">
           <option value="">Escolha…</option>
           @for (e of estacoes(); track e.id) {
             @if (e.ativa) { <option [value]="e.id">{{ e.id }} · {{ e.nome }}</option> }
           }
         </select>
-      </label>
-      <label>URL do stream
-        <input [value]="novaCamera().streamUrl" placeholder="http://127.0.0.1:8090/stream"
+      </div>
+      <div class="field">
+        <label>URL do stream</label>
+        <input class="input" [value]="novaCamera().streamUrl" placeholder="http://127.0.0.1:8090/stream"
                (input)="novaCamera.set({ ...novaCamera(), streamUrl: $any($event.target).value })" />
-      </label>
-      <label>Fonte de captura
-        <input [value]="novaCamera().fonte"
+      </div>
+      <div class="field">
+        <label>Fonte de captura</label>
+        <input class="input" [value]="novaCamera().fonte"
                placeholder="rtsp://&#36;&#123;CAM01_USER&#125;:&#36;&#123;CAM01_PASS&#125;&#64;10.0.0.7/stream"
                (input)="novaCamera.set({ ...novaCamera(), fonte: $any($event.target).value })" />
-      </label>
+      </div>
       <p class="ajuda">
         Use <code>&#36;&#123;VARIAVEL&#125;</code> para usuário e senha. O valor é lido do ambiente
         do computador que roda o pipeline — a senha nunca é gravada no servidor.
       </p>
-      <button type="submit" [disabled]="salvando()">Cadastrar câmera</button>
+      <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar câmera</button>
     </form>
   </div>
 
   <div class="lista">
-    <h3>Cadastrado</h3>
+    <h3 class="lista-title">Cadastrado</h3>
     @for (e of estacoes(); track e.id) {
-      <div class="estacao" [class.inativa]="!e.ativa">
+      <div class="estacao-card" [class.inativa]="!e.ativa">
         <div class="linha">
-          <strong>{{ e.id }}</strong>
-          <span>{{ e.nome }}</span>
-          <span class="setor">{{ e.setor || 'sem setor' }}</span>
+          <span class="codigo">{{ e.id }}</span>
+          <span class="nome">{{ e.nome }}</span>
+          <span class="chip">{{ e.setor || 'sem setor' }}</span>
+          <span class="status" [class.on]="e.ativa">{{ e.ativa ? 'ativa' : 'inativa' }}</span>
           @if (e.ativa) {
-            <button type="button" (click)="desativarEstacao(e.id)">desativar</button>
+            <button type="button" class="btn ghost sm" (click)="desativarEstacao(e.id)">desativar</button>
           } @else {
-            <button type="button" (click)="reativarEstacao(e.id)">reativar</button>
+            <button type="button" class="btn ghost sm" (click)="reativarEstacao(e.id)">reativar</button>
           }
         </div>
         @for (c of e.cameras; track c.id) {
-          <div class="camera">
-            <span>{{ c.id }}</span>
-            <span>{{ c.nome }}</span>
-            <button type="button" (click)="desativarCamera(c.id)">desativar</button>
+          <div class="camera-row">
+            <span class="codigo">{{ c.id }}</span>
+            <span class="nome">{{ c.nome }}</span>
+            <button type="button" class="btn ghost sm" (click)="desativarCamera(c.id)">desativar</button>
           </div>
         } @empty {
           <p class="vazio">nenhuma câmera nesta estação — o sistema não vê nada aqui</p>
