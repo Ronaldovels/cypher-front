@@ -763,3 +763,9 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .detail-value { font-size:14px; color:var(--ink); }
 .detail-status { display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--line-2); padding-top:16px; }
 .detail-status-actions { display:flex; gap:10px; }
+
+.stations-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
+.station-card { text-decoration:none; color:inherit; min-height:0; cursor:pointer; transition:transform 0.15s; }
+.station-card:hover { transform:translateY(-2px); border-color:var(--line-3); }
+.station-feed { min-height:180px; border-radius:10px; overflow:hidden; background:var(--surface-2); margin-bottom:10px; }
+.station-cam-count { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.06em; }
