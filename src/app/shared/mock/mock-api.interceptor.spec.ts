@@ -51,10 +51,87 @@ describe('mockApiInterceptor', () => {
     expect(page.content.every(i => i.detectedAt > maisAntigo.detectedAt)).toBe(true);
   });
 
+  it('filtra por since expresso em UTC (Z) igual a quando expresso no offset original', async () => {
+    // A timeline (/incidentes) converte o <input datetime-local> para ISO em
+    // Z antes de mandar `since` — offset diferente do -03:00 das fixtures.
+    // Comparação por string quebraria aqui (dígitos de hora diferentes para o
+    // mesmo instante); precisa comparar o instante mesmo (Date.parse).
+    const maisAntigo = INCIDENTS.reduce((a, b) => a.detectedAt < b.detectedAt ? a : b);
+    const sinceLocal = maisAntigo.detectedAt;
+    const sinceEmZ = new Date(sinceLocal).toISOString();
+
+    const paginaLocal = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`, { params: { since: sinceLocal } }));
+    const paginaZ = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`, { params: { since: sinceEmZ } }));
+
+    expect(paginaZ.content.map(i => i.incidentKey).sort())
+      .toEqual(paginaLocal.content.map(i => i.incidentKey).sort());
+    expect(paginaLocal.content.length).toBeGreaterThan(0);
+  });
+
   it('deixa passar o que não conhece', () => {
     http.get(`${environment.apiUrl}/desconhecido`).subscribe();
 
     rede.expectOne(`${environment.apiUrl}/desconhecido`);
+  });
+
+  it('responde /incidents/{id} com o incidente correspondente', async () => {
+    const alvo = INCIDENTS[0];
+
+    const incidente = await firstValueFrom(
+      http.get<Incident>(`${environment.apiUrl}/incidents/${alvo.id}`));
+
+    expect(incidente.incidentKey).toBe(alvo.incidentKey);
+  });
+
+  it('/incidents/{id} inexistente devolve 404', async () => {
+    await expect(firstValueFrom(
+      http.get(`${environment.apiUrl}/incidents/999999`)))
+      .rejects.toMatchObject({ status: 404 });
+  });
+
+  it('filtra por camera', async () => {
+    const alvo = INCIDENTS.find(i => i.cameraId === 'CAM-01')!;
+
+    const page = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`,
+        { params: { camera: alvo.cameraId } }));
+
+    expect(page.content.length).toBeGreaterThan(0);
+    expect(page.content.every(i => i.cameraId === alvo.cameraId)).toBe(true);
+  });
+
+  it('filtra por severityMin', async () => {
+    const page = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`,
+        { params: { severityMin: '3' } }));
+
+    expect(page.content.every(i => i.severity >= 3)).toBe(true);
+  });
+
+  it('filtra por status', async () => {
+    const page = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`,
+        { params: { status: 'RESOLVIDO' } }));
+
+    expect(page.content.length).toBeGreaterThan(0);
+    expect(page.content.every(i => i.status === 'RESOLVIDO')).toBe(true);
+  });
+
+  it('pagina com page e size', async () => {
+    const primeira = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`,
+        { params: { page: '0', size: '2' } }));
+
+    expect(primeira.content.length).toBe(2);
+    expect(primeira.totalPages).toBe(Math.ceil(INCIDENTS.length / 2));
+
+    const segunda = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`,
+        { params: { page: '1', size: '2' } }));
+
+    expect(segunda.content[0].incidentKey).not.toBe(primeira.content[0].incidentKey);
   });
 
   it('responde PUT de status de um incidente emitido ao vivo sem chegar na rede, preservando o incidentKey', async () => {

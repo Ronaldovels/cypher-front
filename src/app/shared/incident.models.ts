@@ -13,6 +13,14 @@ export type IncidentType =
 
 export type AlertaNivel = 'BAIXO' | 'MEDIO' | 'ALTO';
 export type AlertaStatus = 'PENDENTE' | 'REVISADO' | 'RESOLVIDO';
+
+export interface IncidentSearchFilters {
+  camera?: string;
+  severityMin?: number;
+  status?: AlertaStatus;
+  since?: string;
+}
+
 export type ClosedReason =
   | 'STATE_EXIT'
   | 'ESCALATED'
@@ -161,4 +169,16 @@ export function incidentLabel(type: IncidentType): string {
 export function formatTime(iso: string): string {
   const match = iso.match(/T(\d{2}):(\d{2})/);
   return match ? `${match[1]}:${match[2]}` : '--:--';
+}
+
+/**
+ * Data curta e hora, no fuso em que o evento aconteceu (mesma leitura direta
+ * do ISO que `formatTime` usa — sem passar por `Date`/fuso do navegador).
+ *
+ * Necessário em telas que cobrem vários dias (`/incidentes`, `/incidentes/:id`);
+ * o dashboard usa só `formatTime` porque sua lista é sempre do dia atual.
+ */
+export function formatDateTime(iso: string): string {
+  const match = iso.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  return match ? `${match[3]}/${match[2]} ${match[4]}:${match[5]}` : '--/-- --:--';
 }

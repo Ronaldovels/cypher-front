@@ -17,11 +17,10 @@ const SNAP_ZONES: SnapZone[] = [
 
 const ITEMS: (DockItem | null)[] = [
   { key: 'dashboard', label: 'Dashboard',     route: '/dashboard' },
-  { key: 'live',      label: 'Ao Vivo' },
-  { key: 'alerts',    label: 'Alertas' },
+  { key: 'live',      label: 'Ao Vivo',       route: '/estacoes' },
+  { key: 'alerts',    label: 'Alertas',       route: '/incidentes' },
   null,
   { key: 'heatmap',   label: 'Heatmap',       route: '/heatmap' },
-  { key: 'history',   label: 'Histórico' },
   null,
   { key: 'team',      label: 'Colaboradores' },
   { key: 'invite',    label: 'Cadastrar' },
@@ -130,11 +129,6 @@ function nearestZone(x: number, y: number): DockPos {
             <path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
             <rect x="9.5" y="9.5" width="5" height="5" fill="currentColor" stroke="none" opacity="0.55"/>
             <rect x="15.5" y="3.5" width="5" height="5" fill="currentColor" stroke="none" opacity="0.3"/>
-          </svg>
-        }
-        @case ('history') {
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 21V4M3 21h17"/><path d="M6 16l4-4 3 3 6-7"/><path d="M16 8h3v3"/>
           </svg>
         }
         @case ('team') {

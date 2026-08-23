@@ -7,7 +7,7 @@ import { ThemeService } from '../theme.service';
   imports: [RouterLink],
   template: `
     <header class="dtop">
-      <a routerLink="/" class="brand-mini" title="Voltar ao onboarding" style="text-decoration:none;color:inherit">
+      <a routerLink="/dashboard" data-test="brand-logo" class="brand-mini" title="Dashboard" style="text-decoration:none;color:inherit">
         <div class="brand-logo" [style.background]="cfg()?.accent || 'var(--accent)'">
           @if (cfg()?.logoUrl) {
             <img [src]="cfg()!.logoUrl!" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:8px"/>

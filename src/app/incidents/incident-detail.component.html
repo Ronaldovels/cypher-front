@@ -1,0 +1,56 @@
+<div class="dash">
+  <app-chrome-topbar [cfg]="cfg()" page="Detalhe do incidente" [subtitle]="incidente()?.incidentKey ?? ''" [live]="false" [notifBadge]="0" [shift]="null"/>
+
+  <main class="dcontent">
+    @if (carregando()) {
+      <div class="panel"><div class="vazio">carregando…</div></div>
+    } @else if (erro()) {
+      <div class="panel">
+        <div class="vazio">{{ erro() }}</div>
+        <a routerLink="/incidentes" class="btn ghost">← voltar para incidentes</a>
+      </div>
+    } @else if (incidente(); as inc) {
+      <div class="panel">
+        <div class="panel-head">
+          <div class="ph-left">
+            <span class="ph-title">{{ rotulo(inc.type) }}</span>
+            <span class="ph-meta">{{ inc.cameraId }} · {{ hora(inc.detectedAt) }}</span>
+          </div>
+        </div>
+
+        <div class="detail-snapshot">
+          @if (inc.snapshotUrl) {
+            <img [src]="inc.snapshotUrl" alt="Snapshot do incidente"/>
+          } @else {
+            <div class="detail-snapshot-vazio">processando imagem…</div>
+          }
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-field"><span class="detail-label">Severidade</span><span class="detail-value">{{ inc.severity }} · {{ inc.nivel }}</span></div>
+          <div class="detail-field"><span class="detail-label">REBA</span><span class="detail-value">{{ inc.rebaScore }} (ação {{ inc.actionLevel }})</span></div>
+          <div class="detail-field"><span class="detail-label">Zona</span><span class="detail-value">{{ inc.zoneName ?? ('sem zona (' + inc.zoneStatus + ')') }}</span></div>
+          <div class="detail-field"><span class="detail-label">EPIs presentes</span><span class="detail-value">{{ inc.epiPresent.join(', ') || '—' }}</span></div>
+          <div class="detail-field"><span class="detail-label">EPIs ausentes</span><span class="detail-value">{{ inc.epiMissing.join(', ') || '—' }}</span></div>
+          @if (inc.durationSeconds !== null) {
+            <div class="detail-field"><span class="detail-label">Duração</span><span class="detail-value">{{ inc.durationSeconds }}s · pico {{ inc.peakSeverity }}</span></div>
+          }
+          @if (inc.closedReason) {
+            <div class="detail-field"><span class="detail-label">Motivo de fechamento</span><span class="detail-value">{{ inc.closedReason }}</span></div>
+          }
+        </div>
+
+        <div class="detail-status">
+          <span class="detail-label">Status atual: {{ inc.status }}</span>
+          <div class="detail-status-actions">
+            <button type="button" class="btn ghost" [disabled]="inc.status === 'PENDENTE'" (click)="mudarStatus('PENDENTE')">Pendente</button>
+            <button type="button" class="btn ghost" [disabled]="inc.status === 'REVISADO'" (click)="mudarStatus('REVISADO')">Revisado</button>
+            <button type="button" class="btn primary" [disabled]="inc.status === 'RESOLVIDO'" (click)="mudarStatus('RESOLVIDO')">Resolvido</button>
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+
+  <app-dock activeKey="alerts"/>
+</div>

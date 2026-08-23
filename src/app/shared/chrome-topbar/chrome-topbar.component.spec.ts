@@ -57,4 +57,12 @@ describe('ChromeTopbarComponent', () => {
     expect(link.getAttribute('href')).toBe('/config/identidade');
     expect(link.getAttribute('aria-label')).toBe('Configurações');
   });
+
+  it('o logotipo leva para o dashboard, não para o onboarding', () => {
+    const fixture = montar();
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-test="brand-logo"]');
+
+    expect(link.getAttribute('href')).toBe('/dashboard');
+    expect(link.getAttribute('title')).toBe('Dashboard');
+  });
 });

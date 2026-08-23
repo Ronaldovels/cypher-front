@@ -155,14 +155,41 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
   }
 
   if (req.method === 'GET' && req.url === `${base}/incidents`) {
-    // Comparação de string funciona porque todas as fixtures trazem o mesmo
-    // offset -03:00; com offsets misturados isto precisaria de Date.
+    // Comparação por instante (Date.parse), não string: a timeline manda
+    // `since` em UTC (`Z`, de um <input type="datetime-local">) enquanto o
+    // reconnect do SSE manda no offset original da fixture (-03:00) — os dois
+    // precisam comparar igual ao mesmo instante, não por ordem lexicográfica.
     const since = req.params.get('since');
-    const lista = since ? INCIDENTS.filter(i => i.detectedAt > since) : INCIDENTS;
+    const desde = since ? Date.parse(since) : null;
+    const camera = req.params.get('camera');
+    const severityMinStr = req.params.get('severityMin');
+    const status = req.params.get('status');
+    const page = Number(req.params.get('page') ?? '0');
+    // Sem size explícito (ex.: loadHistory antigo em outro teste), devolve tudo
+    // que sobrar do filtro — mesmo comportamento de antes desta mudança.
+    const size = Number(req.params.get('size') ?? String(INCIDENTS.length || 1));
+
+    let lista = INCIDENTS;
+    if (desde !== null) lista = lista.filter(i => Date.parse(i.detectedAt) > desde);
+    if (camera) lista = lista.filter(i => i.cameraId === camera);
+    if (severityMinStr) lista = lista.filter(i => i.severity >= Number(severityMinStr));
+    if (status) lista = lista.filter(i => i.status === status);
+
+    const inicio = page * size;
+    const paginaDeItens = lista.slice(inicio, inicio + size);
     return {
-      content: lista, totalElements: lista.length,
-      totalPages: 1, number: 0, size: lista.length,
+      content: paginaDeItens,
+      totalElements: lista.length,
+      totalPages: Math.max(1, Math.ceil(lista.length / size)),
+      number: page,
+      size,
     };
+  }
+
+  if (req.method === 'GET' && req.url.startsWith(`${base}/incidents/`)) {
+    const id = Number(req.url.slice(`${base}/incidents/`.length));
+    const alvo = [...INCIDENTS, ...EMITIDOS].find(i => i.id === id);
+    return alvo ?? naoEncontrado(`Incidente inexistente: ${id}`);
   }
 
   if (req.method === 'GET' && req.url === `${base}/summary`) {

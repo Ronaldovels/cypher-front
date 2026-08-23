@@ -129,7 +129,7 @@
       <div class="panel">
         <div class="panel-head">
           <div class="ph-left"><span class="ph-title">Alertas recentes</span></div>
-          <a class="link" href="#">Ver todos →</a>
+          <a class="link" routerLink="/incidentes">Ver todos →</a>
         </div>
         <div class="alerts-list">
           @for (inc of recentes(); track inc.incidentKey) {
@@ -153,7 +153,7 @@
           <span class="l">
             {{ criticosHoje() }} alerta{{ criticosHoje() === 1 ? '' : 's' }} crítico{{ criticosHoje() === 1 ? '' : 's' }} hoje
           </span>
-          <a class="r" href="#">Resolver pendências →</a>
+          <a class="r" routerLink="/incidentes">Resolver pendências →</a>
         </div>
       </div>
     </div>

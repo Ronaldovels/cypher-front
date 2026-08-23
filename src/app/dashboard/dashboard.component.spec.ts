@@ -94,6 +94,17 @@ describe('DashboardComponent', () => {
 
     expect(fixture.nativeElement.querySelector('app-connection-badge')).not.toBeNull();
   });
+
+  it('"Ver todos" e "Resolver pendências" levam para a timeline de incidentes', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    const links = (Array.from(fixture.nativeElement.querySelectorAll('a')) as HTMLAnchorElement[])
+      .filter(a => a.textContent?.includes('Ver todos') || a.textContent?.includes('Resolver pendências'));
+
+    expect(links.length).toBe(2);
+    links.forEach(a => expect(a.getAttribute('href')).toBe('/incidentes'));
+  });
 });
 
 /**

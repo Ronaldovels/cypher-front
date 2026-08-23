@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTime, incidentLabel, severityClass } from './incident.models';
+import { formatDateTime, formatTime, incidentLabel, severityClass } from './incident.models';
 
 describe('severityClass', () => {
   it('mapeia a severidade crua para a classe visual do heatmap', () => {
@@ -28,5 +28,11 @@ describe('formatTime', () => {
   it('preserva o horário local do evento, não o do navegador', () => {
     // O offset vem no próprio instante; 14:31 em -03:00 é o que aconteceu na planta.
     expect(formatTime('2026-08-10T14:31:02.482-03:00')).toBe('14:31');
+  });
+});
+
+describe('formatDateTime', () => {
+  it('inclui data curta (dd/mm) além da hora, no fuso do evento', () => {
+    expect(formatDateTime('2026-08-10T14:31:02.482-03:00')).toBe('10/08 14:31');
   });
 });

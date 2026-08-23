@@ -566,6 +566,8 @@ Endpoints públicos: apenas `/login` e o health check. O stream MJPEG do Python 
 
 **Restrição sobre E1:** o `IncidentService` do Angular usa `withCredentials: true` desde já, e os controllers são escritos de modo que a introdução do Spring Security em E4 seja aditiva.
 
+**Restrição sobre E4 (descoberta em E3, 2026-08-23):** o kiosk (`/estacao/:id`) hoje esconde `<app-dock>` **por rota** — qualquer visitante da URL perde a navegação, inclusive um gestor autenticado que entre ali para supervisionar a estação. Isso é aceitável em E3 porque não há sessão/papel algum para consultar (§14.1 só define "o kiosk não tem navegação", sem distinguir quem olha). Quando o modelo de acesso desta seção for implementado, a visibilidade do dock deve migrar de "por rota" para "por papel de sessão": `GESTOR` mantém navegação normal em qualquer rota, inclusive `/estacao/:id`; só a sessão de kiosk (`OPERADOR`, token de estação) fica sem dock. A lógica que hoje decide "não renderizar `<app-dock>` nesta rota" precisa passar a decidir "não renderizar `<app-dock>` para esta sessão".
+
 ## 16. Gamificação positiva por equipe
 
 Decidido em E1, implementado em E5.
