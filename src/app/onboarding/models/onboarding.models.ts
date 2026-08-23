@@ -53,6 +53,8 @@ export interface RolePreset {
 
 export const STEPS: Step[] = [
   { key: 'identity', name: 'Identidade da empresa', hint: 'Marca · CNPJ · cor' },
+  // Antes dos EPIs de propósito: sem câmera cadastrada o sistema não vê nada.
+  { key: 'stations', name: 'Estações e câmeras', hint: 'O que será monitorado' },
   { key: 'epis', name: 'EPIs monitorados', hint: 'Seleção dos equipamentos' },
   { key: 'cas', name: 'CAs e validades', hint: 'Opcional · certificados' },
   { key: 'launch', name: 'Confirmação', hint: 'Revisar e iniciar' },

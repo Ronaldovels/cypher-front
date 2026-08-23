@@ -5,10 +5,13 @@
     <div class="main">
       @for (key of [state.stepKey()]; track key) {
         <div [class]="state.direction() === 'back' ? 'step-enter-back' : 'step-enter'" style="display:contents">
-          @if (state.step() === 0) { <app-step1-identity/> }
-          @if (state.step() === 1) { <app-step2-epis/> }
-          @if (state.step() === 2) { <app-step3-cas/> }
-          @if (state.step() === 3) { <app-step4-confirm/> }
+          @switch (steps[state.step()].key) {
+            @case ('identity') { <app-step1-identity/> }
+            @case ('stations') { <app-step-stations/> }
+            @case ('epis') { <app-step2-epis/> }
+            @case ('cas') { <app-step3-cas/> }
+            @case ('launch') { <app-step4-confirm/> }
+          }
         </div>
       }
     </div>
@@ -64,7 +67,7 @@
       Voltar
     </button>
     <div style="display:flex;gap:12px">
-      @if (state.step() === 2) {
+      @if (steps[state.step()].key === 'cas') {
         <button class="btn ghost" (click)="state.skip()">Pular esta etapa</button>
       }
       @if (state.step() < steps.length - 1) {

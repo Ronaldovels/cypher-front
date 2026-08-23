@@ -1,0 +1,48 @@
+<app-chrome-topbar [cfg]="cfg()" page="Configurações" subtitle="Edite quando quiser" />
+
+<div class="settings-shell">
+  <nav class="cat-rail">
+    @for (t of tabs; track t.path) {
+      <a class="cat-item" [routerLink]="t.path" routerLinkActive="on">
+        <span class="ci-icon">
+          @switch (t.path) {
+            @case ('identidade') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="3" width="16" height="18" rx="1.5"/>
+                <path d="M8 7h2M8 11h2M8 15h2M14 7h2M14 11h2M14 15h2"/>
+                <path d="M10 21v-4h4v4"/>
+              </svg>
+            }
+            @case ('estacoes') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2.5" y="6.5" width="13" height="11" rx="2"/><path d="M15.5 10.5 L21 7 V17 L15.5 13.5 Z"/>
+              </svg>
+            }
+            @case ('epis') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+            }
+            @case ('cas') {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 3h9l3 3v15H6z"/><path d="M15 3v3h3"/>
+                <path d="M9 12h6M9 15h6M9 9h3"/>
+              </svg>
+            }
+          }
+        </span>
+        <span class="ci-text">
+          <span class="ci-name">{{ t.label }}</span>
+          <span class="ci-sub">{{ t.hint }}</span>
+        </span>
+      </a>
+    }
+  </nav>
+
+  <main class="settings-content">
+    <router-outlet />
+  </main>
+</div>
+
+<app-dock activeKey="config" />

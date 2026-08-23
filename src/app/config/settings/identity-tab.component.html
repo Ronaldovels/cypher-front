@@ -1,0 +1,91 @@
+<div class="tab-head">
+  <div>
+    <div class="eyebrow-accent">Identidade</div>
+    <h2 class="tab-title">Dados da sua <em style="color:var(--accent);font-style:normal">instância Cypher.</em></h2>
+    <p class="sub" style="font-size:14px;margin-top:6px">Esses dados aparecem em todo o sistema. A cor escolhida define o accent visual da plataforma.</p>
+  </div>
+  <div class="save-bar">
+    @if (salvo() && !sujo()) {
+      <span class="save-status ok">salvo</span>
+    } @else if (sujo()) {
+      <span class="save-status">alterações não salvas</span>
+    }
+    <button class="btn primary" [disabled]="!sujo()" (click)="salvar()">Salvar</button>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:32px;max-width:780px">
+  <div class="field">
+    <label>Nome da empresa</label>
+    <input class="input" placeholder="Acme Indústrias Ltda."
+           [value]="draft().company"
+           (input)="patch({ company: $any($event.target).value })" />
+  </div>
+
+  <div class="field">
+    <label>CNPJ</label>
+    <input class="input" placeholder="00.000.000/0000-00"
+           [value]="draft().cnpj"
+           (input)="onCnpj($event)" />
+  </div>
+
+  <div class="field">
+    <label>Setor industrial</label>
+    <select class="select"
+            [value]="draft().sector"
+            (change)="patch({ sector: $any($event.target).value })">
+      <option value="">Selecione um setor</option>
+      @for (s of sectors; track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Logo da empresa</label>
+    <label class="logo-drop">
+      <div class="logo-preview">
+        @if (draft().logoUrl) {
+          <img [src]="draft().logoUrl" alt="logo" />
+        } @else {
+          <span>SEM</span><span>LOGO</span>
+        }
+      </div>
+      <div class="logo-meta">
+        <div class="t">{{ draft().logoName || 'Arraste ou selecione SVG/PNG' }}</div>
+        <div class="s">Recomendado · 256 × 256</div>
+      </div>
+      <input type="file" accept="image/*" (change)="onLogo($event)" style="display:none" />
+    </label>
+  </div>
+
+  <div class="field" style="grid-column:1/-1;margin-top:12px">
+    <label>Cor principal · accent</label>
+    <div class="swatches">
+      @for (c of presetColors; track c) {
+        <button class="swatch" [class.on]="draft().accent === c"
+                [style.background]="c" (click)="patch({ accent: c })">
+          <span class="tick">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12l5 5L20 7"/>
+            </svg>
+          </span>
+        </button>
+      }
+      <label class="swatch-custom">
+        <input type="color" [value]="draft().accent"
+               (input)="patch({ accent: $any($event.target).value })" />
+        <span>{{ draft().accent.toUpperCase() }}</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="field" style="grid-column:1/-1">
+    <label>Tema da plataforma</label>
+    <div class="theme-toggle">
+      <button [class.on]="theme() === 'light'" (click)="setTheme('light')">Claro</button>
+      <button [class.on]="theme() === 'dark'" (click)="setTheme('dark')">Escuro</button>
+    </div>
+    <p class="ajuda" style="margin-top:6px">O tema muda na hora — não depende de Salvar.</p>
+  </div>
+</div>

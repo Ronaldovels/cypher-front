@@ -69,6 +69,49 @@ export interface Station {
   cameras: Camera[];
 }
 
+/** Câmera na superfície de administração: a lista não traz `fonte`, o item traz. */
+export interface CameraAdmin extends Camera {
+  fonte: string | null;
+  ativa: boolean;
+}
+
+export interface StationPayload {
+  id: string;
+  nome: string;
+  setor: string | null;
+  ativa?: boolean;
+}
+
+export interface CameraPayload {
+  id: string;
+  nome: string;
+  estacaoId: string;
+  streamUrl: string;
+  fonte: string | null;
+  ativa?: boolean;
+}
+
+/** Mesmo padrão que o backend valida (spec §4): 4 a 19 caracteres. */
+export const CODIGO_PADRAO = /^[A-Z0-9]{2,10}-[A-Z0-9]{1,8}$/;
+
+/**
+ * Texto que o gestor vai ler.
+ *
+ * O backend responde `{"erro": "..."}` em 409 e 422 justamente para que a
+ * tela possa dizer o que aconteceu; trocar isso por "algo deu errado" seria
+ * falha silenciosa com outra roupa.
+ */
+export function mensagemDeErro(erro: unknown): string {
+  const e = erro as { error?: { erro?: string }; status?: number; message?: string } | null;
+  if (e?.error?.erro) {
+    return e.error.erro;
+  }
+  if (e?.status) {
+    return `A operação falhou (HTTP ${e.status}). Tente novamente.`;
+  }
+  return 'A operação falhou. Verifique a conexão com a API.';
+}
+
 export interface StationCell {
   estacaoId: string;
   nome: string;
