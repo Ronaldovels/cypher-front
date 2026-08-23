@@ -13,6 +13,14 @@ export type IncidentType =
 
 export type AlertaNivel = 'BAIXO' | 'MEDIO' | 'ALTO';
 export type AlertaStatus = 'PENDENTE' | 'REVISADO' | 'RESOLVIDO';
+
+export interface IncidentSearchFilters {
+  camera?: string;
+  severityMin?: number;
+  status?: AlertaStatus;
+  since?: string;
+}
+
 export type ClosedReason =
   | 'STATE_EXIT'
   | 'ESCALATED'

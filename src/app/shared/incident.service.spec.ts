@@ -116,6 +116,45 @@ describe('IncidentService', () => {
     expect(service.incidents()[0].status).toBe('REVISADO');
   });
 
+  it('busca um incidente por id e o insere no store', () => {
+    service.getById(42).subscribe(incidenteRec => {
+      expect(incidenteRec.id).toBe(42);
+    });
+
+    const req = http.expectOne(`${environment.apiUrl}/incidents/42`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.withCredentials).toBe(true);
+    req.flush(incidente({ id: 42, incidentKey: 'k42' }));
+
+    expect(service.incidents().some(i => i.incidentKey === 'k42')).toBe(true);
+  });
+
+  it('busca com filtros envia os parâmetros esperados', () => {
+    service.search(
+      { camera: 'CAM-01', severityMin: 3, status: 'PENDENTE', since: '2026-08-10T00:00:00-03:00' },
+      1, 20,
+    ).subscribe();
+
+    const req = http.expectOne(r => r.url === `${environment.apiUrl}/incidents`);
+    expect(req.request.params.get('camera')).toBe('CAM-01');
+    expect(req.request.params.get('severityMin')).toBe('3');
+    expect(req.request.params.get('status')).toBe('PENDENTE');
+    expect(req.request.params.get('since')).toBe('2026-08-10T00:00:00-03:00');
+    expect(req.request.params.get('page')).toBe('1');
+    expect(req.request.params.get('size')).toBe('20');
+    req.flush(pagina([]));
+  });
+
+  it('busca sem filtros envia só paginação', () => {
+    service.search({}, 0, 50).subscribe();
+
+    const req = http.expectOne(r => r.url === `${environment.apiUrl}/incidents`);
+    expect(req.request.params.get('camera')).toBeNull();
+    expect(req.request.params.get('severityMin')).toBeNull();
+    expect(req.request.params.get('page')).toBe('0');
+    req.flush(pagina([]));
+  });
+
   it('guarda o instante do mais recente para cobrir lacuna do SSE', () => {
     service.upsert(incidente({ incidentKey: 'k1', detectedAt: '2026-08-10T10:00:00-03:00' }));
     service.upsert(incidente({ incidentKey: 'k2', detectedAt: '2026-08-10T12:00:00-03:00' }));

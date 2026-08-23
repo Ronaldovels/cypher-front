@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from './event-source.factory';
-import { AlertaStatus, ConnectionState, Incident, Page, Summary } from './incident.models';
+import { AlertaStatus, ConnectionState, Incident, IncidentSearchFilters, Page, Summary } from './incident.models';
 
 /**
  * Store de incidentes.
@@ -96,6 +97,37 @@ export class IncidentService {
         next: atualizado => this.upsert(atualizado),
         error: () => { /* mantém o estado anterior; nada é inventado na tela */ },
       });
+  }
+
+  /** Busca um incidente por id; também insere no store, para refletir mudanças via SSE enquanto a tela de detalhe está aberta. */
+  getById(id: number): Observable<Incident> {
+    return this.http
+      .get<Incident>(`${environment.apiUrl}/incidents/${id}`, { withCredentials: true })
+      .pipe(tap(incident => this.upsert(incident)));
+  }
+
+  /**
+   * Busca paginada com filtros. Mantém estado próprio no chamador — não entra
+   * no store de 100 itens em memória, que cobre só o "ao vivo" do dashboard.
+   */
+  search(filters: IncidentSearchFilters, page: number, size: number): Observable<Page<Incident>> {
+    const params: Record<string, string> = { page: String(page), size: String(size) };
+    if (filters.camera) {
+      params['camera'] = filters.camera;
+    }
+    if (filters.severityMin !== undefined) {
+      params['severityMin'] = String(filters.severityMin);
+    }
+    if (filters.status) {
+      params['status'] = filters.status;
+    }
+    if (filters.since) {
+      params['since'] = filters.since;
+    }
+    return this.http.get<Page<Incident>>(`${environment.apiUrl}/incidents`, {
+      params,
+      withCredentials: true,
+    });
   }
 
   connect(): void {

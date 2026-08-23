@@ -165,6 +165,12 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     };
   }
 
+  if (req.method === 'GET' && req.url.startsWith(`${base}/incidents/`)) {
+    const id = Number(req.url.slice(`${base}/incidents/`.length));
+    const alvo = [...INCIDENTS, ...EMITIDOS].find(i => i.id === id);
+    return alvo ?? naoEncontrado(`Incidente inexistente: ${id}`);
+  }
+
   if (req.method === 'GET' && req.url === `${base}/summary`) {
     return resumo();
   }

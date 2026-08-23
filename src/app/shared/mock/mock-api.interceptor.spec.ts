@@ -57,6 +57,21 @@ describe('mockApiInterceptor', () => {
     rede.expectOne(`${environment.apiUrl}/desconhecido`);
   });
 
+  it('responde /incidents/{id} com o incidente correspondente', async () => {
+    const alvo = INCIDENTS[0];
+
+    const incidente = await firstValueFrom(
+      http.get<Incident>(`${environment.apiUrl}/incidents/${alvo.id}`));
+
+    expect(incidente.incidentKey).toBe(alvo.incidentKey);
+  });
+
+  it('/incidents/{id} inexistente devolve 404', async () => {
+    await expect(firstValueFrom(
+      http.get(`${environment.apiUrl}/incidents/999999`)))
+      .rejects.toMatchObject({ status: 404 });
+  });
+
   it('responde PUT de status de um incidente emitido ao vivo sem chegar na rede, preservando o incidentKey', async () => {
     const vivo: Incident = {
       ...INCIDENTS[0],
