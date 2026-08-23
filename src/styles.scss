@@ -743,3 +743,13 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .tkpi .tkpi-val {
   font-variant-numeric: tabular-nums slashed-zero lining-nums;
 }
+
+.tl-filters { display:grid; grid-template-columns:repeat(4, 1fr) auto; gap:16px; align-items:end; }
+.tl-filter-actions { display:flex; gap:10px; }
+.tl-row { grid-template-columns:44px 60px 1fr 90px auto auto; cursor:pointer; }
+.tl-status { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); }
+.tl-status[data-status="PENDENTE"] { color:#FFCE38; }
+.tl-status[data-status="REVISADO"] { color:#3D88F6; }
+.tl-status[data-status="RESOLVIDO"] { color:#34D07E; }
+.tl-quick-action { padding:6px 12px; font-size:11px; white-space:nowrap; }
+.tl-pagination { display:flex; align-items:center; justify-content:center; gap:16px; margin-top:16px; }

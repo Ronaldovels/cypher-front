@@ -1,0 +1,90 @@
+<div class="dash">
+  <app-chrome-topbar [cfg]="cfg()" page="Incidentes" subtitle="timeline com filtros" [live]="false" [notifBadge]="0" [shift]="null"/>
+
+  <main class="dcontent">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="ph-left"><span class="ph-title">Filtros</span></div>
+      </div>
+      <form class="tl-filters" (ngSubmit)="aplicarFiltros()">
+        <div class="field">
+          <label for="tl-camera">Câmera</label>
+          <select id="tl-camera" class="select" [(ngModel)]="camera" name="camera">
+            <option value="">Todas</option>
+            @for (cam of cameras(); track cam.id) {
+              <option [value]="cam.id">{{ cam.nome }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="tl-severity">Severidade mínima</label>
+          <select id="tl-severity" class="select" [ngModel]="severityMin()"
+                  (ngModelChange)="severityMin.set($event === '' ? null : +$event)" name="severityMin">
+            <option value="">Qualquer</option>
+            @for (n of [1, 2, 3, 4]; track n) {
+              <option [value]="n">{{ n }}+</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="tl-status">Status</label>
+          <select id="tl-status" class="select" [(ngModel)]="status" name="status">
+            <option value="">Todos</option>
+            <option value="PENDENTE">Pendente</option>
+            <option value="REVISADO">Revisado</option>
+            <option value="RESOLVIDO">Resolvido</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tl-since">A partir de</label>
+          <input id="tl-since" class="input" type="datetime-local" [(ngModel)]="since" name="since"/>
+        </div>
+        <div class="tl-filter-actions">
+          <button type="submit" class="btn primary">Filtrar</button>
+          <button type="button" class="btn ghost" (click)="limparFiltros()">Limpar</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="ph-left">
+          <span class="ph-title">Incidentes</span>
+          <span class="ph-meta">{{ totalElementos() }} no total</span>
+        </div>
+      </div>
+      <div class="alerts-list">
+        @for (inc of linhas(); track inc.incidentKey) {
+          <div [class]="'alert-row tl-row ' + (inc.nivel === 'ALTO' ? 'crit' : inc.nivel === 'MEDIO' ? 'high' : '')"
+               (click)="abrirDetalhe(inc)">
+            <span class="a-time">{{ hora(inc.detectedAt) }}</span>
+            <span class="a-station">{{ inc.cameraId }}</span>
+            <span class="a-type">{{ rotulo(inc.type) }}</span>
+            <span class="tl-status" [attr.data-status]="inc.status">{{ inc.status }}</span>
+            <span class="a-sev">{{ inc.nivel }}</span>
+            @if (proximoStatus(inc.status); as proximo) {
+              <button type="button" class="btn ghost tl-quick-action" (click)="reconhecer(inc, $event)">
+                marcar {{ proximo === 'REVISADO' ? 'revisado' : 'resolvido' }}
+              </button>
+            }
+          </div>
+        } @empty {
+          @if (carregando()) {
+            <div class="vazio">carregando…</div>
+          } @else if (erro()) {
+            <div class="vazio">{{ erro() }}</div>
+          } @else {
+            <div class="vazio">nenhum incidente encontrado com esses filtros</div>
+          }
+        }
+      </div>
+      <div class="tl-pagination">
+        <button type="button" class="btn ghost" [disabled]="page() === 0" (click)="paginaAnterior()">← anterior</button>
+        <span class="ph-meta">página {{ page() + 1 }} de {{ totalPaginas() || 1 }}</span>
+        <button type="button" class="btn ghost" [disabled]="page() + 1 >= totalPaginas()" (click)="proximaPagina()">próxima →</button>
+      </div>
+    </div>
+  </main>
+
+  <app-dock activeKey="alerts"/>
+</div>

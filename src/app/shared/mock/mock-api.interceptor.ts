@@ -158,10 +158,28 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     // Comparação de string funciona porque todas as fixtures trazem o mesmo
     // offset -03:00; com offsets misturados isto precisaria de Date.
     const since = req.params.get('since');
-    const lista = since ? INCIDENTS.filter(i => i.detectedAt > since) : INCIDENTS;
+    const camera = req.params.get('camera');
+    const severityMinStr = req.params.get('severityMin');
+    const status = req.params.get('status');
+    const page = Number(req.params.get('page') ?? '0');
+    // Sem size explícito (ex.: loadHistory antigo em outro teste), devolve tudo
+    // que sobrar do filtro — mesmo comportamento de antes desta mudança.
+    const size = Number(req.params.get('size') ?? String(INCIDENTS.length || 1));
+
+    let lista = INCIDENTS;
+    if (since) lista = lista.filter(i => i.detectedAt > since);
+    if (camera) lista = lista.filter(i => i.cameraId === camera);
+    if (severityMinStr) lista = lista.filter(i => i.severity >= Number(severityMinStr));
+    if (status) lista = lista.filter(i => i.status === status);
+
+    const inicio = page * size;
+    const paginaDeItens = lista.slice(inicio, inicio + size);
     return {
-      content: lista, totalElements: lista.length,
-      totalPages: 1, number: 0, size: lista.length,
+      content: paginaDeItens,
+      totalElements: lista.length,
+      totalPages: Math.max(1, Math.ceil(lista.length / size)),
+      number: page,
+      size,
     };
   }
 
