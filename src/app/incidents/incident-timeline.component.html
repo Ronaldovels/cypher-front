@@ -53,6 +53,11 @@
           <span class="ph-meta">{{ totalElementos() }} no total</span>
         </div>
       </div>
+      @if (carregando()) {
+        <div class="vazio">carregando…</div>
+      } @else if (erro()) {
+        <div class="vazio">{{ erro() }}</div>
+      }
       <div class="alerts-list">
         @for (inc of linhas(); track inc.incidentKey) {
           <div [class]="'alert-row tl-row ' + (inc.nivel === 'ALTO' ? 'crit' : inc.nivel === 'MEDIO' ? 'high' : '')"
@@ -69,11 +74,7 @@
             }
           </div>
         } @empty {
-          @if (carregando()) {
-            <div class="vazio">carregando…</div>
-          } @else if (erro()) {
-            <div class="vazio">{{ erro() }}</div>
-          } @else {
+          @if (!carregando() && !erro()) {
             <div class="vazio">nenhum incidente encontrado com esses filtros</div>
           }
         }

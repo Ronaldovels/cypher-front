@@ -142,16 +142,18 @@ describe('IncidentService', () => {
     expect(req.request.params.get('since')).toBe('2026-08-10T00:00:00-03:00');
     expect(req.request.params.get('page')).toBe('1');
     expect(req.request.params.get('size')).toBe('20');
+    expect(req.request.params.get('sort')).toBe('detectedAt,desc');
     req.flush(pagina([]));
   });
 
-  it('busca sem filtros envia só paginação', () => {
+  it('busca sem filtros envia só paginação (e sort fixo, para paginação determinística)', () => {
     service.search({}, 0, 50).subscribe();
 
     const req = http.expectOne(r => r.url === `${environment.apiUrl}/incidents`);
     expect(req.request.params.get('camera')).toBeNull();
     expect(req.request.params.get('severityMin')).toBeNull();
     expect(req.request.params.get('page')).toBe('0');
+    expect(req.request.params.get('sort')).toBe('detectedAt,desc');
     req.flush(pagina([]));
   });
 

@@ -155,9 +155,12 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
   }
 
   if (req.method === 'GET' && req.url === `${base}/incidents`) {
-    // Comparação de string funciona porque todas as fixtures trazem o mesmo
-    // offset -03:00; com offsets misturados isto precisaria de Date.
+    // Comparação por instante (Date.parse), não string: a timeline manda
+    // `since` em UTC (`Z`, de um <input type="datetime-local">) enquanto o
+    // reconnect do SSE manda no offset original da fixture (-03:00) — os dois
+    // precisam comparar igual ao mesmo instante, não por ordem lexicográfica.
     const since = req.params.get('since');
+    const desde = since ? Date.parse(since) : null;
     const camera = req.params.get('camera');
     const severityMinStr = req.params.get('severityMin');
     const status = req.params.get('status');
@@ -167,7 +170,7 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     const size = Number(req.params.get('size') ?? String(INCIDENTS.length || 1));
 
     let lista = INCIDENTS;
-    if (since) lista = lista.filter(i => i.detectedAt > since);
+    if (desde !== null) lista = lista.filter(i => Date.parse(i.detectedAt) > desde);
     if (camera) lista = lista.filter(i => i.cameraId === camera);
     if (severityMinStr) lista = lista.filter(i => i.severity >= Number(severityMinStr));
     if (status) lista = lista.filter(i => i.status === status);

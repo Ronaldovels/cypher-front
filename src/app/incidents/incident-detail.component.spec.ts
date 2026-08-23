@@ -48,6 +48,8 @@ describe('IncidentDetailComponent', () => {
 
     expect(harness.routeNativeElement?.textContent).toContain('Queda / risco imediato');
     expect(harness.routeNativeElement?.textContent).toContain('CAM-01');
+    // Tela de um incidente específico do passado: precisa da data, não só da hora.
+    expect(harness.routeNativeElement?.textContent).toContain('10/08 14:31');
   });
 
   it('id inexistente mostra erro e link de volta', async () => {

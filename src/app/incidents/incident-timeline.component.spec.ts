@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../environments/environment';
+import { IncidentService } from '../shared/incident.service';
 import { Incident, Page } from '../shared/incident.models';
 import { IncidentTimelineComponent } from './incident-timeline.component';
 
@@ -57,6 +58,12 @@ describe('IncidentTimelineComponent', () => {
     expect(fixture.componentInstance.linhas().length).toBe(1);
   });
 
+  it('mostra a data além da hora de cada linha (timeline cobre vários dias)', () => {
+    const fixture = montar();
+
+    expect(fixture.nativeElement.textContent).toContain('10/08 14:31');
+  });
+
   it('reaplica a busca do zero ao aplicar filtros', () => {
     const fixture = montar();
     fixture.componentInstance.camera.set('CAM-02');
@@ -104,5 +111,116 @@ describe('IncidentTimelineComponent', () => {
     const fixture = montar();
 
     expect(fixture.componentInstance.proximoStatus('RESOLVIDO')).toBeNull();
+  });
+
+  it('mostra erro de uma nova busca mesmo com linhas de uma busca anterior na tela', () => {
+    const fixture = montar();
+    expect(fixture.componentInstance.linhas().length).toBe(1);
+
+    fixture.componentInstance.aplicarFiltros();
+    http.expectOne(r => r.url === `${environment.apiUrl}/incidents`)
+      .flush(null, { status: 500, statusText: 'Erro' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent.toLowerCase()).toContain('falhou');
+  });
+
+  it('não mostra "nenhum incidente" junto com carregando no carregamento inicial', () => {
+    const fixture = TestBed.createComponent(IncidentTimelineComponent);
+    fixture.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([]);
+    // Ainda não flushou /incidents: carregando() é true e linhas() está vazio.
+
+    const texto = fixture.nativeElement.textContent.toLowerCase();
+    expect(texto).toContain('carregando');
+    expect(texto).not.toContain('nenhum incidente encontrado');
+
+    http.expectOne(r => r.url === `${environment.apiUrl}/incidents`).flush(pagina([]));
+  });
+
+  it('mostra carregando de uma nova busca mesmo com linhas de uma busca anterior na tela', () => {
+    const fixture = montar();
+
+    fixture.componentInstance.aplicarFiltros();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent.toLowerCase()).toContain('carregando');
+    http.expectOne(r => r.url === `${environment.apiUrl}/incidents`).flush(pagina([]));
+  });
+
+  it('envia o filtro since como ISO com offset, não o valor cru do datetime-local', () => {
+    const fixture = montar();
+    fixture.componentInstance.since.set('2026-08-10T14:30');
+
+    fixture.componentInstance.aplicarFiltros();
+
+    const req = http.expectOne(r => r.url === `${environment.apiUrl}/incidents`);
+    const enviado = req.request.params.get('since');
+    expect(enviado).toBe(new Date('2026-08-10T14:30').toISOString());
+    expect(enviado).toMatch(/Z$/);
+    req.flush(pagina([]));
+  });
+
+  it('resultado fresco da busca não é sobrescrito por dado velho no store global', () => {
+    const incidentService = TestBed.inject(IncidentService);
+    incidentService.upsert(incidente({ id: 1, incidentKey: 'k1', status: 'PENDENTE' }));
+
+    const fixture = TestBed.createComponent(IncidentTimelineComponent);
+    fixture.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/incidents`)
+      .flush(pagina([incidente({ id: 1, incidentKey: 'k1', status: 'RESOLVIDO' })]));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.linhas()[0].status).toBe('RESOLVIDO');
+  });
+
+  it('reconhecer atualiza a linha localmente sem esperar rebusca', () => {
+    const fixture = montar();
+    const inc = fixture.componentInstance.linhas()[0];
+    const evento = { stopPropagation: () => { } } as unknown as Event;
+
+    fixture.componentInstance.reconhecer(inc, evento);
+
+    const req = http.expectOne(`${environment.apiUrl}/incidents/${inc.id}/status`);
+    req.flush({ ...inc, status: 'REVISADO' });
+
+    expect(fixture.componentInstance.linhas()[0].status).toBe('REVISADO');
+  });
+
+  it('reconhecer com PUT que falha não deixa a linha vulnerável a dado velho do store', () => {
+    const fixture = montar();
+    const incidentService = TestBed.inject(IncidentService);
+    const inc = fixture.componentInstance.linhas()[0];
+    const evento = { stopPropagation: () => { } } as unknown as Event;
+
+    fixture.componentInstance.reconhecer(inc, evento);
+    const req = http.expectOne(`${environment.apiUrl}/incidents/${inc.id}/status`);
+    req.flush(null, { status: 500, statusText: 'Erro' });
+
+    // Depois do PUT falhar, algo (ex.: outra tela) deixa o store com um valor
+    // qualquer para essa chave — a linha não pode passar a mostrar isso.
+    incidentService.upsert({ ...inc, status: 'RESOLVIDO' });
+
+    expect(fixture.componentInstance.linhas()[0].status).toBe(inc.status);
+  });
+
+  it('acompanhamento de reconhecimento não sobrevive a uma nova busca', () => {
+    const fixture = montar();
+    const inc = fixture.componentInstance.linhas()[0];
+    const evento = { stopPropagation: () => { } } as unknown as Event;
+
+    fixture.componentInstance.reconhecer(inc, evento);
+    const reqAck = http.expectOne(`${environment.apiUrl}/incidents/${inc.id}/status`);
+    reqAck.flush({ ...inc, status: 'REVISADO' });
+    expect(fixture.componentInstance.linhas()[0].status).toBe('REVISADO');
+
+    fixture.componentInstance.aplicarFiltros();
+    const reqBusca = http.expectOne(r => r.url === `${environment.apiUrl}/incidents`);
+    reqBusca.flush(pagina([incidente({ id: inc.id, incidentKey: inc.incidentKey, status: 'PENDENTE' })]));
+
+    expect(fixture.componentInstance.linhas()[0].status).toBe('PENDENTE');
   });
 });

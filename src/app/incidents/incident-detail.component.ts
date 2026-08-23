@@ -6,7 +6,7 @@ import { ConfigService } from '../shared/config.service';
 import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
 import {
-  AlertaStatus, Incident, formatTime, incidentLabel, mensagemDeErro,
+  AlertaStatus, Incident, formatDateTime, incidentLabel, mensagemDeErro,
 } from '../shared/incident.models';
 
 @Component({
@@ -33,7 +33,7 @@ export class IncidentDetailComponent implements OnInit {
   readonly incidente = computed(() =>
     this.incidentService.incidents().find(i => i.id === this.id) ?? this.buscado());
 
-  hora = formatTime;
+  hora = formatDateTime;
   rotulo = incidentLabel;
 
   ngOnInit(): void {

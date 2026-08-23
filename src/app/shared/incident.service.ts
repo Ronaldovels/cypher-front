@@ -111,7 +111,9 @@ export class IncidentService {
    * no store de 100 itens em memória, que cobre só o "ao vivo" do dashboard.
    */
   search(filters: IncidentSearchFilters, page: number, size: number): Observable<Page<Incident>> {
-    const params: Record<string, string> = { page: String(page), size: String(size) };
+    // Sem `sort` explícito, a ordenação da página fica a critério do backend —
+    // e paginação sobre ordem não garantida arrisca linha duplicada/faltando.
+    const params: Record<string, string> = { page: String(page), size: String(size), sort: 'detectedAt,desc' };
     if (filters.camera) {
       params['camera'] = filters.camera;
     }

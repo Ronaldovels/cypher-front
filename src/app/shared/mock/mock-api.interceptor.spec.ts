@@ -51,6 +51,25 @@ describe('mockApiInterceptor', () => {
     expect(page.content.every(i => i.detectedAt > maisAntigo.detectedAt)).toBe(true);
   });
 
+  it('filtra por since expresso em UTC (Z) igual a quando expresso no offset original', async () => {
+    // A timeline (/incidentes) converte o <input datetime-local> para ISO em
+    // Z antes de mandar `since` — offset diferente do -03:00 das fixtures.
+    // Comparação por string quebraria aqui (dígitos de hora diferentes para o
+    // mesmo instante); precisa comparar o instante mesmo (Date.parse).
+    const maisAntigo = INCIDENTS.reduce((a, b) => a.detectedAt < b.detectedAt ? a : b);
+    const sinceLocal = maisAntigo.detectedAt;
+    const sinceEmZ = new Date(sinceLocal).toISOString();
+
+    const paginaLocal = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`, { params: { since: sinceLocal } }));
+    const paginaZ = await firstValueFrom(
+      http.get<Page<Incident>>(`${environment.apiUrl}/incidents`, { params: { since: sinceEmZ } }));
+
+    expect(paginaZ.content.map(i => i.incidentKey).sort())
+      .toEqual(paginaLocal.content.map(i => i.incidentKey).sort());
+    expect(paginaLocal.content.length).toBeGreaterThan(0);
+  });
+
   it('deixa passar o que não conhece', () => {
     http.get(`${environment.apiUrl}/desconhecido`).subscribe();
 
