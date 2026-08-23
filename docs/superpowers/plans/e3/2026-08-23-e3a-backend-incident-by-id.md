@@ -14,7 +14,7 @@
 
 ## Global Constraints
 
-- Repositório: `/home/asaas/projects/cypher`. Branch: `feat/e3a-backend-incident-by-id`, criada a partir de `dev` — **não** usar worktree, apenas `git checkout -b`.
+- Repositório: `/home/asaas/projects/cypher`. Branch: `feat/e3a-backend-incident-by-id`, criada a partir de `main` (este repo não tem branch `dev` — `feat/e2a-backend-cadastro` foi mergeada em `main` via PR #3, commit `8018957`) — **não** usar worktree, apenas `git checkout -b`.
 - Sem migração de banco: `Alerta`/`AlertaRepository`/`IncidentMapper`/`IncidentResponse` já existem e não mudam de forma.
 - Sem alterar `changeStatus`, `search`, `ingest` ou `close` — já implementam tudo que a spec de E3 precisa deles.
 - Comentários no código só quando o "porquê" não for óbvio pelo nome, no mesmo estilo do resto do arquivo (ver `IncidentController.java`/`IncidentService.java` atuais).
@@ -37,7 +37,7 @@
 
 ```bash
 cd /home/asaas/projects/cypher
-git checkout dev
+git checkout main
 git pull
 git checkout -b feat/e3a-backend-incident-by-id
 ```
