@@ -6,6 +6,10 @@
 
 Pré-requisitos já entregues: E1 (núcleo de notificação) e E2 (cadastro de estações/câmeras) estão implementados e mergeados em `dev` nos três repositórios.
 
+**Repositórios tocados por esta entrega:** `cypher` (um endpoint novo, §3) e `cypher-front` (as quatro telas, praticamente todo o trabalho). `cypher-capture` **não** é tocado — nada em E3 depende de mudança no pipeline (§1.1).
+
+**Nota de design:** toda implementação em `cypher-front` usa os primitivos globais já estabelecidos em `src/styles.scss` (`.field`, `.input`, `.select`, `.btn`, `.surface`, tokens como `--line-2`) — o mesmo padrão que a correção do commit `6394366` ("cadastro de estações/câmeras segue o design system do app") aplicou em E2. Nenhum componente novo de E3 introduz CSS solto ou elementos crus sem essas classes; onde o wireframe original (`Cypher/uploads/Cypher/gestor.jsx`, `operador.jsx`, `primitives.jsx`) sugerir algo fora desses primitivos, adapta-se ao sistema existente em vez de estendê-lo ad hoc.
+
 ---
 
 ## 1. Contexto e diagnóstico
