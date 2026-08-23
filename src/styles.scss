@@ -769,3 +769,11 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .station-card:hover { transform:translateY(-2px); border-color:var(--line-3); }
 .station-feed { min-height:180px; border-radius:10px; overflow:hidden; background:var(--surface-2); margin-bottom:10px; }
 .station-cam-count { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.06em; }
+
+.dash.kiosk { padding-bottom:40px; } // sem dock nesta tela — não precisa da folga que o dock reserva
+.kiosk-feeds { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }
+.kiosk-feed { min-height:220px; border-radius:10px; overflow:hidden; background:var(--surface-2); }
+.kiosk-lower { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.kiosk-epi-list { list-style:none; display:flex; flex-direction:column; gap:8px; padding:0; margin:0; }
+.kiosk-epi-list li { font-size:13px; color:var(--ink); padding:8px 12px; background:var(--bg-2); border-radius:8px; }
+.kiosk-epi-list li::before { content:'✓ '; color:#34D07E; font-weight:700; }

@@ -1,0 +1,53 @@
+<div class="dash kiosk">
+  <app-chrome-topbar [cfg]="cfg()" [page]="station()?.nome ?? 'Estação'" subtitle="kiosk do operador" [live]="true" [notifBadge]="0" [shift]="null"/>
+
+  <main class="dcontent">
+    @if (station(); as estacao) {
+      <div class="kiosk-feeds">
+        @for (cam of estacao.cameras; track cam.id) {
+          <div class="panel">
+            <div class="panel-head"><div class="ph-left"><span class="ph-title">{{ cam.nome }}</span></div></div>
+            <div class="kiosk-feed"><app-live-feed [camera]="cam" /></div>
+          </div>
+        } @empty {
+          <div class="panel"><div class="vazio">nenhuma câmera cadastrada nesta estação</div></div>
+        }
+      </div>
+
+      <div class="kiosk-lower">
+        <div class="panel">
+          <div class="panel-head"><div class="ph-left"><span class="ph-title">Checklist de EPIs</span></div></div>
+          <ul class="kiosk-epi-list">
+            @for (epi of episRequeridos(); track epi) {
+              <li>{{ epi }}</li>
+            } @empty {
+              <div class="vazio">nenhum EPI cadastrado no onboarding</div>
+            }
+          </ul>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div class="ph-left"><span class="ph-title">Eventos recentes</span></div></div>
+          <div class="alerts-list">
+            @for (inc of eventos(); track inc.incidentKey) {
+              <div [class]="'alert-row ' + (inc.nivel === 'ALTO' ? 'crit' : inc.nivel === 'MEDIO' ? 'high' : '')">
+                <span class="a-time">{{ hora(inc.detectedAt) }}</span>
+                <span class="a-station">{{ inc.cameraId }}</span>
+                <span class="a-type">{{ rotulo(inc.type) }}</span>
+                <span class="a-sev">{{ inc.nivel }}</span>
+              </div>
+            } @empty {
+              @if (carregandoEventos()) {
+                <div class="vazio">carregando…</div>
+              } @else {
+                <div class="vazio">nenhum evento recente</div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="panel"><div class="vazio">estação não encontrada</div></div>
+    }
+  </main>
+</div>
