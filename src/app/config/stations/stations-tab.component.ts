@@ -1,35 +1,28 @@
 import { Component } from '@angular/core';
 
-import { ChromeTopbarComponent } from '../../shared/chrome-topbar/chrome-topbar.component';
-import { DockComponent } from '../../shared/dock/dock.component';
 import { StationsConfigComponent } from './stations-config.component';
 
 /**
- * Página de configuração de estações e câmeras.
+ * Aba "Estações e câmeras" da página de configurações.
  *
- * Existe separada do componente de cadastro porque carrega a moldura do
- * produto — topbar e dock — que o passo do onboarding não deve ter.
+ * Sem topbar nem dock próprios: quem monta a moldura do produto é
+ * `SettingsPageComponent`, compartilhada com as outras abas.
  */
 @Component({
-  selector: 'app-stations-page',
-  imports: [ChromeTopbarComponent, DockComponent, StationsConfigComponent],
+  selector: 'app-stations-tab',
+  imports: [StationsConfigComponent],
   template: `
-    <app-chrome-topbar />
-    <main class="pagina">
-      <header>
-        <h1>Estações e câmeras</h1>
-        <p>O que o Cypher monitora. Cada célula do mapa de calor é uma estação.</p>
-      </header>
+    <div class="tab-head">
+      <div>
+        <div class="eyebrow-accent">Estações e câmeras</div>
+        <h2 class="tab-title">O que o Cypher vai <em style="color:var(--accent);font-style:normal">monitorar.</em></h2>
+        <p class="sub" style="font-size:14px;margin-top:6px">Cada célula do mapa de calor é uma estação. Mudanças aqui já valem na hora — não há rascunho para salvar.</p>
+      </div>
+    </div>
+    <div style="margin-top:32px">
       <app-stations-config />
-    </main>
-    <app-dock />
+    </div>
   `,
-  styles: [`
-    .pagina { padding: 24px 28px 96px; max-width: 1080px; margin: 0 auto; }
-    header { margin-bottom: 20px; }
-    h1 { font-size: 20px; margin: 0 0 4px; }
-    header p { margin: 0; font-size: 13px; opacity: .65; }
-  `],
 })
-export class StationsPageComponent {
+export class StationsTabComponent {
 }

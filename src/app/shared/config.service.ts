@@ -38,4 +38,14 @@ export class ConfigService {
     try { localStorage.setItem(this.KEY, JSON.stringify(cfg)); } catch {}
     this.config.set(cfg);
   }
+
+  /** Mescla um patch no config atual (vazio quando ninguém terminou o onboarding ainda). */
+  update(patch: Partial<CypherConfig>): void {
+    this.save({ ...EMPTY_CONFIG, ...this.config(), ...patch });
+  }
 }
+
+const EMPTY_CONFIG: CypherConfig = {
+  company: '', cnpj: '', sector: '', logoUrl: null, logoName: '',
+  accent: '#F4622A', epis: [], cas: {},
+};

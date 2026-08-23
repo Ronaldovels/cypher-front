@@ -50,11 +50,11 @@ describe('ChromeTopbarComponent', () => {
     expect(botao.getAttribute('aria-label')).toBe('Mudar para tema escuro');
   });
 
-  it('o link de reabrir onboarding não se apresenta mais como Configurações', () => {
+  it('a engrenagem leva para a pagina de configuracoes', () => {
     const fixture = montar();
-    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-test="reopen-onboarding"]');
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('[data-test="open-settings"]');
 
-    expect(link.getAttribute('href')).toBe('/');
-    expect(link.getAttribute('aria-label')).toBe('Reabrir configuração inicial');
+    expect(link.getAttribute('href')).toBe('/config/identidade');
+    expect(link.getAttribute('aria-label')).toBe('Configurações');
   });
 });

@@ -1,0 +1,62 @@
+<div class="tab-head">
+  <div>
+    <div class="eyebrow-accent">EPIs monitorados</div>
+    <h2 class="tab-title">Quais EPIs sua <em style="color:var(--accent);font-style:normal">operação</em> exige?</h2>
+    <p class="sub" style="font-size:14px;margin-top:6px">Selecione o equipamento de proteção individual que será detectado pela visão computacional.</p>
+  </div>
+  <div class="save-bar">
+    @if (salvo() && !sujo()) {
+      <span class="save-status ok">salvo</span>
+    } @else if (sujo()) {
+      <span class="save-status">alterações não salvas</span>
+    }
+    <button class="btn primary" [disabled]="!sujo()" (click)="salvar()">Salvar</button>
+  </div>
+</div>
+
+<div style="position:relative;margin:24px auto 8px;max-width:560px;height:440px;border-radius:20px;border:1px solid var(--line-2);background:radial-gradient(60% 70% at 50% 45%, var(--accent-soft), transparent 70%), var(--surface);overflow:hidden">
+  <div class="kicker" style="position:absolute;top:14px;left:18px;z-index:3">— Prévia do kit</div>
+
+  <div class="kicker" style="position:absolute;top:14px;right:18px;z-index:3;display:flex;gap:8px;align-items:center">
+    <span style="width:6px;height:6px;border-radius:50%;display:inline-block"
+          [style.background]="count() >= 5 ? 'var(--accent)' : 'var(--ink-mute)'"></span>
+    <span>{{ kitStatus() }}</span>
+  </div>
+
+  <div class="kicker" style="position:absolute;bottom:14px;left:18px;z-index:3">{{ count() }} de 8</div>
+
+  <div class="kicker" style="position:absolute;bottom:14px;right:18px;z-index:3"
+       [style.color]="count() ? 'var(--accent)' : 'var(--ink-mute)'">
+    {{ count() }} selecionado{{ count() === 1 ? '' : 's' }}
+  </div>
+
+  <div style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center">
+    <div style="width:56%;max-width:240px;aspect-ratio:400/700">
+      <app-mannequin
+        [picks]="mannequinPicks()"
+        [activeSlot]="null"
+        [complete]="count() >= 6"
+        [accent]="accent()"
+      />
+    </div>
+  </div>
+</div>
+
+<div class="epi-grid" style="margin-top:24px">
+  @for (e of epiList; track e.key) {
+    <button class="epi-card" [class.on]="isOn(e.key)" (click)="toggle(e.key)">
+      <div class="icon-frame">
+        <app-epi-icon [key]="e.key" [size]="26"/>
+      </div>
+      <div>
+        <div class="name">{{ e.name }}</div>
+        <div class="nrm">{{ e.nrm }}</div>
+      </div>
+      <div class="check">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l5 5L20 7"/>
+        </svg>
+      </div>
+    </button>
+  }
+</div>
