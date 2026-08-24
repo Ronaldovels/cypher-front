@@ -2,9 +2,11 @@ import { Component, OnInit, computed, effect, inject, signal } from '@angular/co
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
+import { AuthService } from '../shared/auth/auth.service';
 import { CatalogService } from '../shared/catalog.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
 import { ConfigService } from '../shared/config.service';
+import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
 import { LiveFeedComponent } from '../shared/live-feed/live-feed.component';
 import { Incident, formatTime, incidentLabel } from '../shared/incident.models';
@@ -12,10 +14,15 @@ import { Incident, formatTime, incidentLabel } from '../shared/incident.models';
 const EVENTOS_POR_CAMERA = 10;
 const EVENTOS_EXIBIDOS = 10;
 
-/** Sem <app-dock>: o kiosk é a única tela sem navegação — abre numa estação e permanece nela. */
+/**
+ * Dock por papel, não por rota (design doc de E4, §4.1): para o OPERADOR o
+ * kiosk continua sem navegação (mapa de telas do doc de E1, §14.1); para um
+ * GESTOR supervisionando a estação, o dock aparece — restrição descoberta em
+ * E3 (nota de 2026-08-23 no fim de §15 da spec de E1).
+ */
 @Component({
   selector: 'app-station-kiosk',
-  imports: [ChromeTopbarComponent, LiveFeedComponent],
+  imports: [ChromeTopbarComponent, LiveFeedComponent, DockComponent],
   templateUrl: './station-kiosk.component.html',
 })
 export class StationKioskComponent implements OnInit {
@@ -23,6 +30,8 @@ export class StationKioskComponent implements OnInit {
   private catalogService = inject(CatalogService);
   private incidentService = inject(IncidentService);
   private cfgService = inject(ConfigService);
+  private authService = inject(AuthService);
+  readonly auth = this.authService;
 
   cfg = this.cfgService.config;
   private readonly stationId = this.route.snapshot.paramMap.get('id')!;

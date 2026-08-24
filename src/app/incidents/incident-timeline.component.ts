@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
+import { AuthService } from '../shared/auth/auth.service';
 import { CatalogService } from '../shared/catalog.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
 import { ConfigService } from '../shared/config.service';
@@ -23,6 +24,8 @@ export class IncidentTimelineComponent implements OnInit {
   private catalogService = inject(CatalogService);
   private cfgService = inject(ConfigService);
   private router = inject(Router);
+  private authService = inject(AuthService);
+  readonly auth = this.authService;
 
   cfg = this.cfgService.config;
   readonly cameras = this.catalogService.cameras;

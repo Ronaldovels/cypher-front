@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { AuthService } from '../shared/auth/auth.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
 import { ConfigService } from '../shared/config.service';
 import { DockComponent } from '../shared/dock/dock.component';
@@ -18,6 +19,8 @@ export class IncidentDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private incidentService = inject(IncidentService);
   private cfgService = inject(ConfigService);
+  private authService = inject(AuthService);
+  readonly auth = this.authService;
 
   cfg = this.cfgService.config;
   private readonly id = Number(this.route.snapshot.paramMap.get('id'));

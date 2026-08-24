@@ -50,4 +50,8 @@
       <div class="panel"><div class="vazio">estação não encontrada</div></div>
     }
   </main>
+
+  @if (auth.role() === 'GESTOR') {
+    <app-dock activeKey="live"/>
+  }
 </div>

@@ -56,6 +56,9 @@ describe('StationKioskComponent', () => {
       ] },
     ]);
     harness.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+    harness.detectChanges();
 
     // CAM-01 tem o evento mais antigo, CAM-02 o mais recente: a lista mesclada
     // precisa vir ordenada por detectedAt desc, não na ordem das câmeras.
@@ -83,16 +86,32 @@ describe('StationKioskComponent', () => {
     http.expectNone(r => r.url === `${environment.apiUrl}/incidents`);
   });
 
-  it('não mostra o dock — o kiosk não tem navegação', async () => {
+  it('OPERADOR nao ve o dock — o kiosk continua sem navegacao para o operador', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/estacao/EST-01', StationKioskComponent);
     http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
     http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([
       { id: 'EST-01', nome: 'Esteira', setor: null, ativa: true, cameras: [] },
     ]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
     harness.detectChanges();
 
     expect(harness.routeNativeElement?.querySelector('app-dock')).toBeNull();
+  });
+
+  it('GESTOR ve o dock, mantendo a navegacao (restricao de E3)', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/estacao/EST-01', StationKioskComponent);
+    http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([
+      { id: 'EST-01', nome: 'Esteira', setor: null, ativa: true, cameras: [] },
+    ]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'GESTOR', username: 'g1' });
+    harness.detectChanges();
+
+    expect(harness.routeNativeElement?.querySelector('app-dock')).not.toBeNull();
   });
 
   it('checklist de EPIs vem do ConfigService, somente leitura', async () => {
@@ -109,6 +128,9 @@ describe('StationKioskComponent', () => {
       { id: 'EST-01', nome: 'Esteira', setor: null, ativa: true, cameras: [] },
     ]);
     harness.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+    harness.detectChanges();
 
     const itens = harness.routeNativeElement?.querySelectorAll('.kiosk-epi-list li');
     expect(itens?.length).toBe(2);
@@ -123,6 +145,9 @@ describe('StationKioskComponent', () => {
     http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([
       { id: 'EST-01', nome: 'Esteira', setor: null, ativa: true, cameras: [] },
     ]);
+    harness.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
     harness.detectChanges();
 
     http.expectNone(r => r.url === `${environment.apiUrl}/incidents`);
