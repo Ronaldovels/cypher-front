@@ -1,0 +1,25 @@
+<div class="eyebrow-accent">Etapa 02 · Usuário mestre</div>
+<h1 class="q">Crie o <em>acesso do gestor.</em></h1>
+<p class="sub">Essa credencial autentica agora mesmo, ao final do setup — é o único jeito de criar o primeiro usuário do Cypher. Gestores seguintes são cadastrados por este, já em Definições · Equipes.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:44px;max-width:640px">
+  <div class="field">
+    <label>Usuário</label>
+    <input class="input" placeholder="nome.sobrenome" autocomplete="username"
+           [value]="state.data().masterUsername"
+           (input)="onUsername($event)" />
+    @if (state.errors()['masterUsername']) {
+      <div class="field-error">{{ state.errors()['masterUsername'] }}</div>
+    }
+  </div>
+
+  <div class="field">
+    <label>Senha</label>
+    <input class="input" type="password" autocomplete="new-password"
+           [value]="state.data().masterPassword"
+           (input)="onPassword($event)" />
+    @if (state.errors()['masterPassword']) {
+      <div class="field-error">{{ state.errors()['masterPassword'] }}</div>
+    }
+  </div>
+</div>
