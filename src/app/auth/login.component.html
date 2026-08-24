@@ -1,0 +1,37 @@
+<div class="auth-shell">
+  <div class="panel auth-panel">
+    <div class="panel-head">
+      <div class="ph-left">
+        <span class="ph-title">Entrar</span>
+        <span class="ph-meta">acesso do gestor</span>
+      </div>
+    </div>
+
+    <form class="auth-form" (submit)="$event.preventDefault(); entrar()">
+      <div class="field">
+        <label for="login-username">Usuário</label>
+        <input id="login-username" class="input" type="text" autocomplete="username"
+               [value]="draft().username" (input)="patch({ username: $any($event.target).value })" />
+      </div>
+      <div class="field">
+        <label for="login-password">Senha</label>
+        <input id="login-password" class="input" type="password" autocomplete="current-password"
+               [value]="draft().password" (input)="patch({ password: $any($event.target).value })" />
+      </div>
+
+      @if (erro()) {
+        <p class="vazio" role="alert">{{ erro() }}</p>
+      }
+
+      @if (exemplo) {
+        <p class="vazio">Modo de exemplo: <code>{{ credencialDemo.username }}</code> / <code>{{ credencialDemo.password }}</code></p>
+      }
+
+      <button type="submit" class="btn primary" [disabled]="enviando()">
+        {{ enviando() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <a class="auth-alt-link" routerLink="/login-estacao">Entrar como operador de estação →</a>
+  </div>
+</div>

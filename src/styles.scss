@@ -777,3 +777,13 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .kiosk-epi-list { list-style:none; display:flex; flex-direction:column; gap:8px; padding:0; margin:0; }
 .kiosk-epi-list li { font-size:13px; color:var(--ink); padding:8px 12px; background:var(--bg-2); border-radius:8px; }
 .kiosk-epi-list li::before { content:'✓ '; color:#34D07E; font-weight:700; }
+
+.auth-shell { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.auth-panel { width: 100%; max-width: 400px; min-height: unset; }
+.auth-form { display: flex; flex-direction: column; gap: 18px; margin-top: 20px; }
+.auth-alt-link { display: block; text-align: center; margin-top: 20px; font-size: 13px; color: var(--ink-mute); text-decoration: none; }
+.auth-alt-link:hover { color: var(--accent); }
+// `.vazio` (usada por dashboard/heatmap/incidentes/estacoes/kiosk desde E3, e agora
+// por login/estacao-login/equipe-usuarios) nunca tinha sido definida globalmente —
+// só existia escopada em stations-config.component.scss.
+.vazio { font-size: 13px; color: var(--ink-mute); }
