@@ -3,9 +3,10 @@ import { Observable, delay, of, throwError } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { CameraAdmin, Station } from '../incident.models';
+import { Equipe, Usuario } from '../team.models';
 import {
-  CAMERAS_MUTAVEL, EMITIDOS, GESTOR_DEMO, INCIDENTS, SESSAO_MOCK, SETUP_MOCK, STATIONS_MUTAVEL,
-  TOKENS_ESTACAO, resumo,
+  CAMERAS_MUTAVEL, EMITIDOS, EQUIPES_MUTAVEL, INCIDENTS, SESSAO_MOCK, SETUP_MOCK,
+  STATIONS_MUTAVEL, TOKENS_ESTACAO, USUARIOS_MUTAVEL, resumo,
 } from './fixtures';
 
 const ATRASO_MS = 150;
@@ -79,7 +80,9 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
 
   if (req.method === 'POST' && req.url === `${base}/auth/login`) {
     const { username, password } = req.body as { username: string; password: string };
-    if (username !== GESTOR_DEMO.username || password !== GESTOR_DEMO.password) {
+    const usuario = USUARIOS_MUTAVEL.find(u =>
+      u.username === username && u.password === password && u.papel === 'GESTOR');
+    if (!usuario) {
       return new HttpErrorResponse({ status: 401, error: { erro: 'Usuário ou senha inválidos' } });
     }
     SESSAO_MOCK.atual = { papel: 'GESTOR', username };
@@ -104,6 +107,88 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
   if (req.method === 'GET' && req.url === `${base}/auth/me`) {
     return SESSAO_MOCK.atual
       ?? new HttpErrorResponse({ status: 401, error: { erro: 'Não autenticado' } });
+  }
+
+  // ---------------- equipes ----------------
+
+  if (req.method === 'GET' && req.url === `${base}/teams`) {
+    return EQUIPES_MUTAVEL;
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/teams`) {
+    const corpo = req.body as Equipe;
+    if (EQUIPES_MUTAVEL.some(e => e.id === corpo.id)) {
+      return conflito(`Equipe ja cadastrada: ${corpo.id}`);
+    }
+    const nova: Equipe = { ...corpo, ativa: corpo.ativa ?? true };
+    EQUIPES_MUTAVEL.push(nova);
+    return nova;
+  }
+
+  if (req.method === 'PUT' && req.url.startsWith(`${base}/teams/`)) {
+    const id = req.url.slice(`${base}/teams/`.length);
+    const corpo = req.body as Equipe;
+    const atual = EQUIPES_MUTAVEL.find(e => e.id === id);
+    if (!atual) {
+      return naoEncontrado(`Equipe inexistente: ${id}`);
+    }
+    Object.assign(atual, corpo, { id, ativa: corpo.ativa ?? atual.ativa });
+    return atual;
+  }
+
+  if (req.method === 'DELETE' && req.url.startsWith(`${base}/teams/`)) {
+    const id = req.url.slice(`${base}/teams/`.length);
+    const atual = EQUIPES_MUTAVEL.find(e => e.id === id);
+    if (!atual) {
+      return naoEncontrado(`Equipe inexistente: ${id}`);
+    }
+    atual.ativa = false;
+    return null;
+  }
+
+  // ---------------- usuários ----------------
+
+  if (req.method === 'GET' && req.url === `${base}/users`) {
+    return USUARIOS_MUTAVEL.map(({ password, ...resto }) => resto);
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/users`) {
+    const corpo = req.body as Usuario & { password?: string };
+    if (USUARIOS_MUTAVEL.some(u => u.username === corpo.username)) {
+      return conflito(`Usuario ja cadastrado: ${corpo.username}`);
+    }
+    if (!corpo.password) {
+      return naoProcessavel('Senha obrigatória no cadastro');
+    }
+    const novo = { username: corpo.username, papel: corpo.papel, password: corpo.password };
+    USUARIOS_MUTAVEL.push(novo);
+    const { password, ...resto } = novo;
+    return resto;
+  }
+
+  if (req.method === 'PUT' && req.url.startsWith(`${base}/users/`)) {
+    const username = req.url.slice(`${base}/users/`.length);
+    const corpo = req.body as Usuario & { password?: string };
+    const atual = USUARIOS_MUTAVEL.find(u => u.username === username);
+    if (!atual) {
+      return naoEncontrado(`Usuario inexistente: ${username}`);
+    }
+    atual.papel = corpo.papel;
+    if (corpo.password) {
+      atual.password = corpo.password;
+    }
+    const { password, ...resto } = atual;
+    return resto;
+  }
+
+  if (req.method === 'DELETE' && req.url.startsWith(`${base}/users/`)) {
+    const username = req.url.slice(`${base}/users/`.length);
+    const idx = USUARIOS_MUTAVEL.findIndex(u => u.username === username);
+    if (idx === -1) {
+      return naoEncontrado(`Usuario inexistente: ${username}`);
+    }
+    USUARIOS_MUTAVEL.splice(idx, 1);
+    return null;
   }
 
   // ---------------- escrita de estação ----------------

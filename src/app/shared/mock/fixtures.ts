@@ -1,4 +1,5 @@
 import { Camera, CameraAdmin, Incident, Station, Summary } from '../incident.models';
+import { Equipe, Usuario } from '../team.models';
 
 /**
  * Dados de exemplo do modo `useMockData`.
@@ -201,3 +202,25 @@ export const SETUP_MOCK: { concluido: boolean } = { concluido: false };
 export function resetMockSetup(): void {
   SETUP_MOCK.concluido = false;
 }
+
+// ---------------- equipes e usuários (mock) ----------------
+
+export const EQUIPES: Equipe[] = [
+  { id: 'EQ-01', nome: 'Equipe A', turno: 'MANHA', estacaoIds: ['EST-01', 'EST-02'], ativa: true },
+  { id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-03'], ativa: true },
+];
+
+/** Senha guardada só no mock — nunca no tipo público `Usuario`. Semeada a partir de `GESTOR_DEMO`, fonte única da credencial de demonstração. */
+export const USUARIOS: (Usuario & { password: string })[] = [
+  { username: GESTOR_DEMO.username, papel: 'GESTOR', password: GESTOR_DEMO.password },
+];
+
+export let EQUIPES_MUTAVEL: Equipe[] = [];
+export let USUARIOS_MUTAVEL: (Usuario & { password: string })[] = [];
+
+export function resetMockTeams(): void {
+  EQUIPES_MUTAVEL = EQUIPES.map(e => ({ ...e, estacaoIds: [...e.estacaoIds] }));
+  USUARIOS_MUTAVEL = USUARIOS.map(u => ({ ...u }));
+}
+
+resetMockTeams();

@@ -6,9 +6,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../../environments/environment';
 import { Camera, Incident, Page } from '../incident.models';
+import { Equipe, Usuario } from '../team.models';
 import {
   EMITIDOS, GESTOR_DEMO, INCIDENTS, TOKENS_ESTACAO, agoraNaPlanta, resetMockCatalog,
-  resetMockSessao, resetMockSetup, resumo,
+  resetMockSessao, resetMockSetup, resetMockTeams, resumo,
 } from './fixtures';
 import { mockApiInterceptor } from './mock-api.interceptor';
 
@@ -20,6 +21,7 @@ describe('mockApiInterceptor', () => {
     TestBed.resetTestingModule();
     resetMockSessao();
     resetMockSetup();
+    resetMockTeams();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withFetch(), withInterceptors([mockApiInterceptor])),
@@ -246,6 +248,80 @@ describe('mockApiInterceptor', () => {
 
     await expect(firstValueFrom(http.get(`${environment.apiUrl}/auth/me`)))
       .rejects.toMatchObject({ status: 401 });
+  });
+
+  it('GET /teams lista as equipes semeadas', async () => {
+    const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+
+    expect(equipes.length).toBeGreaterThan(0);
+    expect(equipes[0].id).toBe('EQ-01');
+  });
+
+  it('POST /teams cadastra e GET reflete', async () => {
+    const nova = await firstValueFrom(http.post<Equipe>(`${environment.apiUrl}/teams`,
+      { id: 'EQ-03', nome: 'Equipe C', turno: 'NOITE', estacaoIds: ['EST-03'] }));
+
+    expect(nova.ativa).toBe(true);
+    const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    expect(equipes.some(e => e.id === 'EQ-03')).toBe(true);
+  });
+
+  it('POST /teams com id repetido devolve 409', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/teams`,
+      { id: 'EQ-01', nome: 'Duplicada', turno: 'MANHA', estacaoIds: [] })))
+      .rejects.toMatchObject({ status: 409 });
+  });
+
+  it('PUT /teams/{id} edita e preserva ativa quando o corpo nao informa', async () => {
+    const editada = await firstValueFrom(http.put<Equipe>(`${environment.apiUrl}/teams/EQ-01`,
+      { id: 'EQ-01', nome: 'Equipe A Renomeada', turno: 'NOITE', estacaoIds: ['EST-01'] }));
+
+    expect(editada.nome).toBe('Equipe A Renomeada');
+    expect(editada.ativa).toBe(true);
+    const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    expect(equipes.find(e => e.id === 'EQ-01')?.turno).toBe('NOITE');
+  });
+
+  it('PUT /teams/{id} inexistente devolve 404', async () => {
+    await expect(firstValueFrom(http.put(`${environment.apiUrl}/teams/EQ-999`,
+      { id: 'EQ-999', nome: 'X', turno: 'MANHA', estacaoIds: [] })))
+      .rejects.toMatchObject({ status: 404 });
+  });
+
+  it('DELETE /teams/{id} desativa em vez de remover', async () => {
+    await firstValueFrom(http.delete(`${environment.apiUrl}/teams/EQ-01`));
+
+    const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    expect(equipes.find(e => e.id === 'EQ-01')?.ativa).toBe(false);
+  });
+
+  it('GET /users nunca traz senha', async () => {
+    const usuarios = await firstValueFrom(http.get<Record<string, unknown>[]>(`${environment.apiUrl}/users`));
+
+    expect(usuarios.length).toBeGreaterThan(0);
+    usuarios.forEach(u => expect(u['password']).toBeUndefined());
+  });
+
+  it('POST /users sem senha devolve 422', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/users`,
+      { username: 'sem-senha', papel: 'OPERADOR' })))
+      .rejects.toMatchObject({ status: 422 });
+  });
+
+  it('POST /users cadastra e a nova credencial loga', async () => {
+    await firstValueFrom(http.post<Usuario>(`${environment.apiUrl}/users`,
+      { username: 'gestor2', papel: 'GESTOR', password: 'senha456' }));
+
+    const resp = await firstValueFrom(http.post<{ papel: string }>(`${environment.apiUrl}/auth/login`,
+      { username: 'gestor2', password: 'senha456' }));
+    expect(resp.papel).toBe('GESTOR');
+  });
+
+  it('DELETE /users/{username} remove de verdade', async () => {
+    await firstValueFrom(http.delete(`${environment.apiUrl}/users/${GESTOR_DEMO.username}`));
+
+    const usuarios = await firstValueFrom(http.get<Usuario[]>(`${environment.apiUrl}/users`));
+    expect(usuarios.some(u => u.username === GESTOR_DEMO.username)).toBe(false);
   });
 });
 
