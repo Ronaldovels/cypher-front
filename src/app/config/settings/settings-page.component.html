@@ -45,4 +45,6 @@
   </main>
 </div>
 
-<app-dock activeKey="config" />
+@if (auth.role() === 'GESTOR') {
+  <app-dock activeKey="config" />
+}

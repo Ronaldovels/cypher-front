@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 
+import { AuthService } from '../shared/auth/auth.service';
 import { CatalogService } from '../shared/catalog.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
 import { ConfigService } from '../shared/config.service';
@@ -69,6 +70,8 @@ interface GrupoSetor {
   templateUrl: './heatmap.component.html',
 })
 export class HeatmapComponent implements OnInit, OnDestroy {
+  private authService = inject(AuthService);
+  readonly auth = this.authService;
   private cfgService = inject(ConfigService);
   private incidentService = inject(IncidentService);
   private catalogService = inject(CatalogService);

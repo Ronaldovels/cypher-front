@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { AuthService } from '../shared/auth/auth.service';
 import { CatalogService } from '../shared/catalog.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
 import { ConfigService } from '../shared/config.service';
@@ -19,6 +20,8 @@ import { formatTime, incidentLabel, severityClass } from '../shared/incident.mod
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private authService = inject(AuthService);
+  readonly auth = this.authService;
   private cfgService = inject(ConfigService);
   private incidentService = inject(IncidentService);
   private catalogService = inject(CatalogService);
