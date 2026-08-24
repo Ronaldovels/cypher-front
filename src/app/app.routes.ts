@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { OnboardingComponent } from './onboarding/onboarding.component';
+import { LoginComponent } from './auth/login.component';
+import { LoginEstacaoComponent } from './auth/login-estacao.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { HeatmapComponent } from './heatmap/heatmap.component';
 import { IncidentTimelineComponent } from './incidents/incident-timeline.component';
@@ -11,18 +13,24 @@ import { EpisTabComponent } from './config/settings/epis-tab.component';
 import { IdentityTabComponent } from './config/settings/identity-tab.component';
 import { SettingsPageComponent } from './config/settings/settings-page.component';
 import { StationsTabComponent } from './config/stations/stations-tab.component';
+import {
+  canActivateGestor, canActivateOnboarding, canActivateOperadorOuGestor,
+} from './shared/auth/auth.guards';
 
 export const routes: Routes = [
-  { path: '', component: OnboardingComponent },
-  { path: 'dashboard', component: DashboardComponent },
-  { path: 'heatmap', component: HeatmapComponent },
+  { path: '', component: OnboardingComponent, canActivate: [canActivateOnboarding] },
+  { path: 'login', component: LoginComponent },
+  { path: 'login-estacao', component: LoginEstacaoComponent },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [canActivateGestor] },
+  { path: 'heatmap', component: HeatmapComponent, canActivate: [canActivateGestor] },
   { path: 'incidentes', component: IncidentTimelineComponent },
   { path: 'incidentes/:id', component: IncidentDetailComponent },
   { path: 'estacoes', component: StationsGridComponent },
-  { path: 'estacao/:id', component: StationKioskComponent },
+  { path: 'estacao/:id', component: StationKioskComponent, canActivate: [canActivateOperadorOuGestor] },
   {
     path: 'config',
     component: SettingsPageComponent,
+    canActivate: [canActivateGestor],
     children: [
       { path: '', redirectTo: 'estacoes', pathMatch: 'full' },
       { path: 'estacoes', component: StationsTabComponent },
