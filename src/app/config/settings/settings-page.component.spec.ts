@@ -51,16 +51,17 @@ describe('SettingsPageComponent', () => {
     expect(fixture.nativeElement.querySelector('app-dock')).toBeNull();
   });
 
-  it('tem uma aba para cada secao do onboarding editavel', () => {
+  it('tem uma aba para cada secao do onboarding editavel, mais equipes e usuarios', () => {
     const fixture = montarGestor();
 
     const links: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('.cat-item'));
 
-    expect(links.length).toBe(4);
+    expect(links.length).toBe(5);
     expect(fixture.nativeElement.textContent).toContain('Identidade da empresa');
     expect(fixture.nativeElement.textContent).toContain('Estações e câmeras');
     expect(fixture.nativeElement.textContent).toContain('EPIs monitorados');
     expect(fixture.nativeElement.textContent).toContain('CAs e validades');
+    expect(fixture.nativeElement.textContent).toContain('Equipes e usuários');
   });
 
   it('a rota /config/estacoes ainda resolve (link do dock nao muda)', () => {

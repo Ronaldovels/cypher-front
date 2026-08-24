@@ -13,6 +13,7 @@ const TABS: SettingsTab[] = [
   { path: 'estacoes', label: 'Estações e câmeras', hint: 'O que será monitorado' },
   { path: 'epis', label: 'EPIs monitorados', hint: 'Seleção dos equipamentos' },
   { path: 'cas', label: 'CAs e validades', hint: 'Certificados de aprovação' },
+  { path: 'equipe', label: 'Equipes e usuários', hint: 'Alocação e acesso' },
 ];
 
 /**

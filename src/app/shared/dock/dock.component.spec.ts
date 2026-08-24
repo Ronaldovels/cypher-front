@@ -27,6 +27,13 @@ describe('DockComponent', () => {
     expect(fixture.componentInstance.items.find(i => i?.key === 'history')).toBeUndefined();
   });
 
+  it('liga "Colaboradores" a /config/equipe', () => {
+    const fixture = TestBed.createComponent(DockComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.items.find(i => i?.key === 'team')?.route).toBe('/config/equipe');
+  });
+
   it('itens com rota renderizam como link, não botão', () => {
     const fixture = TestBed.createComponent(DockComponent);
     fixture.detectChanges();

@@ -787,3 +787,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 // por login/estacao-login/equipe-usuarios) nunca tinha sido definida globalmente —
 // só existia escopada em stations-config.component.scss.
 .vazio { font-size: 13px; color: var(--ink-mute); }
+
+.subtabs { display: flex; gap: 10px; flex-wrap: wrap; }
+.list-row { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-radius: 8px; background: var(--bg-2); margin-bottom: 8px; flex-wrap: wrap; }

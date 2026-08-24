@@ -1,0 +1,40 @@
+<section>
+  @if (erro()) {
+    <p class="vazio" role="alert">{{ erro() }}</p>
+  }
+
+  <form class="auth-form" style="max-width:480px" (submit)="$event.preventDefault(); salvar()">
+    <div class="field">
+      <label>Usuário</label>
+      <input class="input" [value]="novoUsuario().username" placeholder="nome.sobrenome"
+             (input)="novoUsuario.set({ ...novoUsuario(), username: $any($event.target).value })" />
+    </div>
+    <div class="field">
+      <label>Papel</label>
+      <select class="select" [value]="novoUsuario().papel"
+              (change)="novoUsuario.set({ ...novoUsuario(), papel: $any($event.target).value })">
+        @for (p of papeis; track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input class="input" type="password" [value]="novoUsuario().password"
+             (input)="novoUsuario.set({ ...novoUsuario(), password: $any($event.target).value })" />
+    </div>
+    <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar usuário</button>
+  </form>
+
+  <div style="margin-top:28px">
+    @for (u of usuarios(); track u.username) {
+      <div class="list-row">
+        <span class="a-station">{{ u.username }}</span>
+        <span class="chip">{{ u.papel }}</span>
+        <button type="button" class="btn ghost sm" (click)="remover(u.username)">remover</button>
+      </div>
+    } @empty {
+      <p class="vazio">nenhum usuário cadastrado ainda</p>
+    }
+  </div>
+</section>
