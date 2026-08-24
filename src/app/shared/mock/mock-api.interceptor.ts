@@ -3,7 +3,10 @@ import { Observable, delay, of, throwError } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { CameraAdmin, Station } from '../incident.models';
-import { CAMERAS_MUTAVEL, EMITIDOS, INCIDENTS, STATIONS_MUTAVEL, resumo } from './fixtures';
+import {
+  CAMERAS_MUTAVEL, EMITIDOS, GESTOR_DEMO, INCIDENTS, SESSAO_MOCK, SETUP_MOCK, STATIONS_MUTAVEL,
+  TOKENS_ESTACAO, resumo,
+} from './fixtures';
 
 const ATRASO_MS = 150;
 
@@ -50,6 +53,58 @@ function comCameras(estacao: Station): Station {
 
 function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | undefined {
   const base = environment.apiUrl;
+
+  // ---------------- setup (execução única, design doc de E4 §2.5) ----------------
+
+  if (req.method === 'GET' && req.url === `${base}/setup/status`) {
+    return { configured: SETUP_MOCK.concluido };
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/setup`) {
+    if (SETUP_MOCK.concluido) {
+      return conflito('Setup já concluído — o gestor mestre já existe.');
+    }
+    // SETUP_MOCK é intencionalmente independente de USUARIOS_MUTAVEL: esse
+    // array só passa a existir em Task 10. O único efeito que este mock
+    // precisa provar aqui é o contrato request/response e a autenticação da
+    // sessão de resposta, igual a POST /auth/login — não uma persistência
+    // real do usuário criado no catálogo de usuários do mock.
+    const { username } = req.body as { username: string; password: string };
+    SETUP_MOCK.concluido = true;
+    SESSAO_MOCK.atual = { papel: 'GESTOR', username };
+    return { papel: 'GESTOR', username };
+  }
+
+  // ---------------- autenticação ----------------
+
+  if (req.method === 'POST' && req.url === `${base}/auth/login`) {
+    const { username, password } = req.body as { username: string; password: string };
+    if (username !== GESTOR_DEMO.username || password !== GESTOR_DEMO.password) {
+      return new HttpErrorResponse({ status: 401, error: { erro: 'Usuário ou senha inválidos' } });
+    }
+    SESSAO_MOCK.atual = { papel: 'GESTOR', username };
+    return { papel: 'GESTOR', username };
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/auth/login-estacao`) {
+    const { token } = req.body as { token: string };
+    const estacaoId = Object.entries(TOKENS_ESTACAO).find(([, t]) => t === token)?.[0];
+    if (!estacaoId) {
+      return new HttpErrorResponse({ status: 401, error: { erro: 'Token inválido' } });
+    }
+    SESSAO_MOCK.atual = { papel: 'OPERADOR', estacaoId };
+    return { papel: 'OPERADOR', estacaoId };
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/auth/logout`) {
+    SESSAO_MOCK.atual = null;
+    return null;
+  }
+
+  if (req.method === 'GET' && req.url === `${base}/auth/me`) {
+    return SESSAO_MOCK.atual
+      ?? new HttpErrorResponse({ status: 401, error: { erro: 'Não autenticado' } });
+  }
 
   // ---------------- escrita de estação ----------------
 

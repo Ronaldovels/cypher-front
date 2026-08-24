@@ -157,3 +157,47 @@ export function resetMockCatalog(): void {
 }
 
 resetMockCatalog();
+
+// ---------------- autenticação (mock) ----------------
+
+/** Credencial única do modo de exemplo — mostrada em tela por `LoginComponent` quando `USE_MOCK_DATA` é true. */
+export const GESTOR_DEMO = { username: 'gestor.demo', password: 'demo123' };
+
+/** Token de estação por id — só existe no mock; no backend real fica em `Estacao.token`, nunca exposto ao dashboard (design doc de E4, §2.4). */
+export const TOKENS_ESTACAO: Record<string, string> = {
+  'EST-01': 'est-tok-01',
+  'EST-02': 'est-tok-02',
+  'EST-03': 'est-tok-03',
+};
+
+export type SessaoMock =
+  | { papel: 'GESTOR'; username: string }
+  | { papel: 'OPERADOR'; estacaoId: string };
+
+/**
+ * Sessão atual do mock.
+ *
+ * Objeto com propriedade mutável, não `let` exportado: um módulo importador
+ * (o interceptor) não pode reatribuir um `let` importado, só mutar o que ele
+ * referencia — a mesma razão de `STATIONS_MUTAVEL` ser um array mutado via
+ * `.push()`, nunca reatribuído fora deste arquivo.
+ */
+export const SESSAO_MOCK: { atual: SessaoMock | null } = { atual: null };
+
+export function resetMockSessao(): void {
+  SESSAO_MOCK.atual = null;
+}
+
+/**
+ * Se o onboarding (o "setup de execução única", design doc de E4 §2.5) já
+ * rodou no mock. Independente de `USUARIOS_MUTAVEL` (Task 10) de propósito:
+ * esse array ainda não existe neste ponto do plano, e o mock aqui só precisa
+ * provar o contrato request/response de `/setup*` e a autenticação da sessão
+ * — não uma réplica fiel de "existe ≥1 Usuario" (ver comentário no handler
+ * de `POST /setup`, no interceptor).
+ */
+export const SETUP_MOCK: { concluido: boolean } = { concluido: false };
+
+export function resetMockSetup(): void {
+  SETUP_MOCK.concluido = false;
+}

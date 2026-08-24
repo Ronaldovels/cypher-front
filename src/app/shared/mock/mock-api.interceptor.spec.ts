@@ -6,7 +6,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../../environments/environment';
 import { Camera, Incident, Page } from '../incident.models';
-import { EMITIDOS, INCIDENTS, agoraNaPlanta, resetMockCatalog, resumo } from './fixtures';
+import {
+  EMITIDOS, GESTOR_DEMO, INCIDENTS, TOKENS_ESTACAO, agoraNaPlanta, resetMockCatalog,
+  resetMockSessao, resetMockSetup, resumo,
+} from './fixtures';
 import { mockApiInterceptor } from './mock-api.interceptor';
 
 describe('mockApiInterceptor', () => {
@@ -15,6 +18,8 @@ describe('mockApiInterceptor', () => {
 
   beforeEach(() => {
     TestBed.resetTestingModule();
+    resetMockSessao();
+    resetMockSetup();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withFetch(), withInterceptors([mockApiInterceptor])),
@@ -162,6 +167,85 @@ describe('mockApiInterceptor', () => {
     const agora = agoraNaPlanta();
 
     expect(INCIDENTS.every(i => i.detectedAt < agora)).toBe(true);
+  });
+
+  it('GET /setup/status comeca configured:false', async () => {
+    const resp = await firstValueFrom(
+      http.get<{ configured: boolean }>(`${environment.apiUrl}/setup/status`));
+
+    expect(resp).toEqual({ configured: false });
+  });
+
+  it('POST /setup cria o gestor mestre, autentica a sessao e fecha o setup', async () => {
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; username: string }>(`${environment.apiUrl}/setup`,
+        { username: 'admin', password: 'senhaAdmin1' }));
+
+    expect(resp).toEqual({ papel: 'GESTOR', username: 'admin' });
+
+    const status = await firstValueFrom(
+      http.get<{ configured: boolean }>(`${environment.apiUrl}/setup/status`));
+    expect(status).toEqual({ configured: true });
+
+    const me = await firstValueFrom(http.get(`${environment.apiUrl}/auth/me`));
+    expect(me).toEqual({ papel: 'GESTOR', username: 'admin' });
+  });
+
+  it('POST /setup depois de concluido devolve 409 (execucao unica)', async () => {
+    await firstValueFrom(http.post(`${environment.apiUrl}/setup`,
+      { username: 'admin', password: 'senhaAdmin1' }));
+
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/setup`,
+      { username: 'outro', password: 'outrasenha' })))
+      .rejects.toMatchObject({ status: 409 });
+  });
+
+  it('responde POST /auth/login com credencial correta e mantem a sessao', async () => {
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; username: string }>(`${environment.apiUrl}/auth/login`,
+        { username: GESTOR_DEMO.username, password: GESTOR_DEMO.password }));
+
+    expect(resp).toEqual({ papel: 'GESTOR', username: GESTOR_DEMO.username });
+
+    const me = await firstValueFrom(http.get(`${environment.apiUrl}/auth/me`));
+    expect(me).toEqual({ papel: 'GESTOR', username: GESTOR_DEMO.username });
+  });
+
+  it('POST /auth/login com senha errada devolve 401', async () => {
+    await expect(firstValueFrom(
+      http.post(`${environment.apiUrl}/auth/login`,
+        { username: GESTOR_DEMO.username, password: 'errada' })))
+      .rejects.toMatchObject({ status: 401 });
+  });
+
+  it('responde POST /auth/login-estacao com token valido', async () => {
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; estacaoId: string }>(`${environment.apiUrl}/auth/login-estacao`,
+        { token: TOKENS_ESTACAO['EST-01'] }));
+
+    expect(resp).toEqual({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+  });
+
+  it('POST /auth/login-estacao com token invalido devolve 401', async () => {
+    await expect(firstValueFrom(
+      http.post(`${environment.apiUrl}/auth/login-estacao`, { token: 'token-que-nao-existe' })))
+      .rejects.toMatchObject({ status: 401 });
+  });
+
+  it('GET /auth/me sem sessao devolve 401', async () => {
+    await expect(firstValueFrom(http.get(`${environment.apiUrl}/auth/me`)))
+      .rejects.toMatchObject({ status: 401 });
+  });
+
+  it('POST /auth/logout encerra a sessao — /auth/me volta a 401', async () => {
+    await firstValueFrom(
+      http.post(`${environment.apiUrl}/auth/login`,
+        { username: GESTOR_DEMO.username, password: GESTOR_DEMO.password }));
+
+    await firstValueFrom(http.post(`${environment.apiUrl}/auth/logout`, {}));
+
+    await expect(firstValueFrom(http.get(`${environment.apiUrl}/auth/me`)))
+      .rejects.toMatchObject({ status: 401 });
   });
 });
 
