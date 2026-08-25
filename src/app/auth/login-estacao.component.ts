@@ -5,6 +5,7 @@ import { AuthService } from '../shared/auth/auth.service';
 import { mensagemDeErro } from '../shared/incident.models';
 import { TOKENS_ESTACAO } from '../shared/mock/fixtures';
 import { USE_MOCK_DATA } from '../shared/mock/use-mock-data.token';
+import { ThemeService } from '../shared/theme.service';
 
 /** Login do kiosk (token de estação) — design doc de E4 §4.2. Rota pública, sem topbar/dock, sem campo de senha. */
 @Component({
@@ -15,6 +16,7 @@ import { USE_MOCK_DATA } from '../shared/mock/use-mock-data.token';
 export class LoginEstacaoComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private theme = inject(ThemeService);
 
   readonly exemplo = inject(USE_MOCK_DATA);
   readonly tokenDemo = TOKENS_ESTACAO['EST-01'];
@@ -22,6 +24,11 @@ export class LoginEstacaoComponent {
   readonly token = signal('');
   readonly enviando = signal(false);
   readonly erro = signal<string | null>(null);
+
+  readonly temaEscuro = () => this.theme.theme() === 'dark';
+  alternarTema(): void {
+    this.theme.toggle();
+  }
 
   patch(valor: string): void {
     this.token.set(valor);

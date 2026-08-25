@@ -60,6 +60,28 @@ describe('LoginComponent', () => {
     expect(navegar).toHaveBeenCalledWith(['/dashboard']);
   });
 
+  it('login de operador por credencial navega para /estacao/:id', async () => {
+    const fixture = montar();
+    const navegar = vi.spyOn(router, 'navigate');
+    fixture.componentInstance.patch({ username: 'op1', password: 'senha123' });
+
+    fixture.componentInstance.entrar();
+
+    http.expectOne(`${environment.apiUrl}/auth/login`)
+      .flush({ papel: 'OPERADOR', estacaoId: 'EST-01', username: 'op1' });
+
+    expect(navegar).toHaveBeenCalledWith(['/estacao', 'EST-01']);
+  });
+
+  it('alternarTema chama o ThemeService.toggle', () => {
+    const fixture = montar();
+    const antes = fixture.componentInstance.temaEscuro();
+
+    fixture.componentInstance.alternarTema();
+
+    expect(fixture.componentInstance.temaEscuro()).toBe(!antes);
+  });
+
   it('credencial invalida mostra a mensagem do backend, sem navegar', () => {
     const fixture = montar();
     const navegar = vi.spyOn(router, 'navigate');

@@ -74,6 +74,15 @@ describe('LoginEstacaoComponent', () => {
     expect(navegar).not.toHaveBeenCalled();
   });
 
+  it('alternarTema chama o ThemeService.toggle', () => {
+    const fixture = montar();
+    const antes = fixture.componentInstance.temaEscuro();
+
+    fixture.componentInstance.alternarTema();
+
+    expect(fixture.componentInstance.temaEscuro()).toBe(!antes);
+  });
+
   it('link de volta leva ao login do gestor', () => {
     const fixture = montar();
 
