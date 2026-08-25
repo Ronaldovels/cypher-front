@@ -92,6 +92,18 @@ Para testes E2E:
 ng e2e
 ```
 
+## 🗂️ Gestão Ágil (Sprint 3)
+
+- **Board Trello:** `[PREENCHER: link do board Trello, com permissão de visualização]`
+- **Protótipo Figma (atualizado):** `[PREENCHER: link do protótipo Figma]`
+- **Documento de cerimônias Scrum:** [docs/scrum/sprint-3/cerimonias.md](docs/scrum/sprint-3/cerimonias.md)
+- **Product Backlog / Sprint Backlog / DoD:** [docs/scrum/sprint-3/](docs/scrum/sprint-3/)
+- **Roteiro de apresentação (5 min):** [docs/apresentacao/2026-08-25-roteiro-sprint3.md](docs/apresentacao/2026-08-25-roteiro-sprint3.md)
+
+### Evolução do protótipo nesta Sprint
+
+`[PREENCHER: descrever as ≥2 telas/fluxos novos adicionados ao Figma e a justificativa de cada mudança — feedback recebido, requisito não coberto anteriormente, ou melhoria de usabilidade]`
+
 ## 📁 Branches
 
 - **main**: Produção estável
