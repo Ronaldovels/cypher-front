@@ -83,6 +83,38 @@ describe('StationsConfigComponent', () => {
     expect(componente.erro()).toBe('');
   });
 
+  it('cadastrar estacao mostra o token devolvido pelo backend', () => {
+    const fixture = montar();
+    const componente = fixture.componentInstance;
+
+    componente.novaEstacao.set({ id: 'EST-01', nome: 'Esteira', setor: 'montagem' });
+    componente.salvarEstacao();
+
+    http.expectOne(r => r.method === 'POST' && r.url === `${environment.apiUrl}/stations`)
+      .flush({ id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true, token: 'est-tok-abc123' });
+    http.match(r => r.url === `${environment.apiUrl}/cameras`).forEach(r => r.flush([]));
+    http.match(r => r.url === `${environment.apiUrl}/stations`).forEach(r => r.flush([
+      { id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true, cameras: [] },
+    ]));
+    fixture.detectChanges();
+
+    expect(componente.tokenVisto()).toEqual({ estacaoId: 'EST-01', token: 'est-tok-abc123' });
+    expect(fixture.nativeElement.textContent).toContain('est-tok-abc123');
+  });
+
+  it('gerarToken chama o endpoint de regenerate e mostra o token novo', () => {
+    const fixture = montar();
+    const componente = fixture.componentInstance;
+
+    componente.gerarToken('EST-01');
+
+    const req = http.expectOne(
+      r => r.method === 'POST' && r.url === `${environment.apiUrl}/stations/EST-01/token/regenerate`);
+    req.flush({ id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true, token: 'est-tok-novo' });
+
+    expect(componente.tokenVisto()).toEqual({ estacaoId: 'EST-01', token: 'est-tok-novo' });
+  });
+
   it('mostra a mensagem do servidor quando o codigo ja existe', () => {
     const fixture = montar();
     const componente = fixture.componentInstance;

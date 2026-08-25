@@ -4,7 +4,7 @@ import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {
-  Camera, CameraAdmin, CameraPayload, Station, StationPayload,
+  Camera, CameraAdmin, CameraPayload, EstacaoAdmin, Station, StationPayload,
 } from './incident.models';
 
 /**
@@ -52,19 +52,30 @@ export class CatalogService {
       { withCredentials: true });
   }
 
-  createStation(payload: StationPayload): Observable<Station> {
-    return this.http.post<Station>(`${environment.apiUrl}/stations`, payload,
+  /** Devolve `EstacaoAdmin` (com `token`) — nunca `Station`: é a superfície de administração (design doc §2.4). */
+  createStation(payload: StationPayload): Observable<EstacaoAdmin> {
+    return this.http.post<EstacaoAdmin>(`${environment.apiUrl}/stations`, payload,
       { withCredentials: true }).pipe(tap(() => this.reload()));
   }
 
-  updateStation(id: string, payload: StationPayload): Observable<Station> {
-    return this.http.put<Station>(`${environment.apiUrl}/stations/${id}`, payload,
+  updateStation(id: string, payload: StationPayload): Observable<EstacaoAdmin> {
+    return this.http.put<EstacaoAdmin>(`${environment.apiUrl}/stations/${id}`, payload,
       { withCredentials: true }).pipe(tap(() => this.reload()));
   }
 
   deactivateStation(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}/stations/${id}`,
       { withCredentials: true }).pipe(tap(() => this.reload()));
+  }
+
+  /**
+   * Rotaciona o token da estação — provisionar o kiosk é copiar o valor
+   * devolvido aqui uma vez (design doc §2.4). Sem leitura: é o único jeito de
+   * ver o token depois do cadastro inicial.
+   */
+  regenerateStationToken(id: string): Observable<EstacaoAdmin> {
+    return this.http.post<EstacaoAdmin>(`${environment.apiUrl}/stations/${id}/token/regenerate`, {},
+      { withCredentials: true });
   }
 
   createCamera(payload: CameraPayload): Observable<CameraAdmin> {
