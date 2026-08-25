@@ -85,11 +85,21 @@ export class AuthService {
       .subscribe({ error: () => { /* sessão local já foi limpa */ } });
   }
 
-  /** `GET /setup/status` (design doc §2.5) — não toca `role`/`estacaoId`, só informa se o onboarding já rodou. Usado por `canActivateOnboarding` (Task 2). */
+  /**
+   * `GET /setup/status` (design doc §2.5) — não toca `role`/`estacaoId`, só
+   * informa se o onboarding já rodou. Usado por `canActivateOnboarding`
+   * (Task 2). Erro de rede/5xx vira `false` (mostra o wizard) em vez de
+   * propagar: um blip transitório não pode blank-pagear `/` — se o setup já
+   * tivesse rodado de verdade, `POST /setup` devolveria 409 e `launch()` já
+   * trata isso como erro visível, sem navegar.
+   */
   checkSetupStatus(): Observable<boolean> {
     return this.http
       .get<SetupStatusResponse>(`${environment.apiUrl}/setup/status`, { withCredentials: true })
-      .pipe(map(resp => resp.configured));
+      .pipe(
+        map(resp => resp.configured),
+        catchError(() => of(false)),
+      );
   }
 
   /**

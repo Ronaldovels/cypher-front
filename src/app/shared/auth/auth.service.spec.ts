@@ -119,6 +119,24 @@ describe('AuthService', () => {
     expect(configurado).toBe(true);
   });
 
+  it('checkSetupStatus com erro de rede/5xx resolve para false, sem propagar (nao blank-pageia /)', () => {
+    http.expectOne(`${environment.apiUrl}/auth/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    let configurado: boolean | undefined;
+    let falhou = false;
+    service.checkSetupStatus().subscribe({
+      next: v => { configurado = v; },
+      error: () => { falhou = true; },
+    });
+
+    const req = http.expectOne(`${environment.apiUrl}/setup/status`);
+    req.flush({ erro: 'fora do ar' }, { status: 500, statusText: 'Internal Server Error' });
+
+    expect(falhou).toBe(false);
+    expect(configurado).toBe(false);
+  });
+
   it('bootstrap cria o gestor mestre e autentica a sessao, igual ao login', () => {
     http.expectOne(`${environment.apiUrl}/auth/me`)
       .flush(null, { status: 401, statusText: 'Unauthorized' });

@@ -193,6 +193,21 @@ describe('mockApiInterceptor', () => {
     expect(me).toEqual({ papel: 'GESTOR', username: 'admin' });
   });
 
+  it('POST /setup cadastra o gestor mestre em USUARIOS_MUTAVEL: sobrevive a logout e loga de novo', async () => {
+    await firstValueFrom(http.post(`${environment.apiUrl}/setup`,
+      { username: 'admin', password: 'senhaAdmin1' }));
+
+    await firstValueFrom(http.post(`${environment.apiUrl}/auth/logout`, {}));
+
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; username: string }>(`${environment.apiUrl}/auth/login`,
+        { username: 'admin', password: 'senhaAdmin1' }));
+    expect(resp).toEqual({ papel: 'GESTOR', username: 'admin' });
+
+    const usuarios = await firstValueFrom(http.get<{ username: string }[]>(`${environment.apiUrl}/users`));
+    expect(usuarios.some(u => u.username === 'admin')).toBe(true);
+  });
+
   it('POST /setup depois de concluido devolve 409 (execucao unica)', async () => {
     await firstValueFrom(http.post(`${environment.apiUrl}/setup`,
       { username: 'admin', password: 'senhaAdmin1' }));
@@ -293,6 +308,23 @@ describe('mockApiInterceptor', () => {
 
     const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
     expect(equipes.find(e => e.id === 'EQ-01')?.ativa).toBe(false);
+  });
+
+  it('GET /teams devolve uma copia nova a cada chamada (nao a referencia mutavel do mock)', async () => {
+    const primeira = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    const segunda = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+
+    expect(primeira).not.toBe(segunda);
+    expect(primeira[0]).not.toBe(segunda[0]);
+    expect(primeira[0].estacaoIds).not.toBe(segunda[0].estacaoIds);
+    expect(primeira).toEqual(segunda);
+
+    await firstValueFrom(http.delete(`${environment.apiUrl}/teams/EQ-01`));
+
+    // A copia obtida antes do DELETE nao deve ter sido mutada por referencia.
+    expect(primeira.find(e => e.id === 'EQ-01')?.ativa).toBe(true);
+    const depois = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    expect(depois.find(e => e.id === 'EQ-01')?.ativa).toBe(false);
   });
 
   it('GET /users nunca traz senha', async () => {

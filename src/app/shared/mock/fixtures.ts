@@ -191,11 +191,12 @@ export function resetMockSessao(): void {
 
 /**
  * Se o onboarding (o "setup de execução única", design doc de E4 §2.5) já
- * rodou no mock. Independente de `USUARIOS_MUTAVEL` (Task 10) de propósito:
- * esse array ainda não existe neste ponto do plano, e o mock aqui só precisa
- * provar o contrato request/response de `/setup*` e a autenticação da sessão
- * — não uma réplica fiel de "existe ≥1 Usuario" (ver comentário no handler
- * de `POST /setup`, no interceptor).
+ * rodou no mock. Continua sendo a fonte de verdade de `GET /setup/status`
+ * mesmo depois de `POST /setup` também empurrar o novo usuário para
+ * `USUARIOS_MUTAVEL` (Task 10): esse array já vem pré-semeado com
+ * `gestor.demo` (`USUARIOS_MUTAVEL.length > 0` sempre verdadeiro, mesmo antes
+ * de qualquer setup rodar), então não serve como sinal de "setup concluído"
+ * sem quebrar a expectativa de `configured:false` no início.
  */
 export const SETUP_MOCK: { concluido: boolean } = { concluido: false };
 

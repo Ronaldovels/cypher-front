@@ -65,13 +65,9 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     if (SETUP_MOCK.concluido) {
       return conflito('Setup já concluído — o gestor mestre já existe.');
     }
-    // SETUP_MOCK é intencionalmente independente de USUARIOS_MUTAVEL: esse
-    // array só passa a existir em Task 10. O único efeito que este mock
-    // precisa provar aqui é o contrato request/response e a autenticação da
-    // sessão de resposta, igual a POST /auth/login — não uma persistência
-    // real do usuário criado no catálogo de usuários do mock.
-    const { username } = req.body as { username: string; password: string };
+    const { username, password } = req.body as { username: string; password: string };
     SETUP_MOCK.concluido = true;
+    USUARIOS_MUTAVEL.push({ username, papel: 'GESTOR', password });
     SESSAO_MOCK.atual = { papel: 'GESTOR', username };
     return { papel: 'GESTOR', username };
   }
@@ -112,7 +108,12 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
   // ---------------- equipes ----------------
 
   if (req.method === 'GET' && req.url === `${base}/teams`) {
-    return EQUIPES_MUTAVEL;
+    // Clona (raso, mais o array aninhado estacaoIds), como todo outro handler
+    // de leitura deste arquivo — devolver EQUIPES_MUTAVEL por referência faz
+    // o signal `_equipes` do TeamService acabar guardando essa mesma
+    // referência; uma mutação in-place posterior (ex.: desativar()) não
+    // muda a referência, e Object.is() no set() do signal não notifica.
+    return EQUIPES_MUTAVEL.map(e => ({ ...e, estacaoIds: [...e.estacaoIds] }));
   }
 
   if (req.method === 'POST' && req.url === `${base}/teams`) {
