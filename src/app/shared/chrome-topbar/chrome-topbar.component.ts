@@ -1,5 +1,6 @@
 import { Component, input, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
 import { ThemeService } from '../theme.service';
 
 @Component({
@@ -7,19 +8,35 @@ import { ThemeService } from '../theme.service';
   imports: [RouterLink],
   template: `
     <header class="dtop">
-      <a routerLink="/dashboard" data-test="brand-logo" class="brand-mini" title="Dashboard" style="text-decoration:none;color:inherit">
-        <div class="brand-logo" [style.background]="cfg()?.accent || 'var(--accent)'">
-          @if (cfg()?.logoUrl) {
-            <img [src]="cfg()!.logoUrl!" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:8px"/>
-          } @else {
-            {{ initial() }}
-          }
+      @if (auth.role() === 'GESTOR') {
+        <a routerLink="/dashboard" data-test="brand-logo" class="brand-mini" title="Dashboard" style="text-decoration:none;color:inherit">
+          <div class="brand-logo" [style.background]="cfg()?.accent || 'var(--accent)'">
+            @if (cfg()?.logoUrl) {
+              <img [src]="cfg()!.logoUrl!" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:8px"/>
+            } @else {
+              {{ initial() }}
+            }
+          </div>
+          <div>
+            <div class="brand-text">{{ company() }}</div>
+            <div class="brand-tag">Industrial Vision AI</div>
+          </div>
+        </a>
+      } @else {
+        <div class="brand-mini">
+          <div class="brand-logo" [style.background]="cfg()?.accent || 'var(--accent)'">
+            @if (cfg()?.logoUrl) {
+              <img [src]="cfg()!.logoUrl!" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:8px"/>
+            } @else {
+              {{ initial() }}
+            }
+          </div>
+          <div>
+            <div class="brand-text">{{ company() }}</div>
+            <div class="brand-tag">Industrial Vision AI</div>
+          </div>
         </div>
-        <div>
-          <div class="brand-text">{{ company() }}</div>
-          <div class="brand-tag">Industrial Vision AI</div>
-        </div>
-      </a>
+      }
 
       <div class="pgtitle">
         <span class="h">{{ page() }}</span>
@@ -62,15 +79,24 @@ import { ThemeService } from '../theme.service';
           }
         </button>
 
-        <a routerLink="/config/identidade" class="icon-btn" data-test="open-settings"
-           aria-label="Configurações" title="Configurações">
-          <!-- Engrenagem de verdade. Antes levava de volta ao onboarding — agora
-               que existe uma página de configurações de verdade, é para lá que vai. -->
+        @if (auth.role() === 'GESTOR') {
+          <a routerLink="/config/identidade" class="icon-btn" data-test="open-settings"
+             aria-label="Configurações" title="Configurações">
+            <!-- Engrenagem de verdade. Antes levava de volta ao onboarding — agora
+                 que existe uma página de configurações de verdade, é para lá que vai. -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </a>
+        }
+
+        <button class="icon-btn" data-test="logout" aria-label="Sair" title="Sair" (click)="sair()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
           </svg>
-        </a>
+        </button>
       </div>
     </header>
   `,
@@ -84,11 +110,22 @@ export class ChromeTopbarComponent {
   notifBadge = input<number>(0);
 
   private themeService = inject(ThemeService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  readonly auth = this.authService;
 
   temaEscuro = computed(() => this.themeService.theme() === 'dark');
 
   alternarTema(): void {
     this.themeService.toggle();
+  }
+
+  /** Rota de saída depende de quem estava logado — captura antes de `logout()` limpar `role()`. */
+  sair(): void {
+    const eraOperador = this.auth.role() === 'OPERADOR';
+    this.authService.logout();
+    this.router.navigate([eraOperador ? '/login-estacao' : '/login']);
   }
 
   company = computed(() => (this.cfg()?.company || 'CYPHER').toUpperCase());

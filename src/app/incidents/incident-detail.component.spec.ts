@@ -37,19 +37,22 @@ describe('IncidentDetailComponent', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  it('busca o incidente pelo id da rota e mostra os campos', async () => {
+  it('busca o incidente pelo id da rota e mostra os campos, com dock para GESTOR', async () => {
     const harness = await RouterTestingHarness.create();
     // navigateByUrl só resolve depois que o componente é ativado e ngOnInit
-    // roda; é só depois disso que a requisição HTTP existe para o backend
-    // de teste flushar.
+    // roda; é só depois disso que as requisições HTTP (incidente e
+    // /auth/me, ambos disparados na construção/ngOnInit) existem para o
+    // backend de teste flushar.
     await harness.navigateByUrl('/incidentes/42', IncidentDetailComponent);
     http.expectOne(`${environment.apiUrl}/incidents/42`).flush(incidente());
+    http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'g1' });
     harness.detectChanges();
 
     expect(harness.routeNativeElement?.textContent).toContain('Queda / risco imediato');
     expect(harness.routeNativeElement?.textContent).toContain('CAM-01');
     // Tela de um incidente específico do passado: precisa da data, não só da hora.
     expect(harness.routeNativeElement?.textContent).toContain('10/08 14:31');
+    expect(harness.routeNativeElement?.querySelector('app-dock')).not.toBeNull();
   });
 
   it('id inexistente mostra erro e link de volta', async () => {
@@ -57,6 +60,7 @@ describe('IncidentDetailComponent', () => {
     await harness.navigateByUrl('/incidentes/999999', IncidentDetailComponent);
     http.expectOne(`${environment.apiUrl}/incidents/999999`)
       .flush(null, { status: 404, statusText: 'Not Found' });
+    http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'g1' });
     harness.detectChanges();
 
     expect(harness.routeNativeElement?.textContent?.toLowerCase()).toContain('falhou');
@@ -67,6 +71,7 @@ describe('IncidentDetailComponent', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/incidentes/42', IncidentDetailComponent);
     http.expectOne(`${environment.apiUrl}/incidents/42`).flush(incidente({ snapshotUrl: null }));
+    http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'g1' });
     harness.detectChanges();
 
     expect(harness.routeNativeElement?.textContent).toContain('processando imagem');
@@ -76,6 +81,7 @@ describe('IncidentDetailComponent', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/incidentes/42', IncidentDetailComponent);
     http.expectOne(`${environment.apiUrl}/incidents/42`).flush(incidente({ status: 'PENDENTE' }));
+    http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'g1' });
     harness.detectChanges();
 
     const botaoResolvido = Array.from(harness.routeNativeElement?.querySelectorAll('button') ?? [])
@@ -85,5 +91,16 @@ describe('IncidentDetailComponent', () => {
     const req = http.expectOne(`${environment.apiUrl}/incidents/42/status`);
     expect(req.request.body).toEqual({ status: 'RESOLVIDO' });
     req.flush(incidente({ status: 'RESOLVIDO' }));
+  });
+
+  it('sem sessao GESTOR, nao mostra o dock', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/incidentes/42', IncidentDetailComponent);
+    http.expectOne(`${environment.apiUrl}/incidents/42`).flush(incidente());
+    http.expectOne(`${environment.apiUrl}/auth/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    harness.detectChanges();
+
+    expect(harness.routeNativeElement?.querySelector('app-dock')).toBeNull();
   });
 });

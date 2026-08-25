@@ -3,7 +3,11 @@ import { Observable, delay, of, throwError } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { CameraAdmin, Station } from '../incident.models';
-import { CAMERAS_MUTAVEL, EMITIDOS, INCIDENTS, STATIONS_MUTAVEL, resumo } from './fixtures';
+import { Equipe, Usuario } from '../team.models';
+import {
+  CAMERAS_MUTAVEL, EMITIDOS, EQUIPES_MUTAVEL, INCIDENTS, SESSAO_MOCK, SETUP_MOCK,
+  STATIONS_MUTAVEL, TOKENS_ESTACAO, USUARIOS_MUTAVEL, resumo,
+} from './fixtures';
 
 const ATRASO_MS = 150;
 
@@ -36,6 +40,27 @@ function naoProcessavel(mensagem: string): HttpErrorResponse {
   return new HttpErrorResponse({ status: 422, error: { erro: mensagem } });
 }
 
+/** Espelha `UsuarioService.validarPapelEEstacao` do backend real. */
+function validarPapelEEstacaoDoUsuario(papel: string, estacaoId?: string): HttpErrorResponse | null {
+  if (papel !== 'GESTOR' && papel !== 'OPERADOR') {
+    return naoProcessavel(`papel deve ser GESTOR ou OPERADOR: ${papel}`);
+  }
+  if (papel === 'OPERADOR') {
+    if (!estacaoId) {
+      return naoProcessavel('estacaoId e obrigatorio para OPERADOR');
+    }
+    if (!STATIONS_MUTAVEL.some(s => s.id === estacaoId)) {
+      return naoProcessavel(`estacao inexistente: ${estacaoId}`);
+    }
+  }
+  return null;
+}
+
+/** Espelha `TokenGenerator.novo` do backend real — só para o mock parecer real. */
+function gerarTokenMock(prefixo: string): string {
+  return `${prefixo}-${Math.random().toString(36).slice(2, 10)}${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function naoEncontrado(mensagem: string): HttpErrorResponse {
   return new HttpErrorResponse({ status: 404, error: { erro: mensagem } });
 }
@@ -51,6 +76,159 @@ function comCameras(estacao: Station): Station {
 function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | undefined {
   const base = environment.apiUrl;
 
+  // ---------------- setup (execução única, design doc de E4 §2.5) ----------------
+
+  if (req.method === 'GET' && req.url === `${base}/setup/status`) {
+    return { configured: SETUP_MOCK.concluido };
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/setup`) {
+    if (SETUP_MOCK.concluido) {
+      return conflito('Setup já concluído — o gestor mestre já existe.');
+    }
+    const { username, password } = req.body as { username: string; password: string };
+    SETUP_MOCK.concluido = true;
+    USUARIOS_MUTAVEL.push({ username, papel: 'GESTOR', password });
+    SESSAO_MOCK.atual = { papel: 'GESTOR', username };
+    return { papel: 'GESTOR', username };
+  }
+
+  // ---------------- autenticação ----------------
+
+  if (req.method === 'POST' && req.url === `${base}/auth/login`) {
+    const { username, password } = req.body as { username: string; password: string };
+    const usuario = USUARIOS_MUTAVEL.find(u => u.username === username && u.password === password);
+    if (!usuario) {
+      return new HttpErrorResponse({ status: 401, error: { erro: 'Usuário ou senha inválidos' } });
+    }
+    // OPERADOR por credencial (revisão pós-E4) usa a MESMA OperadorAuthentication
+    // do login por token do lado do backend — aqui, mesma forma de resposta,
+    // só que com `username` também preenchido.
+    if (usuario.papel === 'OPERADOR') {
+      SESSAO_MOCK.atual = { papel: 'OPERADOR', estacaoId: usuario.estacaoId!, username };
+      return { papel: 'OPERADOR', estacaoId: usuario.estacaoId, username };
+    }
+    SESSAO_MOCK.atual = { papel: 'GESTOR', username };
+    return { papel: 'GESTOR', username };
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/auth/login-estacao`) {
+    const { token } = req.body as { token: string };
+    const estacaoId = Object.entries(TOKENS_ESTACAO).find(([, t]) => t === token)?.[0];
+    if (!estacaoId) {
+      return new HttpErrorResponse({ status: 401, error: { erro: 'Token inválido' } });
+    }
+    SESSAO_MOCK.atual = { papel: 'OPERADOR', estacaoId };
+    return { papel: 'OPERADOR', estacaoId };
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/auth/logout`) {
+    SESSAO_MOCK.atual = null;
+    return null;
+  }
+
+  if (req.method === 'GET' && req.url === `${base}/auth/me`) {
+    return SESSAO_MOCK.atual
+      ?? new HttpErrorResponse({ status: 401, error: { erro: 'Não autenticado' } });
+  }
+
+  // ---------------- equipes ----------------
+
+  if (req.method === 'GET' && req.url === `${base}/teams`) {
+    // Clona (raso, mais o array aninhado estacaoIds), como todo outro handler
+    // de leitura deste arquivo — devolver EQUIPES_MUTAVEL por referência faz
+    // o signal `_equipes` do TeamService acabar guardando essa mesma
+    // referência; uma mutação in-place posterior (ex.: desativar()) não
+    // muda a referência, e Object.is() no set() do signal não notifica.
+    return EQUIPES_MUTAVEL.map(e => ({ ...e, estacaoIds: [...e.estacaoIds] }));
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/teams`) {
+    const corpo = req.body as Equipe;
+    if (EQUIPES_MUTAVEL.some(e => e.id === corpo.id)) {
+      return conflito(`Equipe ja cadastrada: ${corpo.id}`);
+    }
+    const nova: Equipe = { ...corpo, ativa: corpo.ativa ?? true };
+    EQUIPES_MUTAVEL.push(nova);
+    return nova;
+  }
+
+  if (req.method === 'PUT' && req.url.startsWith(`${base}/teams/`)) {
+    const id = req.url.slice(`${base}/teams/`.length);
+    const corpo = req.body as Equipe;
+    const atual = EQUIPES_MUTAVEL.find(e => e.id === id);
+    if (!atual) {
+      return naoEncontrado(`Equipe inexistente: ${id}`);
+    }
+    Object.assign(atual, corpo, { id, ativa: corpo.ativa ?? atual.ativa });
+    return atual;
+  }
+
+  if (req.method === 'DELETE' && req.url.startsWith(`${base}/teams/`)) {
+    const id = req.url.slice(`${base}/teams/`.length);
+    const atual = EQUIPES_MUTAVEL.find(e => e.id === id);
+    if (!atual) {
+      return naoEncontrado(`Equipe inexistente: ${id}`);
+    }
+    atual.ativa = false;
+    return null;
+  }
+
+  // ---------------- usuários ----------------
+
+  if (req.method === 'GET' && req.url === `${base}/users`) {
+    return USUARIOS_MUTAVEL.map(({ password, ...resto }) => resto);
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/users`) {
+    const corpo = req.body as Usuario & { password?: string };
+    const erroPapel = validarPapelEEstacaoDoUsuario(corpo.papel, corpo.estacaoId);
+    if (erroPapel) {
+      return erroPapel;
+    }
+    if (USUARIOS_MUTAVEL.some(u => u.username === corpo.username)) {
+      return conflito(`Usuario ja cadastrado: ${corpo.username}`);
+    }
+    if (!corpo.password) {
+      return naoProcessavel('Senha obrigatória no cadastro');
+    }
+    const estacaoId = corpo.papel === 'OPERADOR' ? corpo.estacaoId : undefined;
+    const novo = { username: corpo.username, papel: corpo.papel, password: corpo.password, estacaoId };
+    USUARIOS_MUTAVEL.push(novo);
+    const { password, ...resto } = novo;
+    return resto;
+  }
+
+  if (req.method === 'PUT' && req.url.startsWith(`${base}/users/`)) {
+    const username = req.url.slice(`${base}/users/`.length);
+    const corpo = req.body as Usuario & { password?: string };
+    const erroPapel = validarPapelEEstacaoDoUsuario(corpo.papel, corpo.estacaoId);
+    if (erroPapel) {
+      return erroPapel;
+    }
+    const atual = USUARIOS_MUTAVEL.find(u => u.username === username);
+    if (!atual) {
+      return naoEncontrado(`Usuario inexistente: ${username}`);
+    }
+    atual.papel = corpo.papel;
+    atual.estacaoId = corpo.papel === 'OPERADOR' ? corpo.estacaoId : undefined;
+    if (corpo.password) {
+      atual.password = corpo.password;
+    }
+    const { password, ...resto } = atual;
+    return resto;
+  }
+
+  if (req.method === 'DELETE' && req.url.startsWith(`${base}/users/`)) {
+    const username = req.url.slice(`${base}/users/`.length);
+    const idx = USUARIOS_MUTAVEL.findIndex(u => u.username === username);
+    if (idx === -1) {
+      return naoEncontrado(`Usuario inexistente: ${username}`);
+    }
+    USUARIOS_MUTAVEL.splice(idx, 1);
+    return null;
+  }
+
   // ---------------- escrita de estação ----------------
 
   if (req.method === 'POST' && req.url === `${base}/stations`) {
@@ -60,7 +238,8 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     }
     const nova: Station = { ...corpo, ativa: corpo.ativa ?? true, cameras: [] };
     STATIONS_MUTAVEL.push(nova);
-    return nova;
+    TOKENS_ESTACAO[nova.id] = gerarTokenMock('est-tok');
+    return { ...nova, token: TOKENS_ESTACAO[nova.id] };
   }
 
   if (req.method === 'PUT' && req.url.startsWith(`${base}/stations/`)) {
@@ -78,7 +257,17 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     if (corpo.ativa !== undefined) {
       atual.ativa = corpo.ativa;
     }
-    return comCameras(atual);
+    return { ...comCameras(atual), token: TOKENS_ESTACAO[id] ?? (TOKENS_ESTACAO[id] = gerarTokenMock('est-tok')) };
+  }
+
+  if (req.method === 'POST' && req.url.endsWith('/token/regenerate') && req.url.startsWith(`${base}/stations/`)) {
+    const id = req.url.slice(`${base}/stations/`.length, -'/token/regenerate'.length);
+    const atual = STATIONS_MUTAVEL.find(s => s.id === id);
+    if (!atual) {
+      return naoEncontrado(`Estacao inexistente: ${id}`);
+    }
+    TOKENS_ESTACAO[id] = gerarTokenMock('est-tok');
+    return { ...comCameras(atual), token: TOKENS_ESTACAO[id] };
   }
 
   if (req.method === 'DELETE' && req.url.startsWith(`${base}/stations/`)) {

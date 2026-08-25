@@ -204,5 +204,7 @@
     </div>
   </main>
 
-  <app-dock activeKey="heatmap"/>
+  @if (auth.role() === 'GESTOR') {
+    <app-dock activeKey="heatmap"/>
+  }
 </div>

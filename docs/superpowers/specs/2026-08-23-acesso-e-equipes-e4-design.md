@@ -230,6 +230,7 @@ notify:
 - Expiração/rotação automática de token de estação (só rotação manual via `/token/regenerate`).
 - Rate limiting de login.
 - Papel adicional além de `GESTOR`/`OPERADOR` (ex.: administrador de sistema separado do gestor).
+- **Multi-empresa (multi-tenant).** Revisado em 2026-08-25, durante teste de integração local: o sistema hoje é single-tenant — `Estacao`/`Camera`/`Equipe`/`Usuario` vivem numa tabela global, sem coluna de tenant, e `POST /api/v1/setup` cria exatamente um `Usuario` mestre e fecha (409) para sempre, por decisão consciente desta entrega (não um bug). O passo "Identidade da empresa" do onboarding é só branding (nome/CNPJ/cor), gravado em `localStorage`, nunca uma entidade no backend. Levantamento nos specs de E1–E4 não encontrou nenhum desenho anterior de `Empresa` como entidade/tenant — se essa intenção existiu, nunca chegou a virar spec. Registrado aqui para avaliação futura: quando fizer sentido (e se fizer), introduzir `Empresa` exigiria (a) nova entidade + coluna de tenant em toda entidade cadastrável, (b) escopar toda query por tenant, (c) revisar `/setup` (hoje fecha para sempre; um modelo multi-empresa precisaria reabrir por empresa nova, não globalmente) — desenho e ordem de implementação ficam para quando essa entrega for priorizada.
 
 ## 7. Ordem de implementação sugerida
 

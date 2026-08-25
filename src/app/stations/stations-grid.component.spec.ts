@@ -28,6 +28,8 @@ describe('StationsGridComponent', () => {
     fixture.detectChanges();
     http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
     http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush(stations);
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'GESTOR', username: 'g1' });
     fixture.detectChanges();
     return fixture;
   }
@@ -64,5 +66,17 @@ describe('StationsGridComponent', () => {
     const fixture = montarCom([]);
 
     expect(fixture.nativeElement.textContent.toLowerCase()).toContain('nenhuma esta');
+  });
+
+  it('sem sessao GESTOR, nao mostra o dock', () => {
+    const fixture = TestBed.createComponent(StationsGridComponent);
+    fixture.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-dock')).toBeNull();
   });
 });

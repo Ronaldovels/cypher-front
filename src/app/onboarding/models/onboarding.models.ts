@@ -5,6 +5,8 @@ export interface OnboardingData {
   logoUrl: string;
   logoName: string;
   accent: string;
+  masterUsername: string;
+  masterPassword: string;
   epis: string[];
   cas: Record<string, CaEntry>;
   picks: Record<string, string>;
@@ -53,6 +55,7 @@ export interface RolePreset {
 
 export const STEPS: Step[] = [
   { key: 'identity', name: 'Identidade da empresa', hint: 'Marca · CNPJ · cor' },
+  { key: 'master-user', name: 'Usuário mestre', hint: 'Acesso do gestor' },
   // Antes dos EPIs de propósito: sem câmera cadastrada o sistema não vê nada.
   { key: 'stations', name: 'Estações e câmeras', hint: 'O que será monitorado' },
   { key: 'epis', name: 'EPIs monitorados', hint: 'Seleção dos equipamentos' },
@@ -134,7 +137,7 @@ export const ROLE_PRESETS: RolePreset[] = [
 
 export const DEFAULT_DATA: OnboardingData = {
   company: '', cnpj: '', sector: '', logoUrl: '', logoName: '',
-  accent: '#F4622A', epis: [], cas: {}, picks: {},
+  accent: '#F4622A', masterUsername: '', masterPassword: '', epis: [], cas: {}, picks: {},
 };
 
 export function deriveEpis(picks: Record<string, string>): string[] {

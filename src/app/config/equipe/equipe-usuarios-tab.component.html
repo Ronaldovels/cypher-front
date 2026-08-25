@@ -1,0 +1,20 @@
+<div class="tab-head">
+  <div>
+    <div class="eyebrow-accent">Equipes e usuários</div>
+    <h2 class="tab-title">Quem <em style="color:var(--accent);font-style:normal">cobre cada estação.</em></h2>
+    <p class="sub" style="font-size:14px;margin-top:6px">Alocação estática por turno — sem escala por data nesta versão.</p>
+  </div>
+</div>
+
+<div class="subtabs" style="margin-top:24px">
+  <button type="button" class="chip" [class.on]="subaba() === 'equipes'" (click)="irPara('equipes')">Equipes</button>
+  <button type="button" class="chip" [class.on]="subaba() === 'usuarios'" (click)="irPara('usuarios')">Usuários</button>
+</div>
+
+<div style="margin-top:24px">
+  @if (subaba() === 'equipes') {
+    <app-equipes-config />
+  } @else {
+    <app-usuarios-config />
+  }
+</div>

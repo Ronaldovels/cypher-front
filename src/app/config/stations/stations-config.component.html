@@ -74,12 +74,19 @@
           <span class="nome">{{ e.nome }}</span>
           <span class="chip">{{ e.setor || 'sem setor' }}</span>
           <span class="status" [class.on]="e.ativa">{{ e.ativa ? 'ativa' : 'inativa' }}</span>
+          <button type="button" class="btn ghost sm" (click)="gerarToken(e.id)">token do kiosk</button>
           @if (e.ativa) {
             <button type="button" class="btn ghost sm" (click)="desativarEstacao(e.id)">desativar</button>
           } @else {
             <button type="button" class="btn ghost sm" (click)="reativarEstacao(e.id)">reativar</button>
           }
         </div>
+        @if (tokenVisto()?.estacaoId === e.id) {
+          <p class="ajuda" role="status">
+            Token gerado (copie agora — não é exibido de novo): <code>{{ tokenVisto()?.token }}</code>.
+            Cole uma vez na tela de login do kiosk. Gerar de novo invalida o anterior.
+          </p>
+        }
         @for (c of e.cameras; track c.id) {
           <div class="camera-row">
             <span class="codigo">{{ c.id }}</span>

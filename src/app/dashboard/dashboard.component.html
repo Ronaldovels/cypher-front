@@ -202,5 +202,7 @@
     </div>
   </main>
 
-  <app-dock activeKey="dashboard"/>
+  @if (auth.role() === 'GESTOR') {
+    <app-dock activeKey="dashboard"/>
+  }
 </div>

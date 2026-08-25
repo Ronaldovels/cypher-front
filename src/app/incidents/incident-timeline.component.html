@@ -87,5 +87,7 @@
     </div>
   </main>
 
-  <app-dock activeKey="alerts"/>
+  @if (auth.role() === 'GESTOR') {
+    <app-dock activeKey="alerts"/>
+  }
 </div>

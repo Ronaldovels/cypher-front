@@ -22,7 +22,7 @@ const ITEMS: (DockItem | null)[] = [
   null,
   { key: 'heatmap',   label: 'Heatmap',       route: '/heatmap' },
   null,
-  { key: 'team',      label: 'Colaboradores' },
+  { key: 'team',      label: 'Colaboradores', route: '/config/equipe' },
   { key: 'invite',    label: 'Cadastrar' },
   null,
   { key: 'config',    label: 'Configurações',   route: '/config/estacoes' },

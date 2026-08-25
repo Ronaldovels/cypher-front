@@ -105,6 +105,25 @@ describe('DashboardComponent', () => {
     expect(links.length).toBe(2);
     links.forEach(a => expect(a.getAttribute('href')).toBe('/incidentes'));
   });
+
+  it('mostra o dock para GESTOR', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'g1' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-dock')).not.toBeNull();
+  });
+
+  it('nao mostra o dock sem sessao GESTOR', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    http.expectOne(`${environment.apiUrl}/auth/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-dock')).toBeNull();
+  });
 });
 
 /**

@@ -1,10 +1,13 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { OnboardingData, DEFAULT_DATA, STEPS, deriveEpis, accentRgba, accentShade } from './models/onboarding.models';
+import { AuthService } from '../shared/auth/auth.service';
+import { mensagemDeErro } from '../shared/incident.models';
 
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
   private router = inject(Router);
+  private auth = inject(AuthService);
 
   readonly data = signal<OnboardingData>({ ...DEFAULT_DATA });
   readonly step = signal(0);
@@ -12,6 +15,8 @@ export class OnboardingService {
   readonly launching = signal(false);
   readonly launched = signal(false);
   readonly errors = signal<Record<string, string>>({});
+  /** Erro do bootstrap (`POST /setup`) — separado de `errors` porque não é validação de campo, é falha de rede/409 (design doc de E4, §4.2.1). */
+  readonly setupError = signal<string | null>(null);
 
   readonly stepKey = computed(() => `${this.step()}-${this.direction()}`);
   readonly selectedEpis = computed(() => {
@@ -55,6 +60,11 @@ export class OnboardingService {
       if (!d.sector) e['sector'] = 'Selecione um setor';
     }
 
+    if (key === 'master-user') {
+      if (!d.masterUsername.trim()) e['masterUsername'] = 'Usuário obrigatório';
+      if (!d.masterPassword) e['masterPassword'] = 'Senha obrigatória';
+    }
+
     if (key === 'epis') {
       if (d.epis.length === 0) e['epis'] = 'Selecione pelo menos 1 EPI';
     }
@@ -79,6 +89,7 @@ export class OnboardingService {
       this.direction.set('back');
       this.step.update(s => s - 1);
       this.errors.set({});
+      this.setupError.set(null);
     }
   }
 
@@ -105,11 +116,21 @@ export class OnboardingService {
 
   launch(): void {
     this.launching.set(true);
-    setTimeout(() => {
-      this.launched.set(true);
-      this.persistConfig();
-      setTimeout(() => this.router.navigate(['/dashboard']), 2400);
-    }, 900);
+    this.setupError.set(null);
+    const { masterUsername, masterPassword } = this.data();
+    this.auth.bootstrap(masterUsername, masterPassword).subscribe({
+      next: () => {
+        setTimeout(() => {
+          this.launched.set(true);
+          this.persistConfig();
+          setTimeout(() => this.router.navigate(['/dashboard']), 2400);
+        }, 900);
+      },
+      error: e => {
+        this.launching.set(false);
+        this.setupError.set(mensagemDeErro(e));
+      },
+    });
   }
 
   reset(): void {
@@ -117,5 +138,6 @@ export class OnboardingService {
     this.launching.set(false);
     this.step.set(0);
     this.direction.set('forward');
+    this.setupError.set(null);
   }
 }

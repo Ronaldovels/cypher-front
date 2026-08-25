@@ -770,10 +770,33 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .station-feed { min-height:180px; border-radius:10px; overflow:hidden; background:var(--surface-2); margin-bottom:10px; }
 .station-cam-count { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.06em; }
 
-.dash.kiosk { padding-bottom:40px; } // sem dock nesta tela — não precisa da folga que o dock reserva
+.dash.kiosk { padding-bottom:40px; } // só aplicada quando a sessão é OPERADOR (sem dock nesse caso — ver station-kiosk.component.html); sessão GESTOR mantém o .dash base com a folga do dock
 .kiosk-feeds { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }
 .kiosk-feed { min-height:220px; border-radius:10px; overflow:hidden; background:var(--surface-2); }
 .kiosk-lower { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
 .kiosk-epi-list { list-style:none; display:flex; flex-direction:column; gap:8px; padding:0; margin:0; }
 .kiosk-epi-list li { font-size:13px; color:var(--ink); padding:8px 12px; background:var(--bg-2); border-radius:8px; }
 .kiosk-epi-list li::before { content:'✓ '; color:#34D07E; font-weight:700; }
+
+.auth-shell { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.auth-panel { width: 100%; max-width: 400px; min-height: unset; }
+.auth-form { display: flex; flex-direction: column; gap: 18px; margin-top: 20px; }
+.auth-alt-link { display: block; text-align: center; margin-top: 20px; font-size: 13px; color: var(--ink-mute); text-decoration: none; }
+.auth-alt-link:hover { color: var(--accent); }
+// `.vazio` (usada por dashboard/heatmap/incidentes/estacoes/kiosk desde E3, e agora
+// por login/estacao-login/equipe-usuarios) nunca tinha sido definida globalmente —
+// só existia escopada em stations-config.component.scss.
+.vazio { font-size: 13px; color: var(--ink-mute); }
+
+.subtabs { display: flex; gap: 10px; flex-wrap: wrap; }
+.list-row { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-radius: 8px; background: var(--bg-2); margin-bottom: 8px; flex-wrap: wrap; }
+
+// Gap apontado na revisão da Tarefa 11: `.a-station`/`.ph-meta` só existiam
+// escopadas (`.alert-row .a-station`, `.panel-head .ph-meta`); `equipe-usuarios`
+// usa as duas soltas. Mesmo precedente de `.vazio` acima — hoisted para global
+// sem remover as regras escopadas existentes.
+.a-station { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink); letter-spacing:0.04em; }
+.ph-meta { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.08em; }
+.status { display:inline-flex; align-items:center; height:24px; padding:0 10px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-mute); font-size:11px; font-weight:600; letter-spacing:0.04em; font-family:inherit; }
+.status.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.btn.sm { padding: 6px 12px; font-size: 12px; }

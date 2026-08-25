@@ -34,6 +34,13 @@ export class StationsConfigComponent implements OnInit {
   readonly novaEstacao = signal<FormEstacao>({ ...ESTACAO_VAZIA });
   readonly novaCamera = signal<FormCamera>({ ...CAMERA_VAZIA });
 
+  /**
+   * Último token visto — de um cadastro/edição de estação ou de uma
+   * rotação explícita. Não persiste: o backend não expõe leitura (design
+   * doc §2.4), então sair desta tela e voltar apaga o valor, de propósito.
+   */
+  readonly tokenVisto = signal<{ estacaoId: string; token: string } | null>(null);
+
   /** Verdadeiro quando o sistema tem ao menos uma câmera ativa vendo algo. */
   readonly cadastroCompleto = computed(() =>
     this.estacoes().some(e => e.ativa && e.cameras.length > 0));
@@ -62,7 +69,8 @@ export class StationsConfigComponent implements OnInit {
       nome: form.nome.trim(),
       setor: form.setor.trim() || null,
     }).subscribe({
-      next: () => {
+      next: resp => {
+        this.tokenVisto.set({ estacaoId: resp.id, token: resp.token });
         this.novaEstacao.set({ ...ESTACAO_VAZIA });
         this.salvando.set(false);
       },
@@ -71,6 +79,18 @@ export class StationsConfigComponent implements OnInit {
         this.erro.set(mensagemDeErro(e));
         this.salvando.set(false);
       },
+    });
+  }
+
+  /**
+   * Único jeito de ver o token depois do cadastro inicial (design doc §2.4)
+   * — rotaciona e mostra o valor novo; o antigo para de funcionar.
+   */
+  gerarToken(id: string): void {
+    this.erro.set('');
+    this.catalog.regenerateStationToken(id).subscribe({
+      next: resp => this.tokenVisto.set({ estacaoId: resp.id, token: resp.token }),
+      error: e => this.erro.set(mensagemDeErro(e)),
     });
   }
 

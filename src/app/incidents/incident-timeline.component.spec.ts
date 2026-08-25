@@ -48,6 +48,8 @@ describe('IncidentTimelineComponent', () => {
     http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([]);
     http.expectOne(r => r.url === `${environment.apiUrl}/incidents`)
       .flush(pagina([incidente({ id: 1, incidentKey: 'k1' })]));
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'GESTOR', username: 'g1' });
     fixture.detectChanges();
     return fixture;
   }
@@ -222,5 +224,18 @@ describe('IncidentTimelineComponent', () => {
     reqBusca.flush(pagina([incidente({ id: inc.id, incidentKey: inc.incidentKey, status: 'PENDENTE' })]));
 
     expect(fixture.componentInstance.linhas()[0].status).toBe('PENDENTE');
+  });
+
+  it('sem sessao GESTOR, nao mostra o dock', () => {
+    const fixture = TestBed.createComponent(IncidentTimelineComponent);
+    fixture.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/incidents`).flush(pagina([]));
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-dock')).toBeNull();
   });
 });

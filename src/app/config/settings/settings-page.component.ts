@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { AuthService } from '../../shared/auth/auth.service';
 import { ChromeTopbarComponent } from '../../shared/chrome-topbar/chrome-topbar.component';
 import { ConfigService } from '../../shared/config.service';
 import { DockComponent } from '../../shared/dock/dock.component';
@@ -12,6 +13,7 @@ const TABS: SettingsTab[] = [
   { path: 'estacoes', label: 'Estações e câmeras', hint: 'O que será monitorado' },
   { path: 'epis', label: 'EPIs monitorados', hint: 'Seleção dos equipamentos' },
   { path: 'cas', label: 'CAs e validades', hint: 'Certificados de aprovação' },
+  { path: 'equipe', label: 'Equipes e usuários', hint: 'Alocação e acesso' },
 ];
 
 /**
@@ -33,6 +35,9 @@ const TABS: SettingsTab[] = [
 })
 export class SettingsPageComponent {
   tabs = TABS;
+
+  private authService = inject(AuthService);
+  readonly auth = this.authService;
 
   private cfgService = inject(ConfigService);
   cfg = this.cfgService.config;

@@ -435,6 +435,7 @@ Teste de regressão sobre dados reais: o log de transições de `cenario2.mp4` (
 - Múltiplas instâncias do backend (o broadcast SSE é por instância).
 - Identificação individual de trabalhadores (§16.1).
 - Atuação sobre máquinas (parar linha) — o wireframe do operador desenha um botão `pausar`; controle industrial é outra classe de risco e não pertence a este produto sem um projeto próprio de segurança funcional.
+- **Interface de cadastro de webhook.** Revisado em 2026-08-25, durante teste manual: `WebhookSubscription` (`url`/`secret`/`minSeverity`/`ativo`) só é populada via `cypher.catalog.webhooks` no `application.yaml`, carregada pelo `CatalogSeeder` no boot — sem endpoint (`WebhookController` não existe) nem tela no front. Cadastrar ou trocar um assinante hoje exige editar o YAML e reiniciar o backend. Funciona (testado ponta a ponta: HMAC-SHA256 válido, entrega confirmada), mas não é operável por um gestor sem acesso ao servidor. Registrado para avaliação futura: uma entrega que feche esse gap precisaria de `WebhookController` (CRUD GESTOR-only, mesmo padrão de `/teams`/`/users`) + tela em `/config` para cadastrar assinantes e ver o histórico de `WebhookDelivery`.
 
 ## 10. Premissas
 

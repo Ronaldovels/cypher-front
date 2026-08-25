@@ -136,4 +136,20 @@ describe('HeatmapComponent', () => {
     expect(texto).not.toContain('17 estações');
     expect(texto).not.toContain('Capacete ausente');
   });
+
+  it('some sem sessao GESTOR', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/auth/me`)[0]
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-dock')).toBeNull();
+  });
+
+  it('mostra o dock para GESTOR', () => {
+    const gestor = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/auth/me`)[0]
+      .flush({ papel: 'GESTOR', username: 'g1' });
+    gestor.detectChanges();
+    expect(gestor.nativeElement.querySelector('app-dock')).not.toBeNull();
+  });
 });

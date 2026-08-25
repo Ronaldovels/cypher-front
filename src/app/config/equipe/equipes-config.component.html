@@ -1,0 +1,56 @@
+<section>
+  @if (erro()) {
+    <p class="vazio" role="alert">{{ erro() }}</p>
+  }
+
+  <form class="auth-form" style="max-width:560px" (submit)="$event.preventDefault(); salvar()">
+    <div class="field">
+      <label>Código</label>
+      <input class="input" [value]="novaEquipe().id" placeholder="EQ-01"
+             (input)="novaEquipe.set({ ...novaEquipe(), id: ($any($event.target).value || '').toUpperCase() })" />
+    </div>
+    <div class="field">
+      <label>Nome</label>
+      <input class="input" [value]="novaEquipe().nome" placeholder="Equipe A"
+             (input)="novaEquipe.set({ ...novaEquipe(), nome: $any($event.target).value })" />
+    </div>
+    <div class="field">
+      <label>Turno</label>
+      <select class="select" [value]="novaEquipe().turno"
+              (change)="novaEquipe.set({ ...novaEquipe(), turno: $any($event.target).value })">
+        @for (t of turnos; track t) {
+          <option [value]="t">{{ t }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label>Estações cobertas</label>
+      <div class="subtabs">
+        @for (e of estacoes(); track e.id) {
+          @if (e.ativa) {
+            <button type="button" class="chip" [class.on]="novaEquipe().estacaoIds.includes(e.id)"
+                    (click)="alternarEstacao(e.id)">{{ e.id }} · {{ e.nome }}</button>
+          }
+        }
+      </div>
+    </div>
+    <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar equipe</button>
+  </form>
+
+  <div style="margin-top:28px">
+    @for (eq of equipes(); track eq.id) {
+      <div class="list-row">
+        <span class="a-station">{{ eq.id }}</span>
+        <span>{{ eq.nome }}</span>
+        <span class="chip">{{ eq.turno }}</span>
+        <span class="ph-meta">{{ eq.estacaoIds.length ? eq.estacaoIds.map(nomeEstacao).join(', ') : 'sem estação' }}</span>
+        <span class="status" [class.on]="eq.ativa">{{ eq.ativa ? 'ativa' : 'inativa' }}</span>
+        @if (eq.ativa) {
+          <button type="button" class="btn ghost sm" (click)="desativar(eq.id)">desativar</button>
+        }
+      </div>
+    } @empty {
+      <p class="vazio">nenhuma equipe cadastrada ainda</p>
+    }
+  </div>
+</section>

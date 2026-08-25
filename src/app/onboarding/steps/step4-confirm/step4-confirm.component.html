@@ -1,4 +1,4 @@
-<div class="eyebrow-accent">Etapa 04 · Confirmação</div>
+<div class="eyebrow-accent">Etapa 05 · Confirmação</div>
 <h1 class="q">Tudo pronto, <em>{{ state.data().company || 'sua operação' }}</em>.</h1>
 <p class="sub">Revise a configuração abaixo. Você pode ajustar qualquer item nas Definições da plataforma a qualquer momento — nada aqui é permanente.</p>
 
@@ -62,3 +62,7 @@
     </svg>
   </button>
 </div>
+
+@if (state.setupError()) {
+  <div class="field-error" role="alert" style="margin-top:16px">{{ state.setupError() }}</div>
+}

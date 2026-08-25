@@ -83,6 +83,20 @@ export interface CameraAdmin extends Camera {
   ativa: boolean;
 }
 
+/**
+ * Estação na superfície de administração — devolvida só por `POST`/`PUT
+ * /stations` e `POST /stations/{id}/token/regenerate` (design doc de E4,
+ * §2.4). Sem `cameras`: essa lista só existe na leitura de navegação
+ * (`Station`), nunca nesses três endpoints GESTOR-only.
+ */
+export interface EstacaoAdmin {
+  id: string;
+  nome: string;
+  setor: string | null;
+  ativa: boolean;
+  token: string;
+}
+
 export interface StationPayload {
   id: string;
   nome: string;

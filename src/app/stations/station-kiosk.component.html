@@ -1,4 +1,4 @@
-<div class="dash kiosk">
+<div class="dash" [class.kiosk]="auth.role() !== 'GESTOR'">
   <app-chrome-topbar [cfg]="cfg()" [page]="station()?.nome ?? 'Estação'" subtitle="kiosk do operador" [live]="true" [notifBadge]="0" [shift]="null"/>
 
   <main class="dcontent">
@@ -50,4 +50,8 @@
       <div class="panel"><div class="vazio">estação não encontrada</div></div>
     }
   </main>
+
+  @if (auth.role() === 'GESTOR') {
+    <app-dock activeKey="live"/>
+  }
 </div>

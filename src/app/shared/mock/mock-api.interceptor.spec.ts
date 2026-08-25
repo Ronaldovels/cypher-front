@@ -6,7 +6,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../../environments/environment';
 import { Camera, Incident, Page } from '../incident.models';
-import { EMITIDOS, INCIDENTS, agoraNaPlanta, resetMockCatalog, resumo } from './fixtures';
+import { Equipe, Usuario } from '../team.models';
+import {
+  EMITIDOS, GESTOR_DEMO, INCIDENTS, TOKENS_ESTACAO, agoraNaPlanta, resetMockCatalog,
+  resetMockSessao, resetMockSetup, resetMockTeams, resumo,
+} from './fixtures';
 import { mockApiInterceptor } from './mock-api.interceptor';
 
 describe('mockApiInterceptor', () => {
@@ -15,6 +19,9 @@ describe('mockApiInterceptor', () => {
 
   beforeEach(() => {
     TestBed.resetTestingModule();
+    resetMockSessao();
+    resetMockSetup();
+    resetMockTeams();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withFetch(), withInterceptors([mockApiInterceptor])),
@@ -163,6 +170,216 @@ describe('mockApiInterceptor', () => {
 
     expect(INCIDENTS.every(i => i.detectedAt < agora)).toBe(true);
   });
+
+  it('GET /setup/status comeca configured:false', async () => {
+    const resp = await firstValueFrom(
+      http.get<{ configured: boolean }>(`${environment.apiUrl}/setup/status`));
+
+    expect(resp).toEqual({ configured: false });
+  });
+
+  it('POST /setup cria o gestor mestre, autentica a sessao e fecha o setup', async () => {
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; username: string }>(`${environment.apiUrl}/setup`,
+        { username: 'admin', password: 'senhaAdmin1' }));
+
+    expect(resp).toEqual({ papel: 'GESTOR', username: 'admin' });
+
+    const status = await firstValueFrom(
+      http.get<{ configured: boolean }>(`${environment.apiUrl}/setup/status`));
+    expect(status).toEqual({ configured: true });
+
+    const me = await firstValueFrom(http.get(`${environment.apiUrl}/auth/me`));
+    expect(me).toEqual({ papel: 'GESTOR', username: 'admin' });
+  });
+
+  it('POST /setup cadastra o gestor mestre em USUARIOS_MUTAVEL: sobrevive a logout e loga de novo', async () => {
+    await firstValueFrom(http.post(`${environment.apiUrl}/setup`,
+      { username: 'admin', password: 'senhaAdmin1' }));
+
+    await firstValueFrom(http.post(`${environment.apiUrl}/auth/logout`, {}));
+
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; username: string }>(`${environment.apiUrl}/auth/login`,
+        { username: 'admin', password: 'senhaAdmin1' }));
+    expect(resp).toEqual({ papel: 'GESTOR', username: 'admin' });
+
+    const usuarios = await firstValueFrom(http.get<{ username: string }[]>(`${environment.apiUrl}/users`));
+    expect(usuarios.some(u => u.username === 'admin')).toBe(true);
+  });
+
+  it('POST /setup depois de concluido devolve 409 (execucao unica)', async () => {
+    await firstValueFrom(http.post(`${environment.apiUrl}/setup`,
+      { username: 'admin', password: 'senhaAdmin1' }));
+
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/setup`,
+      { username: 'outro', password: 'outrasenha' })))
+      .rejects.toMatchObject({ status: 409 });
+  });
+
+  it('responde POST /auth/login com credencial correta e mantem a sessao', async () => {
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; username: string }>(`${environment.apiUrl}/auth/login`,
+        { username: GESTOR_DEMO.username, password: GESTOR_DEMO.password }));
+
+    expect(resp).toEqual({ papel: 'GESTOR', username: GESTOR_DEMO.username });
+
+    const me = await firstValueFrom(http.get(`${environment.apiUrl}/auth/me`));
+    expect(me).toEqual({ papel: 'GESTOR', username: GESTOR_DEMO.username });
+  });
+
+  it('POST /auth/login com senha errada devolve 401', async () => {
+    await expect(firstValueFrom(
+      http.post(`${environment.apiUrl}/auth/login`,
+        { username: GESTOR_DEMO.username, password: 'errada' })))
+      .rejects.toMatchObject({ status: 401 });
+  });
+
+  it('responde POST /auth/login-estacao com token valido', async () => {
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; estacaoId: string }>(`${environment.apiUrl}/auth/login-estacao`,
+        { token: TOKENS_ESTACAO['EST-01'] }));
+
+    expect(resp).toEqual({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+  });
+
+  it('POST /auth/login-estacao com token invalido devolve 401', async () => {
+    await expect(firstValueFrom(
+      http.post(`${environment.apiUrl}/auth/login-estacao`, { token: 'token-que-nao-existe' })))
+      .rejects.toMatchObject({ status: 401 });
+  });
+
+  it('GET /auth/me sem sessao devolve 401', async () => {
+    await expect(firstValueFrom(http.get(`${environment.apiUrl}/auth/me`)))
+      .rejects.toMatchObject({ status: 401 });
+  });
+
+  it('POST /auth/logout encerra a sessao — /auth/me volta a 401', async () => {
+    await firstValueFrom(
+      http.post(`${environment.apiUrl}/auth/login`,
+        { username: GESTOR_DEMO.username, password: GESTOR_DEMO.password }));
+
+    await firstValueFrom(http.post(`${environment.apiUrl}/auth/logout`, {}));
+
+    await expect(firstValueFrom(http.get(`${environment.apiUrl}/auth/me`)))
+      .rejects.toMatchObject({ status: 401 });
+  });
+
+  it('GET /teams lista as equipes semeadas', async () => {
+    const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+
+    expect(equipes.length).toBeGreaterThan(0);
+    expect(equipes[0].id).toBe('EQ-01');
+  });
+
+  it('POST /teams cadastra e GET reflete', async () => {
+    const nova = await firstValueFrom(http.post<Equipe>(`${environment.apiUrl}/teams`,
+      { id: 'EQ-03', nome: 'Equipe C', turno: 'NOITE', estacaoIds: ['EST-03'] }));
+
+    expect(nova.ativa).toBe(true);
+    const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    expect(equipes.some(e => e.id === 'EQ-03')).toBe(true);
+  });
+
+  it('POST /teams com id repetido devolve 409', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/teams`,
+      { id: 'EQ-01', nome: 'Duplicada', turno: 'MANHA', estacaoIds: [] })))
+      .rejects.toMatchObject({ status: 409 });
+  });
+
+  it('PUT /teams/{id} edita e preserva ativa quando o corpo nao informa', async () => {
+    const editada = await firstValueFrom(http.put<Equipe>(`${environment.apiUrl}/teams/EQ-01`,
+      { id: 'EQ-01', nome: 'Equipe A Renomeada', turno: 'NOITE', estacaoIds: ['EST-01'] }));
+
+    expect(editada.nome).toBe('Equipe A Renomeada');
+    expect(editada.ativa).toBe(true);
+    const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    expect(equipes.find(e => e.id === 'EQ-01')?.turno).toBe('NOITE');
+  });
+
+  it('PUT /teams/{id} inexistente devolve 404', async () => {
+    await expect(firstValueFrom(http.put(`${environment.apiUrl}/teams/EQ-999`,
+      { id: 'EQ-999', nome: 'X', turno: 'MANHA', estacaoIds: [] })))
+      .rejects.toMatchObject({ status: 404 });
+  });
+
+  it('DELETE /teams/{id} desativa em vez de remover', async () => {
+    await firstValueFrom(http.delete(`${environment.apiUrl}/teams/EQ-01`));
+
+    const equipes = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    expect(equipes.find(e => e.id === 'EQ-01')?.ativa).toBe(false);
+  });
+
+  it('GET /teams devolve uma copia nova a cada chamada (nao a referencia mutavel do mock)', async () => {
+    const primeira = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    const segunda = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+
+    expect(primeira).not.toBe(segunda);
+    expect(primeira[0]).not.toBe(segunda[0]);
+    expect(primeira[0].estacaoIds).not.toBe(segunda[0].estacaoIds);
+    expect(primeira).toEqual(segunda);
+
+    await firstValueFrom(http.delete(`${environment.apiUrl}/teams/EQ-01`));
+
+    // A copia obtida antes do DELETE nao deve ter sido mutada por referencia.
+    expect(primeira.find(e => e.id === 'EQ-01')?.ativa).toBe(true);
+    const depois = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
+    expect(depois.find(e => e.id === 'EQ-01')?.ativa).toBe(false);
+  });
+
+  it('GET /users nunca traz senha', async () => {
+    const usuarios = await firstValueFrom(http.get<Record<string, unknown>[]>(`${environment.apiUrl}/users`));
+
+    expect(usuarios.length).toBeGreaterThan(0);
+    usuarios.forEach(u => expect(u['password']).toBeUndefined());
+  });
+
+  it('POST /users sem senha devolve 422', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/users`,
+      { username: 'sem-senha', papel: 'OPERADOR' })))
+      .rejects.toMatchObject({ status: 422 });
+  });
+
+  it('POST /users cadastra e a nova credencial loga', async () => {
+    await firstValueFrom(http.post<Usuario>(`${environment.apiUrl}/users`,
+      { username: 'gestor2', papel: 'GESTOR', password: 'senha456' }));
+
+    const resp = await firstValueFrom(http.post<{ papel: string }>(`${environment.apiUrl}/auth/login`,
+      { username: 'gestor2', password: 'senha456' }));
+    expect(resp.papel).toBe('GESTOR');
+  });
+
+  it('POST /users com papel OPERADOR sem estacaoId devolve 422', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/users`,
+      { username: 'op1', papel: 'OPERADOR', password: 'senha456' })))
+      .rejects.toMatchObject({ status: 422 });
+  });
+
+  it('POST /users com papel OPERADOR e estacao inexistente devolve 422', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/users`,
+      { username: 'op1', papel: 'OPERADOR', password: 'senha456', estacaoId: 'EST-999' })))
+      .rejects.toMatchObject({ status: 422 });
+  });
+
+  it('POST /users com OPERADOR e estacao valida cadastra, e a credencial loga como OPERADOR', async () => {
+    await firstValueFrom(http.post<Usuario>(`${environment.apiUrl}/users`,
+      { username: 'op1', papel: 'OPERADOR', password: 'senha456', estacaoId: 'EST-01' }));
+
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; estacaoId: string; username: string }>(
+        `${environment.apiUrl}/auth/login`, { username: 'op1', password: 'senha456' }));
+    expect(resp).toEqual({ papel: 'OPERADOR', estacaoId: 'EST-01', username: 'op1' });
+
+    const me = await firstValueFrom(http.get(`${environment.apiUrl}/auth/me`));
+    expect(me).toEqual({ papel: 'OPERADOR', estacaoId: 'EST-01', username: 'op1' });
+  });
+
+  it('DELETE /users/{username} remove de verdade', async () => {
+    await firstValueFrom(http.delete(`${environment.apiUrl}/users/${GESTOR_DEMO.username}`));
+
+    const usuarios = await firstValueFrom(http.get<Usuario[]>(`${environment.apiUrl}/users`));
+    expect(usuarios.some(u => u.username === GESTOR_DEMO.username)).toBe(false);
+  });
 });
 
 describe('mockApiInterceptor — escritas', () => {
@@ -210,6 +427,30 @@ describe('mockApiInterceptor — escritas', () => {
         streamUrl: 'http://127.0.0.1:8190/stream', fonte: null,
       })))
       .rejects.toMatchObject({ status: 422 });
+  });
+
+  it('cadastra estacao e devolve o token gerado', async () => {
+    const resp = await esperar(cliente.post<{ token: string }>(`${environment.apiUrl}/stations`,
+      { id: 'EST-90', nome: 'Nova', setor: 'teste' }));
+
+    expect(typeof resp.token).toBe('string');
+    expect(resp.token.length).toBeGreaterThan(0);
+  });
+
+  it('regenerate de token devolve um valor diferente do anterior', async () => {
+    const criada = await esperar(cliente.post<{ token: string }>(`${environment.apiUrl}/stations`,
+      { id: 'EST-90', nome: 'Nova', setor: 'teste' }));
+
+    const regenerada = await esperar(
+      cliente.post<{ token: string }>(`${environment.apiUrl}/stations/EST-90/token/regenerate`, {}));
+
+    expect(regenerada.token).not.toBe(criada.token);
+  });
+
+  it('regenerate de token de estacao inexistente devolve 404', async () => {
+    await expect(esperar(
+      cliente.post(`${environment.apiUrl}/stations/EST-999/token/regenerate`, {})))
+      .rejects.toMatchObject({ status: 404 });
   });
 
   it('edita estacao', async () => {
