@@ -40,6 +40,27 @@ function naoProcessavel(mensagem: string): HttpErrorResponse {
   return new HttpErrorResponse({ status: 422, error: { erro: mensagem } });
 }
 
+/** Espelha `UsuarioService.validarPapelEEstacao` do backend real. */
+function validarPapelEEstacaoDoUsuario(papel: string, estacaoId?: string): HttpErrorResponse | null {
+  if (papel !== 'GESTOR' && papel !== 'OPERADOR') {
+    return naoProcessavel(`papel deve ser GESTOR ou OPERADOR: ${papel}`);
+  }
+  if (papel === 'OPERADOR') {
+    if (!estacaoId) {
+      return naoProcessavel('estacaoId e obrigatorio para OPERADOR');
+    }
+    if (!STATIONS_MUTAVEL.some(s => s.id === estacaoId)) {
+      return naoProcessavel(`estacao inexistente: ${estacaoId}`);
+    }
+  }
+  return null;
+}
+
+/** Espelha `TokenGenerator.novo` do backend real — só para o mock parecer real. */
+function gerarTokenMock(prefixo: string): string {
+  return `${prefixo}-${Math.random().toString(36).slice(2, 10)}${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function naoEncontrado(mensagem: string): HttpErrorResponse {
   return new HttpErrorResponse({ status: 404, error: { erro: mensagem } });
 }
@@ -76,10 +97,16 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
 
   if (req.method === 'POST' && req.url === `${base}/auth/login`) {
     const { username, password } = req.body as { username: string; password: string };
-    const usuario = USUARIOS_MUTAVEL.find(u =>
-      u.username === username && u.password === password && u.papel === 'GESTOR');
+    const usuario = USUARIOS_MUTAVEL.find(u => u.username === username && u.password === password);
     if (!usuario) {
       return new HttpErrorResponse({ status: 401, error: { erro: 'Usuário ou senha inválidos' } });
+    }
+    // OPERADOR por credencial (revisão pós-E4) usa a MESMA OperadorAuthentication
+    // do login por token do lado do backend — aqui, mesma forma de resposta,
+    // só que com `username` também preenchido.
+    if (usuario.papel === 'OPERADOR') {
+      SESSAO_MOCK.atual = { papel: 'OPERADOR', estacaoId: usuario.estacaoId!, username };
+      return { papel: 'OPERADOR', estacaoId: usuario.estacaoId, username };
     }
     SESSAO_MOCK.atual = { papel: 'GESTOR', username };
     return { papel: 'GESTOR', username };
@@ -155,13 +182,18 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
 
   if (req.method === 'POST' && req.url === `${base}/users`) {
     const corpo = req.body as Usuario & { password?: string };
+    const erroPapel = validarPapelEEstacaoDoUsuario(corpo.papel, corpo.estacaoId);
+    if (erroPapel) {
+      return erroPapel;
+    }
     if (USUARIOS_MUTAVEL.some(u => u.username === corpo.username)) {
       return conflito(`Usuario ja cadastrado: ${corpo.username}`);
     }
     if (!corpo.password) {
       return naoProcessavel('Senha obrigatória no cadastro');
     }
-    const novo = { username: corpo.username, papel: corpo.papel, password: corpo.password };
+    const estacaoId = corpo.papel === 'OPERADOR' ? corpo.estacaoId : undefined;
+    const novo = { username: corpo.username, papel: corpo.papel, password: corpo.password, estacaoId };
     USUARIOS_MUTAVEL.push(novo);
     const { password, ...resto } = novo;
     return resto;
@@ -170,11 +202,16 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
   if (req.method === 'PUT' && req.url.startsWith(`${base}/users/`)) {
     const username = req.url.slice(`${base}/users/`.length);
     const corpo = req.body as Usuario & { password?: string };
+    const erroPapel = validarPapelEEstacaoDoUsuario(corpo.papel, corpo.estacaoId);
+    if (erroPapel) {
+      return erroPapel;
+    }
     const atual = USUARIOS_MUTAVEL.find(u => u.username === username);
     if (!atual) {
       return naoEncontrado(`Usuario inexistente: ${username}`);
     }
     atual.papel = corpo.papel;
+    atual.estacaoId = corpo.papel === 'OPERADOR' ? corpo.estacaoId : undefined;
     if (corpo.password) {
       atual.password = corpo.password;
     }
@@ -201,7 +238,8 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     }
     const nova: Station = { ...corpo, ativa: corpo.ativa ?? true, cameras: [] };
     STATIONS_MUTAVEL.push(nova);
-    return nova;
+    TOKENS_ESTACAO[nova.id] = gerarTokenMock('est-tok');
+    return { ...nova, token: TOKENS_ESTACAO[nova.id] };
   }
 
   if (req.method === 'PUT' && req.url.startsWith(`${base}/stations/`)) {
@@ -219,7 +257,17 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     if (corpo.ativa !== undefined) {
       atual.ativa = corpo.ativa;
     }
-    return comCameras(atual);
+    return { ...comCameras(atual), token: TOKENS_ESTACAO[id] ?? (TOKENS_ESTACAO[id] = gerarTokenMock('est-tok')) };
+  }
+
+  if (req.method === 'POST' && req.url.endsWith('/token/regenerate') && req.url.startsWith(`${base}/stations/`)) {
+    const id = req.url.slice(`${base}/stations/`.length, -'/token/regenerate'.length);
+    const atual = STATIONS_MUTAVEL.find(s => s.id === id);
+    if (!atual) {
+      return naoEncontrado(`Estacao inexistente: ${id}`);
+    }
+    TOKENS_ESTACAO[id] = gerarTokenMock('est-tok');
+    return { ...comCameras(atual), token: TOKENS_ESTACAO[id] };
   }
 
   if (req.method === 'DELETE' && req.url.startsWith(`${base}/stations/`)) {

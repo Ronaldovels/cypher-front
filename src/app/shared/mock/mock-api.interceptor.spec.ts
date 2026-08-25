@@ -349,6 +349,31 @@ describe('mockApiInterceptor', () => {
     expect(resp.papel).toBe('GESTOR');
   });
 
+  it('POST /users com papel OPERADOR sem estacaoId devolve 422', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/users`,
+      { username: 'op1', papel: 'OPERADOR', password: 'senha456' })))
+      .rejects.toMatchObject({ status: 422 });
+  });
+
+  it('POST /users com papel OPERADOR e estacao inexistente devolve 422', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/users`,
+      { username: 'op1', papel: 'OPERADOR', password: 'senha456', estacaoId: 'EST-999' })))
+      .rejects.toMatchObject({ status: 422 });
+  });
+
+  it('POST /users com OPERADOR e estacao valida cadastra, e a credencial loga como OPERADOR', async () => {
+    await firstValueFrom(http.post<Usuario>(`${environment.apiUrl}/users`,
+      { username: 'op1', papel: 'OPERADOR', password: 'senha456', estacaoId: 'EST-01' }));
+
+    const resp = await firstValueFrom(
+      http.post<{ papel: string; estacaoId: string; username: string }>(
+        `${environment.apiUrl}/auth/login`, { username: 'op1', password: 'senha456' }));
+    expect(resp).toEqual({ papel: 'OPERADOR', estacaoId: 'EST-01', username: 'op1' });
+
+    const me = await firstValueFrom(http.get(`${environment.apiUrl}/auth/me`));
+    expect(me).toEqual({ papel: 'OPERADOR', estacaoId: 'EST-01', username: 'op1' });
+  });
+
   it('DELETE /users/{username} remove de verdade', async () => {
     await firstValueFrom(http.delete(`${environment.apiUrl}/users/${GESTOR_DEMO.username}`));
 
@@ -402,6 +427,30 @@ describe('mockApiInterceptor — escritas', () => {
         streamUrl: 'http://127.0.0.1:8190/stream', fonte: null,
       })))
       .rejects.toMatchObject({ status: 422 });
+  });
+
+  it('cadastra estacao e devolve o token gerado', async () => {
+    const resp = await esperar(cliente.post<{ token: string }>(`${environment.apiUrl}/stations`,
+      { id: 'EST-90', nome: 'Nova', setor: 'teste' }));
+
+    expect(typeof resp.token).toBe('string');
+    expect(resp.token.length).toBeGreaterThan(0);
+  });
+
+  it('regenerate de token devolve um valor diferente do anterior', async () => {
+    const criada = await esperar(cliente.post<{ token: string }>(`${environment.apiUrl}/stations`,
+      { id: 'EST-90', nome: 'Nova', setor: 'teste' }));
+
+    const regenerada = await esperar(
+      cliente.post<{ token: string }>(`${environment.apiUrl}/stations/EST-90/token/regenerate`, {}));
+
+    expect(regenerada.token).not.toBe(criada.token);
+  });
+
+  it('regenerate de token de estacao inexistente devolve 404', async () => {
+    await expect(esperar(
+      cliente.post(`${environment.apiUrl}/stations/EST-999/token/regenerate`, {})))
+      .rejects.toMatchObject({ status: 404 });
   });
 
   it('edita estacao', async () => {

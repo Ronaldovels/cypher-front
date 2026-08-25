@@ -2,9 +2,16 @@
 
 export type Papel = 'GESTOR' | 'OPERADOR';
 
+/**
+ * `POST /auth/login` agora autentica os dois papéis (revisão pós-E4: OPERADOR
+ * ganhou login por usuário/senha, além do token de estação) — por isso o
+ * mesmo formato de `MeResponse`: `estacaoId` vem preenchido quando o papel
+ * devolvido é `OPERADOR`.
+ */
 export interface LoginResponse {
-  papel: 'GESTOR';
-  username: string;
+  papel: Papel;
+  username?: string;
+  estacaoId?: string;
 }
 
 export interface LoginEstacaoResponse {

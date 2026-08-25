@@ -57,13 +57,14 @@ export class AuthService {
     return this.sessaoVerificada$;
   }
 
+  /** Autentica GESTOR ou OPERADOR (revisão pós-E4: OPERADOR ganhou login por usuário/senha). */
   login(username: string, password: string): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { username, password },
         { withCredentials: true })
       .pipe(tap(resp => {
         this._role.set(resp.papel);
-        this._estacaoId.set(null);
+        this._estacaoId.set(resp.estacaoId ?? null);
       }));
   }
 

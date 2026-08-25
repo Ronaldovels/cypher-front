@@ -24,6 +24,8 @@ export interface EquipePayload {
 export interface Usuario {
   username: string;
   papel: Papel;
+  /** Só preenchido para `papel === 'OPERADOR'` (revisão pós-E4: login por usuário/senha vinculado a uma estação). */
+  estacaoId?: string;
 }
 
 export interface UsuarioPayload {
@@ -31,4 +33,6 @@ export interface UsuarioPayload {
   papel: Papel;
   /** Só em criação (obrigatório) ou redefinição (opcional); nunca volta do backend — design doc §4.2: sem "esqueci minha senha" nesta entrega, a única ação sensível é o gestor redefinir. */
   password?: string;
+  /** Obrigatório quando `papel === 'OPERADOR'`; ausente para GESTOR. */
+  estacaoId?: string;
 }

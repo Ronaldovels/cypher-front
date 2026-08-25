@@ -173,7 +173,8 @@ export const TOKENS_ESTACAO: Record<string, string> = {
 
 export type SessaoMock =
   | { papel: 'GESTOR'; username: string }
-  | { papel: 'OPERADOR'; estacaoId: string };
+  /** `username` só vem preenchido quando o operador logou por credencial (revisão pós-E4) — token não carrega usuário. */
+  | { papel: 'OPERADOR'; estacaoId: string; username?: string };
 
 /**
  * Sessão atual do mock.
