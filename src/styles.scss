@@ -790,3 +790,13 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 
 .subtabs { display: flex; gap: 10px; flex-wrap: wrap; }
 .list-row { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-radius: 8px; background: var(--bg-2); margin-bottom: 8px; flex-wrap: wrap; }
+
+// Gap apontado na revisão da Tarefa 11: `.a-station`/`.ph-meta` só existiam
+// escopadas (`.alert-row .a-station`, `.panel-head .ph-meta`); `equipe-usuarios`
+// usa as duas soltas. Mesmo precedente de `.vazio` acima — hoisted para global
+// sem remover as regras escopadas existentes.
+.a-station { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink); letter-spacing:0.04em; }
+.ph-meta { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.08em; }
+.status { display:inline-flex; align-items:center; height:24px; padding:0 10px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-mute); font-size:11px; font-weight:600; letter-spacing:0.04em; font-family:inherit; }
+.status.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.btn.sm { padding: 6px 12px; font-size: 12px; }
