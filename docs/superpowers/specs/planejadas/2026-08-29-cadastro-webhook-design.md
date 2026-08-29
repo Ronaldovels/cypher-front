@@ -99,8 +99,8 @@ Formulário com campos `url`, `secret`, `minSeverity` (0–4), `ativa`, seguindo
 | Situação | Comportamento |
 |---|---|
 | URL duplicada | `409` (constraint já existe hoje) |
-| `minSeverity` fora de 0–4 | `422` |
-| `secret` vazio | `422` |
+| `minSeverity` fora de 0–4 | `400` (violação de `@Min`/`@Max` em `WebhookRequest`, mesmo padrão de todo outro campo anotado em `StationRequest`/`CameraRequest` — nenhum handler de `MethodArgumentNotValidException` no projeto traduz isso para 422; `422` fica reservado a `CatalogValidationException`, sempre checagem de negócio entre entidades) |
+| `secret` vazio | `400` (mesmo motivo — `@NotBlank`) |
 | Assinante desativado | Some da listagem principal por padrão; `WebhookDispatcher` já ignora no disparo, sem mudança |
 | Sem entregas para o assinante | Estado vazio explícito no histórico ("nenhuma entrega registrada"), mesmo padrão de E3 §5 |
 
