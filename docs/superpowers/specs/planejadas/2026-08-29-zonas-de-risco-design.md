@@ -151,8 +151,9 @@ Como não há hot-reload (§3.4), ao salvar uma zona o painel mostra um aviso ex
 
 | Situação | Comportamento |
 |---|---|
-| Polígono com menos de 3 vértices | `422` no `POST`/`PUT` |
-| `severity` fora de 1–4 | `422` |
+| Polígono com menos de 3 vértices | `400` (`@Size(min=3)` em `ZoneRequest.polygon` — mesmo padrão consolidado em `2026-08-29-cadastro-webhook-design.md` §4: violação de anotação de formato no próprio corpo é sempre `400`; `422` fica reservado a checagem de negócio entre entidades, que não existe aqui) |
+| `severity` fora de 1–4 | `400` (`@Min`/`@Max` em `ZoneRequest.severity`) |
+| `cameraId` da URL não cadastrado (ou de outra empresa) | `404` — mesmo padrão de `CatalogService`/isolamento multi-tenant |
 | API indisponível no boot do pipeline | Escada de §3.1: cache normalizado convertido → arquivo local pixel absoluto → lista vazia |
 | Resolução da câmera muda entre execuções | Zonas continuam corretas — conversão normalizado→pixel refeita a cada boot com a resolução atual |
 | Zona desativada | Some de `.../zones/config`; pipeline para de aplicá-la no próximo boot daquela câmera |
@@ -162,7 +163,7 @@ Como não há hot-reload (§3.4), ao salvar uma zona o painel mostra um aviso ex
 
 ## 6. Estratégia de testes
 
-**Java** — CRUD completo; `422` de polígono com menos de 3 vértices e de `severity` inválido; soft delete removendo do `.../zones/config`; escopo por `empresaId` (zona de câmera de uma empresa não aparece/edita por outra).
+**Java** — CRUD completo; `400` de polígono com menos de 3 vértices e de `severity` inválido; soft delete removendo do `.../zones/config`; escopo por `empresaId` (zona de câmera de uma empresa não aparece/edita por outra, câmera de outra empresa na URL devolve 404).
 
 **Python** — `ZoneConfigClient` nos três degraus da escada (API, cache, arquivo local), com conversão normalizado→pixel testada contra resoluções diferentes (ex.: mesma zona normalizada produzindo polígonos corretos em 1280×720 e em 1920×1080); nenhuma mudança de comportamento em `ZoneDetector`/`ZoneManager`, já cobertos pelos testes existentes.
 
