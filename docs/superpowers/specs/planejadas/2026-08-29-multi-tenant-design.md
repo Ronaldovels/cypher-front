@@ -53,19 +53,21 @@ public class Empresa {
 
 | Entidade | Mudança |
 |---|---|
-| `Estacao` | `empresaId` (String, not null, campo solto — sem FK, mesmo padrão do resto). PK vira composta: `(empresaId, id)` via `@IdClass`. |
-| `Camera` | `empresaId` (String, not null). PK vira composta: `(empresaId, id)`. `estacaoId` continua referência solta, implicitamente no mesmo tenant (validado em `CameraService`). |
-| `Equipe` | `empresaId` (String, not null). PK vira composta: `(empresaId, id)`. |
-| `Usuario` | `empresaId` (String, not null). PK continua `Long` gerado — não precisa compor, porque `username` (`nome@empresa`) já é globalmente único por construção. |
-| `Alerta` | `empresaId` (String, not null, carimbado a partir da câmera que gerou o incidente). PK continua `Long`. `incidentKey` ganha `empresaId` como parte da string (`empresaId:cameraId:runId:trackId:timestamp`) — mesmo motivo do `cameraId` já estar lá: chave de depuração legível, e não pode colidir entre empresas. |
-| `WebhookSubscription` | `empresaId` (String, not null). |
+| `Estacao` | `empresaId` (String, not null, campo solto — sem FK, mesmo padrão do resto). PK continua `String` simples, mas o **valor armazenado** passa a ser `empresaId:codigo` (ex.: `acme:EST-01`) — mesmo truque de string composta que `Alerta.incidentKey` já usa. |
+| `Camera` | `empresaId` (String, not null). PK armazena `empresaId:codigo`, mesmo padrão. `estacaoId` (referência solta) passa a armazenar o valor já prefixado da estação (`acme:EST-01`), sempre do mesmo tenant do dono da câmera — validado em `CatalogService`. |
+| `Equipe` | `empresaId` (String, not null). PK armazena `empresaId:codigo`. Cada entrada de `estacaoIds` (`@ElementCollection`) também guarda o valor prefixado. |
+| `Usuario` | `empresaId` (String, not null). PK continua `Long` gerado — não precisa de prefixo, porque `username` (`nome@empresa`) já é globalmente único por construção. `estacaoId` (quando OPERADOR) guarda o valor prefixado, mesma regra de `Camera.estacaoId`. |
+| `Alerta` | `empresaId` (String, not null, carimbado a partir da câmera que gerou o incidente). PK continua `Long`. `incidentKey` e `cameraId` guardam o valor prefixado (`empresaId:cameraId:...`) — já é o padrão que motivou esta escolha. |
+| `WebhookSubscription` | `empresaId` (String, not null). PK continua `Long` — não referencia catálogo, não precisa de prefixo. |
 | `WebhookDelivery` | Sem campo próprio — herda o escopo via `subscriptionId` (mesmo padrão de referência solta já usado). |
 
-`@IdClass` foi escolhido em vez de `@EmbeddedId` por ser mais direto de mapear em cima dos repositórios `String`-based que já existem (menos código de adaptação nos DTOs/services atuais).
+**Regra única de conversão:** todo campo de entidade (`id`, `estacaoId`, `cameraId`, `incidentKey`) que referencia um recurso de catálogo guarda a string **prefixada** (`empresaId:codigo`). Todo DTO na borda da API (request/response) fala só o **código puro** (`EST-01`). A conversão entre as duas formas acontece só em um lugar: `TenantContext.key(codigo)` (prefixa com `currentEmpresaId()`) e `TenantContext.codigo(chave)` (remove o prefixo, faz `split` no primeiro `:` — seguro porque o formato do slug, `^[a-z0-9-]{2,30}$`, nunca contém `:`). Nenhum service concatena string manualmente fora desse helper.
 
-### 2.3 Chave composta: por que não manter `codigo` como PK simples
+### 2.3 Por que PK `String` prefixada, não chave composta (`@IdClass`)
 
-Alternativa considerada: manter `codigo` como PK simples e só adicionar `empresaId` como coluna comum, com unicidade composta validada em serviço (mesmo padrão de `estacaoId+turno` em `Equipe`). Rejeitada: duas empresas diferentes quase certamente vão querer usar `EST-01` — deixar `codigo` como PK simples criaria contenção entre clientes que não se conhecem (empresa nova não pode usar um código que outra já usou), o que é inaceitável num SaaS multi-cliente.
+Alternativa considerada: chave composta de verdade via `@IdClass`/`@EmbeddedId`, com PK `(empresaId, codigo)`. Rejeitada: exigiria trocar o tipo genérico de todo repositório (`JpaRepository<Estacao, String>` → `JpaRepository<Estacao, EstacaoId>`), reescrever toda chamada existente de `findById`/`existsById`/`deleteById` nos services, e — pior — toda referência solta hoje `String` simples (`Camera.estacaoId`, `Equipe.estacaoIds`, `Usuario.estacaoId`, `Alerta.cameraId`) viraria "meia chave", exigindo um tipo novo de embeddable ou uma segunda coluna só para completar a busca. Isso contradiz o próprio padrão que a spec identifica como estrutural neste código: referência solta, sem classe de chave, resolvida em nível de serviço.
+
+A alternativa "manter `codigo` como PK simples, sem prefixo, com `empresaId` como coluna comum" segue rejeitada pelo motivo original: duas empresas diferentes vão querer usar `EST-01`, e PK simples sem prefixo criaria contenção entre clientes que não se conhecem. A correção é prefixar o **valor armazenado** da PK (não mudar o **tipo** dela) — resolve a colisão sem introduzir nenhuma classe de chave composta, e mantém `JpaRepository<Estacao, String>`, todo `findById(String)` existente, e a assinatura de todo service exatamente como estão hoje.
 
 ---
 
@@ -101,7 +103,7 @@ Generaliza o filtro que já existe (`Subscription(emitter, estacaoId)`, em `Inci
 
 ## 4. `cypher-capture`: nenhuma mudança
 
-O pipeline já se autentica só por `X-Cypher-Key` (segredo por câmera, já globalmente único hoje, independente de empresa). Com chave composta no backend, `GET /api/v1/cameras/{codigo}/config` resolve `(empresaId da chave, codigo da URL)` — o `codigo`, que seria ambíguo entre empresas, deixa de ser ambíguo porque a própria API key já fixa o tenant antes do path param ser interpretado. `CameraConfigClient`, `--camera-id`, cache local (`outputs/camera-config-cache.json`): tudo continua igual.
+O pipeline já se autentica só por `X-Cypher-Key` (segredo por câmera, já globalmente único hoje, independente de empresa). Com PK prefixada no backend, `GET /api/v1/cameras/{codigo}/config` resolve `TenantContext.key(codigo)` usando o `empresaId` que a própria chave já carrega (via `PipelineAuthentication`) — o `codigo`, que seria ambíguo entre empresas, deixa de ser ambíguo porque a API key já fixa o tenant antes do path param ser interpretado. `CameraConfigClient`, `--camera-id`, cache local (`outputs/camera-config-cache.json`): tudo continua igual.
 
 ---
 
@@ -129,7 +131,7 @@ O H2 atual (`data/cypherdb.mv.db`) contém só dado de demonstração — mesmo 
 | Slug de empresa já existe no sign-up | `POST /api/v1/setup` responde `409`, mesmo contrato de hoje — só que a checagem passa a ser por slug, não global |
 | Slug com formato inválido | `422`, mesmo padrão de `EST-01`/`CAM-01` (E2 §4) |
 | Código de estação/câmera duplicado dentro da mesma empresa | `409`, como hoje |
-| Mesmo código em empresas diferentes | Aceito — chave composta os distingue |
+| Mesmo código em empresas diferentes | Aceito — PK armazenada (`empresaId:codigo`) os distingue |
 | `X-Cypher-Key` de câmera de uma empresa usada para acessar recurso doutra | Nunca ocorre — a chave já resolve o `empresaId`, e todo lookup subsequente é escopado por ele; não há como uma chave "vazar" para fora do próprio tenant |
 | GESTOR de uma empresa tenta acessar recurso doutra (ex.: manipular URL com `codigo` de estação alheia) | `404`/`403` — `TenantContext.currentEmpresaId()` escopa a busca antes de checar existência |
 
