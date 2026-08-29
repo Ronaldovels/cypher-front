@@ -107,6 +107,8 @@ O pipeline já se autentica só por `X-Cypher-Key` (segredo por câmera, já glo
 
 ## 5. `cypher-front`: o que muda
 
+**Nota de design:** toda peça nova desta seção reaproveita 100% os primitivos globais já existentes em `src/styles.scss` (`.field`, `.input`, `.btn`, `.panel`) e o padrão de formulário "signal de rascunho + `patch()`" já usado no onboarding e em `identity-tab.component.ts` — mesmo princípio já seguido em E3 §0 e E4 §4. Nenhuma tela desta entrega introduz CSS solto, componente de UI novo ou biblioteca de formulário (`ReactiveFormsModule`); tudo herda o design system existente.
+
 - **Onboarding — passo "Identidade da empresa":** hoje só grava nome/CNPJ/cor em `localStorage`, sem efeito no backend (E4 §6). Ganha o campo slug e passa a criar a `Empresa` de verdade via backend.
 - **Rota `''`:** hoje consulta `GET /api/v1/setup/status` (flag global "já existe algum Usuario?") via guard `canActivateOnboarding` para decidir entre onboarding e `/login` (E4 §4.2/§4.3). Deixa de fazer sentido em multi-tenant — sempre vai existir "algum Usuario" assim que a primeira empresa se cadastrar, e isso não pode bloquear a segunda. `GET /api/v1/setup/status` e `canActivateOnboarding` são **removidos**. `''` vira uma tela simples com duas ações lado a lado: "Criar empresa" (abre o wizard) / "Entrar" (`/login`).
 - **`AuthService`/`GET /auth/me`:** corpo de resposta ganha `empresaId`/`empresaNome`, para exibir o nome da empresa na topbar (mesmo padrão de já exibir `papel`/`estacaoId`).

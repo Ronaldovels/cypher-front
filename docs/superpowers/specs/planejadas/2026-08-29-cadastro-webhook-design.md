@@ -60,6 +60,8 @@ Diferente do token de estação e da API key de câmera (gerados via `TokenGener
 
 ## 3. Front — nova aba em `/config`
 
+**Nota de design:** toda a implementação desta seção reaproveita 100% os primitivos globais já existentes em `src/styles.scss` (`.field`, `.input`, `.btn`, `.list-row`, `.chip`, `.status`, `.vazio`) e o padrão de formulário "signal de rascunho + `patch()`" já usado em `identity-tab.component.ts` e nas telas de equipe/usuários — mesmo princípio seguido em E3 §0 e E4 §4. Nenhum CSS por componente (`styleUrl`), nenhum `ReactiveFormsModule`, nenhuma biblioteca de UI nova.
+
 ### 3.1 Rota e navegação
 
 Entrada nova em `TABS` (`SettingsPageComponent`, `src/app/config/settings/settings-page.component.ts`): `{ path: 'webhooks', label: 'Webhooks' }`, mais um ícone no `@switch` do template e uma rota filha em `app.routes.ts`:

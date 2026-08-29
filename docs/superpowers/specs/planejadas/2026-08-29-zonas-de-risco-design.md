@@ -115,6 +115,8 @@ Mudança feita na UI só é aplicada no próximo boot do pipeline daquela câmer
 
 ## 4. Front — editor de zonas
 
+**Nota de design:** exceto pelo canvas de desenho do polígono (§4.3, sem equivalente nos primitivos existentes), todo o resto desta seção reaproveita os primitivos globais já existentes em `src/styles.scss` (`.field`, `.input`, `.btn`, `.panel`) e o padrão de formulário "signal de rascunho + `patch()`" já usado no restante do app — mesmo princípio seguido em E3 §0, E4 §4 e nas duas specs anteriores desta rodada. O canvas é a única exceção deliberada, justificada em §4.3.
+
 ### 4.1 Onde entra
 
 Dentro do fluxo de cadastro de câmera já existente (`StationsConfigComponent`, E2 §7.1): cada câmera cadastrada ganha uma ação "Editar zonas", que abre um painel (`ZoneEditorComponent`) recebendo `codigo` e `streamUrl` daquela câmera.
