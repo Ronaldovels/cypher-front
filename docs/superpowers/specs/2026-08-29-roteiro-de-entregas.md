@@ -37,13 +37,15 @@ Confirmado por histórico de commits nos três repositórios em 2026-08-29 (E4 m
 
 ## 3. Entregas planejadas
 
-| Ordem | Entrega | Spec | Depende de | Bloqueio |
-|---|---|---|---|---|
-| 1 | Multi-tenant (Empresa) | `planejadas/2026-08-29-multi-tenant-design.md` | E1–E4 | nenhum — pronta para virar plano |
-| 2 | Cadastro de webhook pela interface | `planejadas/2026-08-29-cadastro-webhook-design.md` | Multi-tenant | nenhum, além da ordem |
-| 2 | Zonas de risco pela interface | `planejadas/2026-08-29-zonas-de-risco-design.md` | Multi-tenant | nenhum, além da ordem |
-| E5 | Gamificação por equipe | `planejadas/2026-08-29-gamificacao-e5-design.md` | Multi-tenant | **sim** — gating temporal de queda no `cypher-capture` (cronograma pós-NEXT, sem data definida); implementação não deve começar antes disso (spec §7) |
-| E6 | Relatórios e exportação | `planejadas/2026-08-29-relatorios-e6-design.md` | Multi-tenant; parcialmente E5 (placar) | CSV de incidentes é independente de E5; CSV de placar e PDF de resumo dependem de E5 estar implementada |
+| Ordem | Entrega | Spec | Plano de implementação | Depende de | Bloqueio |
+|---|---|---|---|---|---|
+| 1 | Multi-tenant (Empresa) | `planejadas/2026-08-29-multi-tenant-design.md` | `plans/multi-tenant/` (`mta` backend, `mtb` front) | E1–E4 | nenhum — pronta para executar |
+| 2 | Cadastro de webhook pela interface | `planejadas/2026-08-29-cadastro-webhook-design.md` | `plans/webhook/` (`wha` backend, `whb` front) | Multi-tenant | nenhum, além da ordem |
+| 2 | Zonas de risco pela interface | `planejadas/2026-08-29-zonas-de-risco-design.md` | `plans/zonas-de-risco/` (`zra` backend, `zrb` capture, `zrc` front) | Multi-tenant | nenhum, além da ordem |
+| E5 | Gamificação por equipe | `planejadas/2026-08-29-gamificacao-e5-design.md` | `plans/e5-gamificacao/` (`e5a` backend, `e5b` capture, `e5c` front) — **planos escritos, execução bloqueada** | Multi-tenant | **sim** — gating temporal de queda no `cypher-capture` (cronograma pós-NEXT, sem data definida); implementação não deve começar antes disso (spec §7) |
+| E6 | Relatórios e exportação | `planejadas/2026-08-29-relatorios-e6-design.md` | `plans/e6-relatorios/` (`e6a` backend, `e6b` front) — Tarefa 1 de cada arquivo liberada, Tarefa 2 depende de E5 | Multi-tenant; parcialmente E5 (placar) | CSV de incidentes é independente de E5 e pode ser executado agora; CSV de placar e PDF de resumo dependem de E5 estar implementada |
+
+Todos os planos seguem a convenção `docs/superpowers/plans/<entrega>/YYYY-MM-DD-<letra><entrega>-<descricao>.md`, uma letra por repositório/fatia (`a`=backend `cypher`, `b`=`cypher-capture` quando a entrega o toca, última letra=front `cypher-front`) — mesmo padrão de `plans/e1`–`plans/e4`.
 
 **Cadastro de webhook** e **zonas de risco** têm a mesma ordem (2) porque são independentes entre si — ambas só dependem do multi-tenant, podem avançar em paralelo ou em qualquer ordem relativa.
 
