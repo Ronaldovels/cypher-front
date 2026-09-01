@@ -174,10 +174,14 @@ cypher:
     claude:
       api-key: ${CYPHER_CLAUDE_API_KEY:}
       model: claude-sonnet-5
+      base-url: https://api.anthropic.com
     gemini:
       api-key: ${CYPHER_GEMINI_API_KEY:}
       model: gemini-2.5-flash
+      base-url: https://generativelanguage.googleapis.com
 ```
+
+`base-url` configurável (não fixo no código) é o que permite testar `ClaudeVisionClient`/`GeminiVisionClient` do mesmo jeito que o projeto já testa `WebhookDispatcher` — apontando para um `HttpServer` local embutido no teste, em vez de mockar o `RestClient` (este projeto não usa Mockito em nenhum teste existente; ver `WebhookDispatcherTest`).
 
 **Nota:** este é o primeiro segredo do projeto injetado via variável de ambiente (`${VAR}`) — hoje o segredo de webhook e a API key de câmera ficam como valor literal em YAML/banco. Desvio deliberado e documentado: uma chave de API de terceiro não deve ser commitada em texto puro, diferente dos segredos internos já existentes (gerados e controlados pelo próprio Cypher).
 
