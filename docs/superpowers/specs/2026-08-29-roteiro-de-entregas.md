@@ -39,6 +39,7 @@ Confirmado por histórico de commits nos três repositórios em 2026-08-29 (E4 m
 
 | Ordem | Entrega | Spec | Plano de implementação | Depende de | Bloqueio |
 |---|---|---|---|---|---|
+| 0 | Análise de risco com LLM multimodal (Sprint 3 — IA) | `planejadas/2026-09-01-analise-llm-multimodal-design.md` | ainda não escrito | nenhuma — roda sobre o modelo single-tenant atual | nenhum; prazo externo (entrega acadêmica em 21/09) faz avançar em paralelo às demais, sem sobrepor arquivos |
 | 1 | Multi-tenant (Empresa) | `planejadas/2026-08-29-multi-tenant-design.md` | `plans/multi-tenant/` (`mta` backend, `mtb` front) | E1–E4 | nenhum — pronta para executar |
 | 2 | Cadastro de webhook pela interface | `planejadas/2026-08-29-cadastro-webhook-design.md` | `plans/webhook/` (`wha` backend, `whb` front) | Multi-tenant | nenhum, além da ordem |
 | 2 | Zonas de risco pela interface | `planejadas/2026-08-29-zonas-de-risco-design.md` | `plans/zonas-de-risco/` (`zra` backend, `zrb` capture, `zrc` front) | Multi-tenant | nenhum, além da ordem |
@@ -50,6 +51,8 @@ Todos os planos seguem a convenção `docs/superpowers/plans/<entrega>/YYYY-MM-D
 **Cadastro de webhook** e **zonas de risco** têm a mesma ordem (2) porque são independentes entre si — ambas só dependem do multi-tenant, podem avançar em paralelo ou em qualquer ordem relativa.
 
 **E5 é a única com um bloqueio externo ao controle do time de produto** — depende de um item de calibração de modelo no `cypher-capture` sem prazo definido. Nada impede as demais entregas planejadas de avançarem enquanto isso.
+
+**Ordem 0 não é prioridade de produto — é prazo externo.** É a entrega da Sprint 3 da disciplina de Inteligência Artificial (prazo 21/09), motivada pelo cronograma acadêmico, não pelo roteiro de produto. Não toca `cypher-capture` nem depende de multi-tenant, então não compete por arquivos com nenhuma outra entrega planejada — pode avançar em paralelo com a ordem 1 sem risco de conflito.
 
 ---
 
