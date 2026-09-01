@@ -23,6 +23,8 @@ Priorização: MoSCoW simplificado, ordenado por valor para o objetivo "sistema 
 
 Trabalho real de refinamento de backlog: cada item abaixo tem um documento de design (`docs/superpowers/specs/`) e um plano de implementação TDD tarefa-a-tarefa (`docs/superpowers/plans/`) — nenhum é ainda código mergeado, mas todos saíram de "ideia" para "pronto para desenvolver" nesta janela. Ordem de dependência registrada em `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md`.
 
+**Quebra em cards de execução:** cada item abaixo já está quebrado em cards por fatia de repositório (backend/capture/front), prontos para virar cards do Trello com checklist = tasks do plano — ver `docs/scrum/sprint-3/sprint-backlog.md`, seção "Próximas entregas".
+
 | # | Item | Valor | Spec | Plano | Status |
 |---|---|---|---|---|---|
 | 6 | Multi-tenant (Empresa) — pré-requisito das próximas 4 entregas | Must | `2026-08-29-multi-tenant-design.md` | `plans/multi-tenant/` | 📝 Pronto para dev |

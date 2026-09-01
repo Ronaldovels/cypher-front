@@ -19,6 +19,8 @@ docs/superpowers/specs/
 
 Uma spec migra de `planejadas/` para `implementadas/` quando a entrega correspondente é mergeada — não quando o plano de implementação é escrito. Este documento é atualizado no mesmo commit que move o arquivo.
 
+**⚠️ Sempre que uma sessão de desenvolvimento finalizar ou revisar uma entrega deste roteiro** (PR aberto, revisado ou mergeado), atualizar também os artefatos Scrum em `docs/scrum/sprint-3/`: mover o card correspondente no Trello (e no `sprint-backlog.md` de referência), e registrar a Review daquela entrega em `docs/scrum/sprint-3/cerimonias.md`. Isso mantém os artefatos Scrum como reflexo real da execução, entrega por entrega, em vez de um dump retroativo no fim da sprint.
+
 ---
 
 ## 2. Entregas implementadas
