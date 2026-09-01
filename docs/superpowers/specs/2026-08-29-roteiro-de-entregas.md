@@ -39,7 +39,7 @@ Confirmado por histórico de commits nos três repositórios em 2026-08-29 (E4 m
 
 | Ordem | Entrega | Spec | Plano de implementação | Depende de | Bloqueio |
 |---|---|---|---|---|---|
-| 0 | Análise de risco com LLM multimodal (Sprint 3 — IA) | `planejadas/2026-09-01-analise-llm-multimodal-design.md` | ainda não escrito | nenhuma — roda sobre o modelo single-tenant atual | nenhum; prazo externo (entrega acadêmica em 21/09) faz avançar em paralelo às demais, sem sobrepor arquivos |
+| 0 | Análise de risco com LLM multimodal (Sprint 3 — IA) | `planejadas/2026-09-01-analise-llm-multimodal-design.md` | `plans/analise-llm/` (`ala` backend, `alb` front) | nenhuma — roda sobre o modelo single-tenant atual | nenhum; prazo externo (entrega acadêmica em 21/09) faz avançar em paralelo às demais, sem sobrepor arquivos |
 | 1 | Multi-tenant (Empresa) | `planejadas/2026-08-29-multi-tenant-design.md` | `plans/multi-tenant/` (`mta` backend, `mtb` front) | E1–E4 | nenhum — pronta para executar |
 | 2 | Cadastro de webhook pela interface | `planejadas/2026-08-29-cadastro-webhook-design.md` | `plans/webhook/` (`wha` backend, `whb` front) | Multi-tenant | nenhum, além da ordem |
 | 2 | Zonas de risco pela interface | `planejadas/2026-08-29-zonas-de-risco-design.md` | `plans/zonas-de-risco/` (`zra` backend, `zrb` capture, `zrc` front) | Multi-tenant | nenhum, além da ordem |
