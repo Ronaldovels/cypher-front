@@ -1,7 +1,7 @@
 # Sprint Backlog — Sprint 3
 
 **Período:** 2026-08-23 a 2026-09-01
-**Sprint Goal:** Fechar a Entrega E4 (acesso, papéis e cadastro de equipes) nos três repositórios e, na sequência, evoluir o protótipo Figma para acompanhar esses fluxos novos, com a gestão do grupo formalizada em Scrum visível no Trello e as cerimônias documentadas.
+**Sprint Goal:** Fechar a Entrega E4 (acesso, papéis e cadastro de equipes) nos três repositórios, especificar e planejar as 6 próximas entregas do roteiro de produto (multi-tenant, webhook, zonas de risco, gamificação E5, relatórios E6, análise por LLM multimodal) e, na sequência, evoluir o protótipo Figma para acompanhar os fluxos já entregues, com a gestão do grupo formalizada em Scrum visível no Trello e as cerimônias documentadas.
 
 Board Trello: `[PREENCHER: link do board Trello, com permissão de visualização]`
 
@@ -20,6 +20,17 @@ Board Trello: `[PREENCHER: link do board Trello, com permissão de visualizaçã
 | Backend — `Usuario`, `Equipe`, sessão e guards de segurança | Spring Security com `HttpSession`, `/auth/*`, `/setup`, restrição de OPERADOR à própria `estacaoId` — PR [#5](https://github.com/lucvs07/Cypher-Api/pull/5) | Lucas Grecco | ✅ Concluído |
 | Capture — chave de API por câmera na ingestão | `X-Cypher-Key` via `api_key_env`, provisionamento automático via login de gestor — PR [#7](https://github.com/lucvs07/cypher-capture/pull/7) | Lucas Grecco | ✅ Concluído |
 | Front — login (gestor/kiosk), guards, dock por papel, `/config/equipe` | Telas `/login`, `/login-estacao`, abas Equipes/Usuários — PR [#4](https://github.com/Ronaldovels/cypher-front/pull/4) | Lucas Grecco | ✅ Concluído |
+
+### Planejamento (concluído — 2026-08-25 a 2026-09-01, evidenciado pelos specs/planos commitados)
+
+| Card | Descrição | Responsável | Status |
+|---|---|---|---|
+| Spec + plano — Multi-tenant (Empresa) | Design de PK prefixada por empresa (`empresaId:codigo`) para `Estacao`/`Camera`/`Equipe`, `TenantContext`, sessão real por empresa. `docs/superpowers/specs/planejadas/2026-08-29-multi-tenant-design.md` + `docs/superpowers/plans/multi-tenant/` | Lucas Grecco | ✅ Concluído |
+| Spec + plano — Cadastro de webhook pela interface | CRUD de `WebhookSubscription` + histórico de `WebhookDelivery`, fecha o gap de "só via YAML+restart". `docs/superpowers/specs/planejadas/2026-08-29-cadastro-webhook-design.md` + `docs/superpowers/plans/webhook/` | Lucas Grecco | ✅ Concluído |
+| Spec + plano — Zonas de risco pela interface | Editor de polígono no canvas, `ZoneConfigClient` com ladder de degradação no `cypher-capture`. `docs/superpowers/specs/planejadas/2026-08-29-zonas-de-risco-design.md` + `docs/superpowers/plans/zonas-de-risco/` | Lucas Grecco | ✅ Concluído |
+| Spec + plano — Gamificação por equipe (E5) | Heartbeat de câmera, placar por delta de conformidade, metas por equipe. Bloqueado por gating externo no `cypher-capture`. `docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` + `docs/superpowers/plans/e5-gamificacao/` | Lucas Grecco | ✅ Concluído (execução bloqueada) |
+| Spec + plano — Relatórios e exportação (E6) | CSV de incidentes (liberado), CSV de placar + PDF de resumo (depende de E5). `docs/superpowers/specs/planejadas/2026-08-29-relatorios-e6-design.md` + `docs/superpowers/plans/e6-relatorios/` | Lucas Grecco | ✅ Concluído |
+| Spec + plano — Análise de risco com LLM multimodal | Botão "Analisar com IA" no detalhe do incidente, cliente alternável Claude/Gemini via `@ConditionalOnProperty`. `docs/superpowers/specs/planejadas/2026-09-01-analise-llm-multimodal-design.md` + `docs/superpowers/plans/analise-llm/` | Lucas Grecco | ✅ Concluído |
 
 ### Gestão ágil e protótipo (em andamento — objeto real desta Sprint)
 

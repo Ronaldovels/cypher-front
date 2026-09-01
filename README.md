@@ -102,7 +102,13 @@ ng e2e
 
 ### Evolução do protótipo nesta Sprint
 
-`[PREENCHER: descrever as ≥2 telas/fluxos novos adicionados ao Figma e a justificativa de cada mudança — feedback recebido, requisito não coberto anteriormente, ou melhoria de usabilidade]`
+O protótipo original (Sprints 1–2) cobria onboarding, dashboard e heatmap — nenhuma tela de controle de acesso, porque o produto ainda não tinha login nem papéis. A Entrega E4 introduziu autenticação e permissões, um requisito que simplesmente não existia nas Sprints anteriores; as telas abaixo evoluem o Figma para acompanhar esse código já implementado e mergeado (`cypher-front` PR #4):
+
+1. **Tela de login do gestor (`/login`)** — campo de usuário/senha, alternância de tema claro/escuro, e um link de saída ("Entrar como operador de estação →") para o fluxo de kiosk. *Justificativa:* requisito não coberto anteriormente — o protótipo das Sprints 1–2 não tinha nenhuma tela de autenticação, porque o produto ainda não distinguia papéis de usuário.
+2. **Tela de login do kiosk / operador de estação (`/login-estacao`)** — fluxo deliberadamente separado do login de gestor: só um campo de token da estação, sem usuário/senha, porque quem opera o kiosk é o dispositivo fixo da estação, não uma pessoa autenticando-se individualmente. *Justificativa:* melhoria de usabilidade — um único formulário de login para dois públicos diferentes (gestor remoto vs. kiosk fixo na estação) forçaria campos irrelevantes em um dos dois fluxos.
+3. **Tela `/config/equipe` (sub-abas Equipes/Usuários)** — cadastro de equipe com código, nome, turno e as estações cobertas (seleção por chip), mais a sub-aba de usuários do sistema. *Justificativa:* requisito não coberto anteriormente — a gamificação por equipe (E5, já especificada) e a própria E4 exigem que equipes existam como entidade de primeira classe, o que não fazia parte do modelo de dados nem da tela nas Sprints anteriores.
+
+Nenhuma das três introduz um padrão visual novo — todas reaproveitam os mesmos primitivos já usados no restante da aplicação (`.panel`, `.field`, `.input`, `.btn`, `.chip`, `.list-row`, `.status`), consistente com a convenção de design já registrada nas specs do projeto (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §4).
 
 ## 📁 Branches
 
