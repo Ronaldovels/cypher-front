@@ -26,6 +26,33 @@
           }
         </div>
 
+        @if (auth.role() === 'GESTOR') {
+          <div class="detail-llm">
+            <button type="button" class="btn ghost" [disabled]="analisando()" (click)="analisarComIa()">
+              {{ analisando() ? 'Analisando…' : 'Analisar com IA' }}
+            </button>
+
+            @if (analiseErro()) {
+              <div class="vazio">{{ analiseErro() }}</div>
+            }
+
+            @if (analiseResultado(); as resultado) {
+              @if (resultado.status === 'ERRO_PARSE') {
+                <div class="vazio">O modelo respondeu, mas não no formato esperado.</div>
+              } @else {
+                <div class="panel">
+                  <div class="detail-field"><span class="detail-label">Situação</span><span class="detail-value">{{ resultado.situacao }}</span></div>
+                  <div class="detail-field"><span class="detail-label">EPIs identificados</span><span class="detail-value">{{ resultado.episIdentificados.join(', ') || '—' }}</span></div>
+                  <div class="detail-field"><span class="detail-label">EPIs ausentes</span><span class="detail-value">{{ resultado.episAusentes.join(', ') || '—' }}</span></div>
+                  <div class="detail-field"><span class="detail-label">Risco</span><span class="status">{{ resultado.riscoIdentificado ? resultado.nivelRisco : 'nenhum' }}</span></div>
+                  <div class="detail-field"><span class="detail-label">Justificativa</span><span class="detail-value">{{ resultado.justificativa }}</span></div>
+                  <div class="detail-field"><span class="detail-label">Ação recomendada</span><span class="detail-value">{{ resultado.acaoRecomendada }}</span></div>
+                </div>
+              }
+            }
+          </div>
+        }
+
         <div class="detail-grid">
           <div class="detail-field"><span class="detail-label">Severidade</span><span class="detail-value">{{ inc.severity }} · {{ inc.nivel }}</span></div>
           <div class="detail-field"><span class="detail-label">REBA</span><span class="detail-value">{{ inc.rebaScore }} (ação {{ inc.actionLevel }})</span></div>

@@ -9,6 +9,8 @@ import { IncidentService } from '../shared/incident.service';
 import {
   AlertaStatus, Incident, formatDateTime, incidentLabel, mensagemDeErro,
 } from '../shared/incident.models';
+import { LlmAnalysisService } from '../shared/llm-analysis.service';
+import { RiskAnalysisResponse } from '../shared/llm-analysis.models';
 
 @Component({
   selector: 'app-incident-detail',
@@ -20,6 +22,7 @@ export class IncidentDetailComponent implements OnInit {
   private incidentService = inject(IncidentService);
   private cfgService = inject(ConfigService);
   private authService = inject(AuthService);
+  private llmService = inject(LlmAnalysisService);
   readonly auth = this.authService;
 
   cfg = this.cfgService.config;
@@ -28,6 +31,10 @@ export class IncidentDetailComponent implements OnInit {
   private readonly buscado = signal<Incident | null>(null);
   readonly carregando = signal(true);
   readonly erro = signal<string | null>(null);
+
+  readonly analisando = signal(false);
+  readonly analiseResultado = signal<RiskAnalysisResponse | null>(null);
+  readonly analiseErro = signal<string | null>(null);
 
   /**
    * Prefere o store global (fresco via SSE); cai para o resultado do GET
@@ -54,5 +61,20 @@ export class IncidentDetailComponent implements OnInit {
 
   mudarStatus(status: AlertaStatus): void {
     this.incidentService.acknowledge(this.id, status);
+  }
+
+  analisarComIa(): void {
+    this.analisando.set(true);
+    this.analiseErro.set(null);
+    this.llmService.analisar(this.id).subscribe({
+      next: resultado => {
+        this.analiseResultado.set(resultado);
+        this.analisando.set(false);
+      },
+      error: () => {
+        this.analiseErro.set('Não foi possível analisar agora. Tente novamente.');
+        this.analisando.set(false);
+      },
+    });
   }
 }
