@@ -136,4 +136,27 @@ describe('ChromeTopbarComponent — nome da empresa (design doc de multi-tenant,
     expect(fixture.componentInstance.company()).toBe('ACME INDUSTRIAL');
     expect(fixture.componentInstance.initial()).toBe('A');
   });
+
+  it('empresaNome so com espaco em branco nao quebra o computed e cai no proximo fallback', () => {
+    const authStub = { role: signal('GESTOR'), empresaNome: signal('   ') };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideRouter([]),
+        { provide: AuthService, useValue: authStub }],
+    });
+    const fixture = TestBed.createComponent(ChromeTopbarComponent);
+
+    // empresaNome em branco + cfg.company presente -> usa cfg.company
+    fixture.componentRef.setInput('cfg', { company: 'Acme' });
+    fixture.detectChanges();
+    expect(() => fixture.componentInstance.initial()).not.toThrow();
+    expect(fixture.componentInstance.initial()).toBe('A');
+    expect(fixture.componentInstance.company()).toBe('ACME');
+
+    // empresaNome em branco + cfg.company tambem em branco -> literal 'C'/'CYPHER'
+    fixture.componentRef.setInput('cfg', { company: '   ' });
+    fixture.detectChanges();
+    expect(fixture.componentInstance.initial()).toBe('C');
+    expect(fixture.componentInstance.company()).toBe('CYPHER');
+  });
 });

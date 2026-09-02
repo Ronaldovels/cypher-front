@@ -30,6 +30,16 @@ describe('AuthService', () => {
 
     expect(service.role()).toBe('OPERADOR');
     expect(service.estacaoId()).toBe('EST-01');
+    expect(service.empresaId()).toBe('demo');
+    expect(service.empresaNome()).toBeNull();
+  });
+
+  it('checkSession popula empresaNome quando o /auth/me traz o nome da empresa', () => {
+    http.expectOne(`${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'GESTOR', username: 'g1', empresaId: 'acme', empresaNome: 'Acme Industrial' });
+
+    expect(service.empresaId()).toBe('acme');
+    expect(service.empresaNome()).toBe('Acme Industrial');
   });
 
   it('401 no boot vira role null, nao erro', () => {

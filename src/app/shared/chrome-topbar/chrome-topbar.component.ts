@@ -128,6 +128,6 @@ export class ChromeTopbarComponent {
     this.router.navigate([eraOperador ? '/login-estacao' : '/login']);
   }
 
-  company = computed(() => (this.auth.empresaNome() || this.cfg()?.company || 'CYPHER').toUpperCase());
-  initial = computed(() => (this.auth.empresaNome() || this.cfg()?.company || 'C').trim()[0].toUpperCase());
+  company = computed(() => (this.auth.empresaNome()?.trim() || this.cfg()?.company?.trim() || 'CYPHER').toUpperCase());
+  initial = computed(() => (this.auth.empresaNome()?.trim() || this.cfg()?.company?.trim() || 'C')[0].toUpperCase());
 }
