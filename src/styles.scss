@@ -764,6 +764,26 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .detail-status { display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--line-2); padding-top:16px; }
 .detail-status-actions { display:flex; gap:10px; }
 
+/* ─── ANÁLISE POR IA (detalhe do incidente) ─── */
+.detail-llm { background:var(--surface); border:1px solid var(--line-2); border-radius:14px; padding:20px 24px; margin-bottom:20px; display:flex; flex-direction:column; gap:16px; }
+.detail-llm-head { display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.dl-head-text { display:flex; flex-direction:column; gap:4px; }
+.dl-eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+.dl-sub { font-size:13px; color:var(--ink-mute); }
+
+.dl-result { display:flex; flex-direction:column; gap:16px; padding-top:16px; border-top:1px solid var(--line); }
+.dl-result-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.dl-risk { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; padding:4px 10px; border-radius:999px; background:var(--surface-2); color:var(--ink-mute); border:1px solid var(--line-2); }
+.dl-risk.lvl-baixo { background:rgba(52,208,126,0.14); border-color:rgba(52,208,126,0.4); color:#34D07E; }
+.dl-risk.lvl-medio { background:rgba(255,206,56,0.14); border-color:rgba(255,206,56,0.4); color:#FFCE38; }
+.dl-risk.lvl-alto  { background:#EE4242; border-color:#EE4242; color:#fff; }
+.dl-situacao { font-size:15px; color:var(--ink); line-height:1.5; margin:0; }
+.dl-epis { display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; }
+.dl-reco { display:flex; flex-direction:column; gap:6px; padding:14px 16px; background:var(--bg-2); border-radius:10px; border-left:3px solid var(--accent); }
+.dl-reco-text { font-size:14px; font-weight:600; color:var(--ink); margin:0; }
+.dl-justificativa { font-size:13px; color:var(--ink-2); margin:0; line-height:1.5; }
+@media (max-width: 640px) { .dl-epis { grid-template-columns:1fr; } }
+
 .stations-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
 .station-card { text-decoration:none; color:inherit; min-height:0; cursor:pointer; transition:transform 0.15s; }
 .station-card:hover { transform:translateY(-2px); border-color:var(--line-3); }

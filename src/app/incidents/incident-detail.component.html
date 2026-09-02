@@ -28,9 +28,16 @@
 
         @if (auth.role() === 'GESTOR') {
           <div class="detail-llm">
-            <button type="button" class="btn ghost" [disabled]="analisando()" (click)="analisarComIa()">
-              {{ analisando() ? 'Analisando…' : 'Analisar com IA' }}
-            </button>
+            <div class="detail-llm-head">
+              <div class="dl-head-text">
+                <span class="dl-eyebrow">Análise por IA</span>
+                <span class="dl-sub">Pede ao modelo multimodal uma leitura da cena e uma ação recomendada.</span>
+              </div>
+              <button type="button" class="btn primary" [class.pulsing]="analisando()"
+                      [disabled]="analisando()" (click)="analisarComIa()">
+                {{ analisando() ? 'Analisando…' : (analiseResultado() ? 'Analisar novamente' : 'Analisar com IA') }}
+              </button>
+            </div>
 
             @if (analiseErro()) {
               <div class="vazio">{{ analiseErro() }}</div>
@@ -42,13 +49,26 @@
               } @else if (resultado.status === 'ERRO_API') {
                 <div class="vazio">Não foi possível analisar agora. Tente novamente.</div>
               } @else {
-                <div class="panel">
-                  <div class="detail-field"><span class="detail-label">Situação</span><span class="detail-value">{{ resultado.situacao }}</span></div>
-                  <div class="detail-field"><span class="detail-label">EPIs identificados</span><span class="detail-value">{{ resultado.episIdentificados.join(', ') || '—' }}</span></div>
-                  <div class="detail-field"><span class="detail-label">EPIs ausentes</span><span class="detail-value">{{ resultado.episAusentes.join(', ') || '—' }}</span></div>
-                  <div class="detail-field"><span class="detail-label">Risco</span><span class="status">{{ resultado.riscoIdentificado ? resultado.nivelRisco : 'nenhum' }}</span></div>
-                  <div class="detail-field"><span class="detail-label">Justificativa</span><span class="detail-value">{{ resultado.justificativa }}</span></div>
-                  <div class="detail-field"><span class="detail-label">Ação recomendada</span><span class="detail-value">{{ resultado.acaoRecomendada }}</span></div>
+                <div class="dl-result">
+                  <div class="dl-result-head">
+                    <span class="dl-risk" [class]="'lvl-' + (resultado.riscoIdentificado ? resultado.nivelRisco : 'nenhum')">
+                      {{ resultado.riscoIdentificado ? (resultado.nivelRisco + ' risco') : 'sem risco' }}
+                    </span>
+                    <span class="ph-meta">{{ resultado.provider }} · prompt {{ resultado.promptVersion }}</span>
+                  </div>
+
+                  <p class="dl-situacao">{{ resultado.situacao }}</p>
+
+                  <div class="dl-epis">
+                    <div class="detail-field"><span class="detail-label">EPIs identificados</span><span class="detail-value">{{ resultado.episIdentificados.join(', ') || '—' }}</span></div>
+                    <div class="detail-field"><span class="detail-label">EPIs ausentes</span><span class="detail-value">{{ resultado.episAusentes.join(', ') || '—' }}</span></div>
+                  </div>
+
+                  <div class="dl-reco">
+                    <span class="detail-label">Ação recomendada</span>
+                    <p class="dl-reco-text">{{ resultado.acaoRecomendada }}</p>
+                    <p class="dl-justificativa">{{ resultado.justificativa }}</p>
+                  </div>
                 </div>
               }
             }
