@@ -60,17 +60,3 @@ export const canActivateOperadorOuGestor: CanActivateFn = (route: ActivatedRoute
     }),
   );
 };
-
-/**
- * `''` (onboarding, design doc de E4 §2.5/§4.2): consulta `GET /setup/status`,
- * não `checkSession()` — mostrar o wizard ou redirecionar não depende de quem
- * está logado, só de o primeiro `Usuario` já existir. Público por natureza:
- * não exige sessão nenhuma para responder.
- */
-export const canActivateOnboarding: CanActivateFn = () => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-  return auth.checkSetupStatus().pipe(
-    map(configured => (configured ? router.parseUrl('/login') : true)),
-  );
-};

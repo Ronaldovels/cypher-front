@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../../environments/environment';
 import {
-  canActivateAutenticado, canActivateGestor, canActivateOnboarding, canActivateOperador,
+  canActivateAutenticado, canActivateGestor, canActivateOperador,
   canActivateOperadorOuGestor,
 } from './auth.guards';
 
@@ -112,26 +112,5 @@ describe('auth.guards', () => {
     http.expectOne(`${environment.apiUrl}/auth/me`)
       .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
     expect(await liberado).toBe(true);
-  });
-
-  it('canActivateOnboarding libera quando o setup ainda nao rodou', async () => {
-    // A instanciação de AuthService (via inject) dispara GET /auth/me sozinha,
-    // mas canActivateOnboarding não depende dela — só de checkSetupStatus().
-    // Não flushar /auth/me aqui é deliberado: este spec não chama http.verify(),
-    // então a requisição pendente é inofensiva.
-    const promessa = resultadoDe(() =>
-      canActivateOnboarding(rotaCom(null), {} as RouterStateSnapshot));
-    http.expectOne(`${environment.apiUrl}/setup/status`).flush({ configured: false });
-
-    expect(await promessa).toBe(true);
-  });
-
-  it('canActivateOnboarding redireciona para /login quando o setup ja rodou', async () => {
-    const promessa = resultadoDe(() =>
-      canActivateOnboarding(rotaCom(null), {} as RouterStateSnapshot));
-    http.expectOne(`${environment.apiUrl}/setup/status`).flush({ configured: true });
-
-    const resultado = await promessa;
-    expect(router.serializeUrl(resultado as UrlTree)).toBe('/login');
   });
 });

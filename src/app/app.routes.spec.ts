@@ -9,12 +9,17 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import {
-  canActivateGestor, canActivateOnboarding, canActivateOperadorOuGestor,
+  canActivateGestor, canActivateOperadorOuGestor,
 } from './shared/auth/auth.guards';
 
 describe('routes — guards de acesso (design doc de E4, §4.3)', () => {
-  it('/ (onboarding) usa canActivateOnboarding', () => {
-    expect(routes.find(r => r.path === '')?.canActivate).toEqual([canActivateOnboarding]);
+  it('/ nao tem guard (tela de duas acoes, nao depende de estado global)', () => {
+    expect(routes.find(r => r.path === '')?.canActivate).toBeUndefined();
+  });
+
+  it('/onboarding usa o wizard, sem guard', () => {
+    expect(routes.find(r => r.path === 'onboarding')).toBeDefined();
+    expect(routes.find(r => r.path === 'onboarding')?.canActivate).toBeUndefined();
   });
 
   it('/dashboard e /heatmap exigem GESTOR', () => {
@@ -94,29 +99,6 @@ describe('routes — redirecionamento de ponta a ponta sem sessao', () => {
     await new Promise(resolve => setTimeout(resolve));
     http.expectOne(`${environment.apiUrl}/auth/me`)
       .flush(null, { status: 401, statusText: 'Unauthorized' });
-    await promessa;
-
-    expect(router.url).toBe('/login');
-  });
-
-  it('/ mostra o onboarding quando o setup ainda nao rodou', async () => {
-    const harness = await RouterTestingHarness.create();
-    const promessa = harness.navigateByUrl('/');
-    await new Promise(resolve => setTimeout(resolve));
-    http.expectOne(r => r.url === `${environment.apiUrl}/setup/status`).flush({ configured: false });
-    // `AuthService` (injetado pelo guard) dispara `/auth/me` no construtor,
-    // sem relação com `canActivateOnboarding` — este spec não chama
-    // `http.verify()`, então deixá-la pendente é inofensivo.
-    await promessa;
-
-    expect(router.url).toBe('/');
-  });
-
-  it('/ redireciona para /login quando o setup ja rodou', async () => {
-    const harness = await RouterTestingHarness.create();
-    const promessa = harness.navigateByUrl('/');
-    await new Promise(resolve => setTimeout(resolve));
-    http.expectOne(r => r.url === `${environment.apiUrl}/setup/status`).flush({ configured: true });
     await promessa;
 
     expect(router.url).toBe('/login');
