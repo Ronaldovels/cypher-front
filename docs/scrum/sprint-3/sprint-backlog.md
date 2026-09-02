@@ -32,18 +32,25 @@ Board Trello: `[PREENCHER: link do board Trello, com permissão de visualizaçã
 | Spec + plano — Relatórios e exportação (E6) | CSV de incidentes (liberado), CSV de placar + PDF de resumo (depende de E5). `docs/superpowers/specs/planejadas/2026-08-29-relatorios-e6-design.md` + `docs/superpowers/plans/e6-relatorios/` | Lucas Grecco | ✅ Concluído |
 | Spec + plano — Análise de risco com LLM multimodal | Botão "Analisar com IA" no detalhe do incidente, cliente alternável Claude/Gemini via `@ConditionalOnProperty`. `docs/superpowers/specs/planejadas/2026-09-01-analise-llm-multimodal-design.md` + `docs/superpowers/plans/analise-llm/` | Lucas Grecco | ✅ Concluído |
 
+### Em andamento (puxado em 2026-09-01)
+
+| Card | Descrição | Checklist (tasks do plano) | Responsável | Status |
+|---|---|---|---|---|
+| Análise LLM multimodal — backend (`ala`) | `RiskAnalysisResponse`, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient`, `LlmAnalysisService`, endpoint `POST /incidents/{id}/analyze` | 7 tasks — `plans/analise-llm/2026-09-01-ala-backend-analise-llm.md` | Lucas Grecco | 🔄 Em andamento |
+| Análise LLM multimodal — front (`alb`) | Botão "Analisar com IA" + painel de resultado no detalhe do incidente, modo mock | 3 tasks — `plans/analise-llm/2026-09-01-alb-front-analise-llm.md` | Lucas Grecco | 🔄 Em andamento (aguarda `ala`) |
+
+Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.1.
+
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 
 Um card por fatia de repositório de cada plano — o checklist do card é a lista de tasks do próprio arquivo do plano (`docs/superpowers/plans/<entrega>/`). Ordem de cima pra baixo = ordem de retirada recomendada pelo roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3); cards sem dependência pendente podem ser puxados em paralelo.
 
-**Coluna inicial no Trello: `Product Backlog`**, para todos os 13 cards abaixo — nenhum teve código iniciado ainda. Mover para `Sprint Backlog` só quando o time decidir puxá-lo para a sprint corrente, respeitando a coluna "Depende de".
+**Coluna inicial no Trello: `Product Backlog`**, para os 11 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`) já foram puxados — ver seção "Em andamento" acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
 
 | Ordem | Card | Descrição | Checklist (tasks do plano) | Depende de |
 |---|---|---|---|---|
 | 1 | Multi-tenant — backend (`mta`) | `Empresa`, `TenantContext`, PK prefixada nas 6 entidades, sessão real por empresa, escopo de listagens/incidentes/SSE/webhook | 9 tasks — `plans/multi-tenant/2026-08-29-mta-backend-empresa.md` | E1–E4 (nenhuma pendente) |
 | 2 | Multi-tenant — front (`mtb`) | Slug no onboarding, `AuthService.bootstrap()` com `empresaId`, `LandingComponent`, topbar mostrando nome da empresa | 4 tasks — `plans/multi-tenant/2026-08-29-mtb-front-empresa.md` | mta |
-| 3 | Análise LLM multimodal — backend (`ala`) | `RiskAnalysisResponse`, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient`, `LlmAnalysisService`, endpoint `POST /incidents/{id}/analyze` | 7 tasks — `plans/analise-llm/2026-09-01-ala-backend-analise-llm.md` | nenhuma — pode rodar em paralelo, prazo próprio 21/09 |
-| 4 | Análise LLM multimodal — front (`alb`) | Botão "Analisar com IA" + painel de resultado no detalhe do incidente, modo mock | 3 tasks — `plans/analise-llm/2026-09-01-alb-front-analise-llm.md` | ala |
 | 5 | Webhook — backend (`wha`) | CRUD de `WebhookSubscription`, histórico paginado de `WebhookDelivery` | 2 tasks — `plans/webhook/2026-08-29-wha-backend-webhook.md` | multi-tenant |
 | 6 | Webhook — front (`whb`) | Aba "Webhooks" em `/config` (assinantes + histórico) | 4 tasks — `plans/webhook/2026-08-29-whb-front-webhook.md` | wha |
 | 7 | Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | multi-tenant |

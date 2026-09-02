@@ -29,6 +29,29 @@ Ver `docs/scrum/sprint-3/sprint-backlog.md` — itens 6 a 15 do Product Backlog:
 
 ---
 
+### 1.1 Planning — Análise de risco com LLM multimodal (`ala`/`alb`)
+
+**Data:** 2026-09-01
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto de entrada
+Segue o "Próximos passos" da Review da Sprint 3 (§3): início da implementação das entregas planejadas. Este é o primeiro par de cards puxado do Product Backlog (`docs/scrum/sprint-3/sprint-backlog.md`, cards 3 e 4), com prazo próprio de entrega acadêmica em 21/09, independente da ordem das demais entregas de produto.
+
+#### Sprint Goal
+Implementar o endpoint `POST /api/v1/incidents/{id}/analyze` (backend `cypher`, plano `plans/analise-llm/2026-09-01-ala-backend-analise-llm.md`, 7 tasks) e o botão "Analisar com IA" com painel de resultado no detalhe do incidente (front `cypher-front`, plano `plans/analise-llm/2026-09-01-alb-front-analise-llm.md`, 3 tasks), seguindo TDD tarefa a tarefa.
+
+#### Itens puxados do Product Backlog
+Cards 3 (`ala`) e 4 (`alb`) de `sprint-backlog.md` — movidos de `Product Backlog` para `Em andamento`.
+
+#### Capacidade e divisão de trabalho
+Lucas Grecco — backend e front desta entrega.
+
+#### Riscos identificados no planning
+- Cloudinary ainda não configurado no `cypher-capture` (sem credenciais no `.env`) — hoje nenhum incidente real tem `snapshotUrl` preenchido. Decisão do planning: **não bloqueia** a implementação de `ala`/`alb`, que é inteiramente testável com o `HttpServer` local embutido nos testes (mesmo padrão de `WebhookDispatcherTest`) e com incidentes de teste criados via `AlertaRepository` diretamente. A configuração real do Cloudinary fica como pré-requisito separado, só necessário para gerar as evidências de demonstração (3 cenários) exigidas pelo trabalho acadêmico, não para o código em si.
+- Chaves de API (Claude/Gemini) precisam ser obtidas antes da demonstração real — o desenvolvimento e os testes automatizados não dependem delas (usam o `HttpServer` local), mas a demo ponta a ponta sim.
+
+---
+
 ## 2. Dailies (registro resumido, assíncrono)
 
 Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**.
@@ -44,6 +67,11 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 - `[PREENCHER]`
 
 *(adicionar uma seção por dia útil da sprint; o mínimo exigido pela tarefa é "ao menos uma rodada" — preencher conforme o grupo avança.)*
+
+### 2026-09-01 (início de `ala`/`alb`)
+- Lucas Grecco — feito: Planning de `ala`/`alb` registrado, cards movidos para "Em andamento"; próximo: Task 1 de `ala` (modelo de dados — `AnalysisStatus`, `RiskAnalysisResponse`, `IncidentLlmAnalysis`); bloqueio: nenhum.
+
+*(continuar registrando um bloco por dia de trabalho real em `ala`/`alb`.)*
 
 ---
 
