@@ -121,16 +121,25 @@ Iniciar a implementação das entregas planejadas nesta Sprint, na ordem do rote
 **Participantes:** `[PREENCHER: nomes presentes]`
 
 #### Entregue
-- Backend (`ala`, `cypher`) — 7 tasks: modelo de dados/auditoria, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient` (alternáveis por config, sem tocar código), `LlmAnalysisService` (orquestração, nunca propaga falha de provedor como erro HTTP), endpoint `POST /api/v1/incidents/{id}/analyze` (GESTOR-only). PR [#6](https://github.com/lucvs07/Cypher-Api/pull/6), 272/272 testes passando.
-- Front (`alb`, `cypher-front`) — 3 tasks: `LlmAnalysisService` + modelo TS espelhando o DTO, botão "Analisar com IA" + painel de resultado em `IncidentDetailComponent` (GESTOR-only, sem CSS novo), modo mock. PR [#5](https://github.com/Ronaldovels/cypher-front/pull/5), 288/288 testes passando.
+- Backend (`ala`, `cypher`) — 7 tasks do plano: modelo de dados/auditoria, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient` (alternáveis por config, sem tocar código), `LlmAnalysisService` (orquestração, nunca propaga falha de provedor como erro HTTP), endpoint `POST /api/v1/incidents/{id}/analyze` (GESTOR-only). PR [#6](https://github.com/lucvs07/Cypher-Api/pull/6) — **mergeado em 02/09**, 287/287 testes passando.
+- Front (`alb`, `cypher-front`) — 3 tasks do plano: `LlmAnalysisService` + modelo TS espelhando o DTO, botão "Analisar com IA" + painel de resultado em `IncidentDetailComponent` (GESTOR-only), modo mock. PR [#5](https://github.com/Ronaldovels/cypher-front/pull/5) — **mergeado em 02/09**, 290/290 testes passando.
 - Implementado via subagent-driven development (task-by-task, com revisão de spec+qualidade por task e uma revisão final de branch inteira em cada repositório). A revisão final encontrou e corrigiu, antes do PR:
   - Front: `status: "ERRO_API"` (uma resposta 200 cujo provedor LLM falhou) caía no `@else` genérico do template e renderizava um painel de análise vazio como se fosse válido — defeito do próprio plano (spec §4 não foi refletida no snippet de template), não do implementador.
   - Backend: `GeminiVisionClient` enviava a imagem via `file_data.file_uri`, que só aceita URIs da Files API do próprio Gemini, não uma URL pública — corrigido para baixar a imagem e enviar como `inline_data` base64; `max_tokens` estava assimétrico entre os dois provedores; `LlmResponseParser` aceitava qualquer JSON sintaticamente válido como `OK` mesmo fora do schema esperado.
   - Durante a execução (não no PR final): uma task intermediária do backend chegou a commitar acidentalmente um bloco de config de webhook não relacionado (URL pública + segredo em texto puro), pego pela revisão de task e revertido antes de prosseguir.
+- **Adicionado após o teste ponta a ponta com câmera real** (webcam local + Cloudinary + Gemini), antes do merge:
+  - `RetryComBackoff` — backoff exponencial + jitter (1s/2s/4s) em `LlmAnalysisService`, só para falha transitória (5xx, 429, timeout de rede) — contorna o `503 "high demand"` do nível gratuito do Gemini, confirmado em teste real (duas falhas seguidas + sucesso na terceira tentativa, no mesmo incidente).
+  - `GET /api/v1/incidents/{id}/analyze` + `LlmAnalysisService.ultimaAnalise()` — devolve a última análise já feita, reconstruída do que está salvo, sem chamar o provedor de novo. O front carrega isso automaticamente ao abrir a tela do incidente. Motivação: evitar gasto de chamada de API só por reabrir o mesmo alerta.
+  - Redesenho do painel de resultado (botão `.btn.primary` em vez de `.btn.ghost`, veredito de risco colorido igual ao resto do app, recomendação destacada em callout) — o botão original não tinha destaque visual nenhum.
+  - Correção de bug real descoberto em teste: modelo padrão `gemini-2.5-flash` estava descontinuado pela Google para chaves novas (404) — trocado para o alias `gemini-flash-latest`.
+- Testado ponta a ponta com câmera real: webcam local → detecção → snapshot real no Cloudinary (pasta `cypher`) → incidente persistido → análise `OK` do Gemini → reabertura da tela sem nova chamada ao provedor (confirmado direto no banco H2).
 
 #### O que não foi concluído / passa para o backlog
-- Revisão e merge dos dois PRs.
-- Demonstração com 3 cenários reais (vídeos de `cypher-capture/data/validation/`, Claude vs Gemini) — depende de credenciais reais de API e do Cloudinary configurado no `cypher-capture` (risco já registrado no Planning, §1.1).
+- Demonstração formal com 3 cenários (seguro/risco/ambíguo, Claude vs Gemini) para os entregáveis acadêmicos — o teste ponta a ponta validou o fluxo técnico, mas ainda não湊 as 3 evidências formais exigidas pelo trabalho.
+- Board Trello ainda não reflete este card como concluído (atualização manual pendente no board real).
+
+#### Feedback recebido
+Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
-Revisar/mergear os PRs #6 e #5, depois rodar a demonstração de ponta a ponta para os entregáveis acadêmicos. Em paralelo, retomar a ordem de produto do roteiro (multi-tenant primeiro).
+Gerar as evidências dos 3 cenários exigidos pelo trabalho acadêmico (prazo 21/09). Em paralelo, retomar a ordem de produto do roteiro (multi-tenant primeiro).

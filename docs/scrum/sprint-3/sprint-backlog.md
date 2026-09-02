@@ -32,20 +32,20 @@ Board Trello: `[PREENCHER: link do board Trello, com permissão de visualizaçã
 | Spec + plano — Relatórios e exportação (E6) | CSV de incidentes (liberado), CSV de placar + PDF de resumo (depende de E5). `docs/superpowers/specs/planejadas/2026-08-29-relatorios-e6-design.md` + `docs/superpowers/plans/e6-relatorios/` | Lucas Grecco | ✅ Concluído |
 | Spec + plano — Análise de risco com LLM multimodal | Botão "Analisar com IA" no detalhe do incidente, cliente alternável Claude/Gemini via `@ConditionalOnProperty`. `docs/superpowers/specs/planejadas/2026-09-01-analise-llm-multimodal-design.md` + `docs/superpowers/plans/analise-llm/` | Lucas Grecco | ✅ Concluído |
 
-### Em revisão (puxado em 2026-09-01, implementado via subagent-driven development)
+### Análise LLM multimodal (puxado em 2026-09-01, implementado via subagent-driven development, mergeado em 2026-09-02)
 
 | Card | Descrição | Checklist (tasks do plano) | Responsável | Status |
 |---|---|---|---|---|
-| Análise LLM multimodal — backend (`ala`) | `RiskAnalysisResponse`, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient`, `LlmAnalysisService`, endpoint `POST /incidents/{id}/analyze` — PR [#6](https://github.com/lucvs07/Cypher-Api/pull/6) | 7 tasks — `plans/analise-llm/2026-09-01-ala-backend-analise-llm.md` | Lucas Grecco | 🔍 Em revisão |
-| Análise LLM multimodal — front (`alb`) | Botão "Analisar com IA" + painel de resultado no detalhe do incidente, modo mock — PR [#5](https://github.com/Ronaldovels/cypher-front/pull/5) | 3 tasks — `plans/analise-llm/2026-09-01-alb-front-analise-llm.md` | Lucas Grecco | 🔍 Em revisão |
+| Análise LLM multimodal — backend (`ala`) | `RiskAnalysisResponse`, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient`, `LlmAnalysisService` (com `RetryComBackoff` para 503 transitório), endpoints `POST`/`GET /incidents/{id}/analyze` — PR [#6](https://github.com/lucvs07/Cypher-Api/pull/6), **mergeado** | 7 tasks — `plans/analise-llm/2026-09-01-ala-backend-analise-llm.md` (+ retry e cache de última análise, adicionados após teste ponta a ponta) | Lucas Grecco | ✅ Concluído |
+| Análise LLM multimodal — front (`alb`) | Botão "Analisar com IA" + painel de resultado (redesenhado via skill `frontend-design`) no detalhe do incidente, carregamento automático da última análise, modo mock — PR [#5](https://github.com/Ronaldovels/cypher-front/pull/5), **mergeado** | 3 tasks — `plans/analise-llm/2026-09-01-alb-front-analise-llm.md` (+ auto-carregamento e redesenho, adicionados após teste ponta a ponta) | Lucas Grecco | ✅ Concluído |
 
-Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.1. Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.1.
+Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.1. Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.1. Testado ponta a ponta com câmera real (webcam local, Cloudinary e Gemini reais) antes do merge.
 
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 
 Um card por fatia de repositório de cada plano — o checklist do card é a lista de tasks do próprio arquivo do plano (`docs/superpowers/plans/<entrega>/`). Ordem de cima pra baixo = ordem de retirada recomendada pelo roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3); cards sem dependência pendente podem ser puxados em paralelo.
 
-**Coluna inicial no Trello: `Product Backlog`**, para os 11 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`) já foram puxados — ver seção "Em andamento" acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
+**Coluna inicial no Trello: `Product Backlog`**, para os 11 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`) já foram puxados e concluídos — ver seção acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
 
 | Ordem | Card | Descrição | Checklist (tasks do plano) | Depende de |
 |---|---|---|---|---|

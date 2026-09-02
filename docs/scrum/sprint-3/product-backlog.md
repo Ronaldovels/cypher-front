@@ -32,7 +32,7 @@ Trabalho real de refinamento de backlog: cada item abaixo tem um documento de de
 | 8 | Zonas de risco configuráveis pela interface | Should | `2026-08-29-zonas-de-risco-design.md` | `plans/zonas-de-risco/` | 📝 Pronto para dev |
 | 9 | Gamificação por equipe (placar, metas, sequência) | Should | `2026-08-29-gamificacao-e5-design.md` | `plans/e5-gamificacao/` | ⛔ Planejado, bloqueado (gating de calibração no `cypher-capture`, sem data) |
 | 10 | Relatórios e exportação (CSV/PDF) | Could | `2026-08-29-relatorios-e6-design.md` | `plans/e6-relatorios/` | 📝 Parcialmente liberado (CSV de incidentes já pode ser feito; resto depende do item 9) |
-| 11 | Análise de risco com LLM multimodal (Claude/Gemini) no detalhe do incidente | Must (prazo externo 21/09) | `2026-09-01-analise-llm-multimodal-design.md` | `plans/analise-llm/` | 📝 Pronto para dev |
+| 11 | Análise de risco com LLM multimodal (Claude/Gemini) no detalhe do incidente | Must (prazo externo 21/09) | `2026-09-01-analise-llm-multimodal-design.md` | `plans/analise-llm/` | ✅ Concluído (PRs [#6](https://github.com/lucvs07/Cypher-Api/pull/6)/[#5](https://github.com/Ronaldovels/cypher-front/pull/5) mergeados, testado com câmera real) |
 
 ## Sprint 3 (em andamento — gestão ágil)
 
