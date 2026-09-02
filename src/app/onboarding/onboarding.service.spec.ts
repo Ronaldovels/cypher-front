@@ -102,6 +102,19 @@ describe('OnboardingService — passo de estações e usuário mestre', () => {
     expect(service.errors()['company']).toBeTruthy();
   });
 
+  it('valida o passo "identity" exigindo empresaSlug em formato valido', () => {
+    service.step.set(0);
+    service.updateData({ company: 'Acme', sector: 'Metalurgia', empresaSlug: '' });
+    expect(service.validateStep(0)).toBe(false);
+    expect(service.errors()['empresaSlug']).toBeTruthy();
+
+    service.updateData({ empresaSlug: 'Acme Com Espaco' });
+    expect(service.validateStep(0)).toBe(false);
+
+    service.updateData({ empresaSlug: 'acme' });
+    expect(service.validateStep(0)).toBe(true);
+  });
+
   it('valida o usuario mestre por chave, nao por posicao', () => {
     service.updateData({ masterUsername: '', masterPassword: '' });
 
@@ -125,7 +138,7 @@ describe('OnboardingService — passo de estações e usuário mestre', () => {
 
   it('avanca ate o ultimo passo', () => {
     service.updateData({
-      company: 'Acme', sector: 'Metalurgia', epis: ['capacete'],
+      company: 'Acme', empresaSlug: 'acme', sector: 'Metalurgia', epis: ['capacete'],
       masterUsername: 'admin', masterPassword: 'senhaAdmin1',
     });
 
@@ -138,7 +151,7 @@ describe('OnboardingService — passo de estações e usuário mestre', () => {
 
   it('nao passa do ultimo passo', () => {
     service.updateData({
-      company: 'Acme', sector: 'Metalurgia', epis: ['capacete'],
+      company: 'Acme', empresaSlug: 'acme', sector: 'Metalurgia', epis: ['capacete'],
       masterUsername: 'admin', masterPassword: 'senhaAdmin1',
     });
     for (let i = 0; i < STEPS.length + 3; i++) {
@@ -172,7 +185,7 @@ describe('OnboardingService — bootstrap do gestor mestre no launch() (design d
     // do injector precisa de um relógio real fake para resolver.
     vi.useFakeTimers();
     service.updateData({
-      company: 'Acme', sector: 'Metalurgia', epis: ['capacete'],
+      company: 'Acme', empresaSlug: 'acme', sector: 'Metalurgia', epis: ['capacete'],
       masterUsername: 'admin', masterPassword: 'senhaAdmin1',
     });
   });

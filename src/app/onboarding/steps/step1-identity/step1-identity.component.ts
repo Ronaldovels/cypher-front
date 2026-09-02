@@ -18,6 +18,10 @@ export class Step1IdentityComponent {
   sectors = SECTORS;
   presetColors = PRESET_COLORS;
 
+  onEmpresaSlug(e: Event) {
+    const v = (e.target as HTMLInputElement).value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    this.state.updateData({ empresaSlug: v });
+  }
   onCnpj(e: Event) {
     const v = (e.target as HTMLInputElement).value;
     this.state.updateData({ cnpj: cnpjMask(v) });

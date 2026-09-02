@@ -14,6 +14,17 @@
   </div>
 
   <div class="field">
+    <label>Identificador da empresa</label>
+    <input class="input" placeholder="acme" autocomplete="off"
+           [value]="state.data().empresaSlug"
+           (input)="onEmpresaSlug($event)" />
+    <p class="vazio">Usado no seu usuário de acesso (ex.: <code>gestor&#64;{{ state.data().empresaSlug || 'acme' }}</code>) — não pode ser alterado depois.</p>
+    @if (state.errors()['empresaSlug']) {
+      <div class="field-error">{{ state.errors()['empresaSlug'] }}</div>
+    }
+  </div>
+
+  <div class="field">
     <label>CNPJ</label>
     <input class="input" placeholder="00.000.000/0000-00"
            [value]="state.data().cnpj"
