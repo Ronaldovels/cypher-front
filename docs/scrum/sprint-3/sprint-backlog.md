@@ -32,14 +32,14 @@ Board Trello: `[PREENCHER: link do board Trello, com permissão de visualizaçã
 | Spec + plano — Relatórios e exportação (E6) | CSV de incidentes (liberado), CSV de placar + PDF de resumo (depende de E5). `docs/superpowers/specs/planejadas/2026-08-29-relatorios-e6-design.md` + `docs/superpowers/plans/e6-relatorios/` | Lucas Grecco | ✅ Concluído |
 | Spec + plano — Análise de risco com LLM multimodal | Botão "Analisar com IA" no detalhe do incidente, cliente alternável Claude/Gemini via `@ConditionalOnProperty`. `docs/superpowers/specs/planejadas/2026-09-01-analise-llm-multimodal-design.md` + `docs/superpowers/plans/analise-llm/` | Lucas Grecco | ✅ Concluído |
 
-### Em andamento (puxado em 2026-09-01)
+### Em revisão (puxado em 2026-09-01, implementado via subagent-driven development)
 
 | Card | Descrição | Checklist (tasks do plano) | Responsável | Status |
 |---|---|---|---|---|
-| Análise LLM multimodal — backend (`ala`) | `RiskAnalysisResponse`, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient`, `LlmAnalysisService`, endpoint `POST /incidents/{id}/analyze` | 7 tasks — `plans/analise-llm/2026-09-01-ala-backend-analise-llm.md` | Lucas Grecco | 🔄 Em andamento |
-| Análise LLM multimodal — front (`alb`) | Botão "Analisar com IA" + painel de resultado no detalhe do incidente, modo mock | 3 tasks — `plans/analise-llm/2026-09-01-alb-front-analise-llm.md` | Lucas Grecco | 🔄 Em andamento (aguarda `ala`) |
+| Análise LLM multimodal — backend (`ala`) | `RiskAnalysisResponse`, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient`, `LlmAnalysisService`, endpoint `POST /incidents/{id}/analyze` — PR [#6](https://github.com/lucvs07/Cypher-Api/pull/6) | 7 tasks — `plans/analise-llm/2026-09-01-ala-backend-analise-llm.md` | Lucas Grecco | 🔍 Em revisão |
+| Análise LLM multimodal — front (`alb`) | Botão "Analisar com IA" + painel de resultado no detalhe do incidente, modo mock — PR [#5](https://github.com/Ronaldovels/cypher-front/pull/5) | 3 tasks — `plans/analise-llm/2026-09-01-alb-front-analise-llm.md` | Lucas Grecco | 🔍 Em revisão |
 
-Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.1.
+Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.1. Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.1.
 
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 

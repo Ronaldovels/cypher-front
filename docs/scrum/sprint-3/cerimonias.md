@@ -70,6 +70,7 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 
 ### 2026-09-01 (início de `ala`/`alb`)
 - Lucas Grecco — feito: Planning de `ala`/`alb` registrado, cards movidos para "Em andamento"; próximo: Task 1 de `ala` (modelo de dados — `AnalysisStatus`, `RiskAnalysisResponse`, `IncidentLlmAnalysis`); bloqueio: nenhum.
+- Lucas Grecco — feito: `ala` (7 tasks) e `alb` (3 tasks) implementadas via subagent-driven development, cada task com implementação + revisão; revisão final de branch inteira em ambos os repositórios, com correções aplicadas e re-revisadas antes do PR — PRs abertos: backend [#6](https://github.com/lucvs07/Cypher-Api/pull/6), front [#5](https://github.com/Ronaldovels/cypher-front/pull/5); próximo: revisão/merge dos PRs, depois demonstração (3 cenários reais); bloqueio: nenhum.
 
 *(continuar registrando um bloco por dia de trabalho real em `ala`/`alb`.)*
 
@@ -113,3 +114,23 @@ O roteiro de dependência entre essas 6 entregas está consolidado em `docs/supe
 
 ### Próximos passos definidos na Review
 Iniciar a implementação das entregas planejadas nesta Sprint, na ordem do roteiro: (1) multi-tenant, (2) webhook e zonas de risco em paralelo, seguidos por E6 (CSV de incidentes, independente) e, quando o bloqueio externo for resolvido, E5 (gamificação) e o restante de E6. A análise por LLM multimodal segue prazo próprio (21/09), independente da ordem de produto.
+
+### 3.1 Review — Análise de risco com LLM multimodal (`ala`/`alb`)
+
+**Data:** 2026-09-01
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Entregue
+- Backend (`ala`, `cypher`) — 7 tasks: modelo de dados/auditoria, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient` (alternáveis por config, sem tocar código), `LlmAnalysisService` (orquestração, nunca propaga falha de provedor como erro HTTP), endpoint `POST /api/v1/incidents/{id}/analyze` (GESTOR-only). PR [#6](https://github.com/lucvs07/Cypher-Api/pull/6), 272/272 testes passando.
+- Front (`alb`, `cypher-front`) — 3 tasks: `LlmAnalysisService` + modelo TS espelhando o DTO, botão "Analisar com IA" + painel de resultado em `IncidentDetailComponent` (GESTOR-only, sem CSS novo), modo mock. PR [#5](https://github.com/Ronaldovels/cypher-front/pull/5), 288/288 testes passando.
+- Implementado via subagent-driven development (task-by-task, com revisão de spec+qualidade por task e uma revisão final de branch inteira em cada repositório). A revisão final encontrou e corrigiu, antes do PR:
+  - Front: `status: "ERRO_API"` (uma resposta 200 cujo provedor LLM falhou) caía no `@else` genérico do template e renderizava um painel de análise vazio como se fosse válido — defeito do próprio plano (spec §4 não foi refletida no snippet de template), não do implementador.
+  - Backend: `GeminiVisionClient` enviava a imagem via `file_data.file_uri`, que só aceita URIs da Files API do próprio Gemini, não uma URL pública — corrigido para baixar a imagem e enviar como `inline_data` base64; `max_tokens` estava assimétrico entre os dois provedores; `LlmResponseParser` aceitava qualquer JSON sintaticamente válido como `OK` mesmo fora do schema esperado.
+  - Durante a execução (não no PR final): uma task intermediária do backend chegou a commitar acidentalmente um bloco de config de webhook não relacionado (URL pública + segredo em texto puro), pego pela revisão de task e revertido antes de prosseguir.
+
+#### O que não foi concluído / passa para o backlog
+- Revisão e merge dos dois PRs.
+- Demonstração com 3 cenários reais (vídeos de `cypher-capture/data/validation/`, Claude vs Gemini) — depende de credenciais reais de API e do Cloudinary configurado no `cypher-capture` (risco já registrado no Planning, §1.1).
+
+#### Próximos passos
+Revisar/mergear os PRs #6 e #5, depois rodar a demonstração de ponta a ponta para os entregáveis acadêmicos. Em paralelo, retomar a ordem de produto do roteiro (multi-tenant primeiro).
