@@ -12,20 +12,21 @@ export interface LoginResponse {
   papel: Papel;
   username?: string;
   estacaoId?: string;
+  empresaId: string;
+  empresaNome?: string;
 }
 
 export interface LoginEstacaoResponse {
   papel: 'OPERADOR';
   estacaoId: string;
+  empresaId: string;
+  empresaNome?: string;
 }
 
 export interface MeResponse {
   papel: Papel;
   username?: string;
   estacaoId?: string;
-}
-
-/** `GET /api/v1/setup/status` (design doc de E4, §2.5) — público, sem sessão. */
-export interface SetupStatusResponse {
-  configured: boolean;
+  empresaId: string;
+  empresaNome?: string;
 }

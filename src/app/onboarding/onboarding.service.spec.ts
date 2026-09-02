@@ -201,9 +201,11 @@ describe('OnboardingService — bootstrap do gestor mestre no launch() (design d
     service.launch();
 
     const req = http.expectOne(`${environment.apiUrl}/setup`);
-    expect(req.request.body).toEqual({ username: 'admin', password: 'senhaAdmin1' });
+    expect(req.request.body).toEqual({
+      username: 'admin', password: 'senhaAdmin1', empresaId: 'acme', empresaNome: 'Acme',
+    });
     expect(req.request.withCredentials).toBe(true);
-    req.flush({ papel: 'GESTOR', username: 'admin' });
+    req.flush({ papel: 'GESTOR', username: 'admin', empresaId: 'acme' });
 
     vi.advanceTimersByTime(900);
     expect(service.launched()).toBe(true);

@@ -120,8 +120,8 @@ export class OnboardingService {
   launch(): void {
     this.launching.set(true);
     this.setupError.set(null);
-    const { masterUsername, masterPassword } = this.data();
-    this.auth.bootstrap(masterUsername, masterPassword).subscribe({
+    const { masterUsername, masterPassword, empresaSlug, company } = this.data();
+    this.auth.bootstrap(masterUsername, masterPassword, empresaSlug, company).subscribe({
       next: () => {
         setTimeout(() => {
           this.launched.set(true);
