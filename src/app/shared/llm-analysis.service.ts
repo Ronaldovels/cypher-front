@@ -17,4 +17,10 @@ export class LlmAnalysisService {
     return this.http.post<RiskAnalysisResponse>(
       `${environment.apiUrl}/incidents/${id}/analyze`, {}, { withCredentials: true });
   }
+
+  /** Ultima analise ja feita para este incidente — 404 (erro) se nunca foi analisado. */
+  ultimaAnalise(id: number): Observable<RiskAnalysisResponse> {
+    return this.http.get<RiskAnalysisResponse>(
+      `${environment.apiUrl}/incidents/${id}/analyze`, { withCredentials: true });
+  }
 }

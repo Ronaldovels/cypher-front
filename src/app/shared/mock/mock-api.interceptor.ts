@@ -11,6 +11,9 @@ import {
 
 const ATRASO_MS = 150;
 
+/** Ultima analise por incidente — so em memória, reflete o comportamento real de auditoria. */
+const ANALISES_MUTAVEL = new Map<number, Record<string, unknown>>();
+
 /**
  * Responde os endpoints do painel a partir de fixtures, sem rede.
  *
@@ -409,7 +412,7 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
       return naoProcessavel('Nenhuma imagem disponível para análise deste incidente');
     }
     const risco = alvo.severity >= 3;
-    return {
+    const resultado = {
       situacao: risco
         ? `Trabalhador próximo a ${alvo.cameraId}, sinais de risco visíveis na cena`
         : 'Cena sem sinais de risco aparentes',
@@ -427,6 +430,20 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
       status: 'OK',
       geradoEm: new Date().toISOString(),
     };
+    // Guarda pra devolver no GET, do mesmo jeito que o backend real audita
+    // cada chamada e serve a mais recente sem reanalisar.
+    ANALISES_MUTAVEL.set(id, resultado);
+    return resultado;
+  }
+
+  if (req.method === 'GET' && req.url.startsWith(prefixoAnalyze) && req.url.endsWith(sufixoAnalyze)) {
+    const id = Number(req.url.slice(prefixoAnalyze.length, -sufixoAnalyze.length));
+    const alvo = [...INCIDENTS, ...EMITIDOS].find(i => i.id === id);
+    if (!alvo) {
+      return naoEncontrado(`Incidente inexistente: ${id}`);
+    }
+    const ultima = ANALISES_MUTAVEL.get(id);
+    return ultima ?? naoEncontrado(`Nenhuma analise ainda para o incidente ${id}`);
   }
 
   return undefined;

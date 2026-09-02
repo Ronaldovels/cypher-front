@@ -57,6 +57,14 @@ export class IncidentDetailComponent implements OnInit {
         this.carregando.set(false);
       },
     });
+
+    // Carrega a ultima analise ja feita, se existir — evita reanalisar
+    // (e gastar chamada de API) so por reabrir a mesma tela. 404 (nunca
+    // analisado) ou 403 (operador) sao esperados e ficam silenciosos.
+    this.llmService.ultimaAnalise(this.id).subscribe({
+      next: resultado => this.analiseResultado.set(resultado),
+      error: () => { /* nada a mostrar ainda; botao permanece "Analisar com IA" */ },
+    });
   }
 
   mudarStatus(status: AlertaStatus): void {
