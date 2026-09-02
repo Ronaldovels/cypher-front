@@ -152,6 +152,29 @@ describe('IncidentDetailComponent', () => {
       .toContain('não no formato esperado');
   });
 
+  it('resposta com status ERRO_API mostra aviso em vez de campos vazios', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/incidentes/42', IncidentDetailComponent);
+    http.expectOne(`${environment.apiUrl}/incidents/42`).flush(incidente());
+    http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'g1' });
+    harness.detectChanges();
+
+    const botao = Array.from(harness.routeNativeElement?.querySelectorAll('button') ?? [])
+      .find(b => b.textContent?.trim() === 'Analisar com IA') as HTMLButtonElement;
+    botao.click();
+
+    http.expectOne(`${environment.apiUrl}/incidents/42/analyze`).flush({
+      situacao: null, episIdentificados: [], episAusentes: [], riscoIdentificado: false,
+      tipoRisco: null, nivelRisco: null, justificativa: null, acaoRecomendada: null,
+      provider: 'claude', promptVersion: 'v2', status: 'ERRO_API', geradoEm: '2026-09-01T10:00:00-03:00',
+    });
+    harness.detectChanges();
+
+    const texto = harness.routeNativeElement?.textContent?.toLowerCase() ?? '';
+    expect(texto).toContain('não foi possível analisar');
+    expect(texto).not.toContain('situação');
+  });
+
   it('falha na requisicao mostra mensagem e reabilita o botao', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/incidentes/42', IncidentDetailComponent);

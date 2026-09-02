@@ -84,7 +84,7 @@ export const INCIDENTS: Incident[] = [
   { ...MOLDE, id: 5, incidentKey: 'exemplo-5', cameraId: 'CAM-02', type: 'FALL_RISK',
     severity: 4, nivel: 'ALTO', descricao: 'Queda detectada', detectedAt: minutosAtras(12),
     reason: 'fallen_sustained', postureCategory: 'immediate_risk', rebaScore: 11,
-    actionLevel: 4, peakSeverity: 4 },
+    actionLevel: 4, peakSeverity: 4, snapshotUrl: 'https://placehold.co/640x360?text=exemplo-5' },
   { ...MOLDE, id: 4, incidentKey: 'exemplo-4', cameraId: 'CAM-01', type: 'EPI_VIOLATION',
     severity: 3, nivel: 'ALTO', descricao: 'Capacete ausente', detectedAt: minutosAtras(90),
     epiMissing: ['HELMET'], epiPresent: ['VEST'], peakSeverity: 3 },
@@ -100,7 +100,8 @@ export const INCIDENTS: Incident[] = [
   { ...MOLDE, id: 1, incidentKey: 'exemplo-1', cameraId: 'CAM-02', type: 'EPI_VIOLATION',
     severity: 2, nivel: 'MEDIO', descricao: 'Luvas ausentes', detectedAt: minutosAtras(480),
     epiMissing: ['GLOVES'], durationSeconds: 300, endedAt: minutosAtras(475),
-    closedReason: 'STATE_EXIT', status: 'RESOLVIDO', peakSeverity: 2 },
+    closedReason: 'STATE_EXIT', status: 'RESOLVIDO', peakSeverity: 2,
+    snapshotUrl: 'https://placehold.co/640x360?text=exemplo-1' },
 ];
 
 /**

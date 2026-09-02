@@ -66,6 +66,7 @@ export class IncidentDetailComponent implements OnInit {
   analisarComIa(): void {
     this.analisando.set(true);
     this.analiseErro.set(null);
+    this.analiseResultado.set(null);
     this.llmService.analisar(this.id).subscribe({
       next: resultado => {
         this.analiseResultado.set(resultado);

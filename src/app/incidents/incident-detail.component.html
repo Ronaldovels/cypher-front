@@ -39,6 +39,8 @@
             @if (analiseResultado(); as resultado) {
               @if (resultado.status === 'ERRO_PARSE') {
                 <div class="vazio">O modelo respondeu, mas não no formato esperado.</div>
+              } @else if (resultado.status === 'ERRO_API') {
+                <div class="vazio">Não foi possível analisar agora. Tente novamente.</div>
               } @else {
                 <div class="panel">
                   <div class="detail-field"><span class="detail-label">Situação</span><span class="detail-value">{{ resultado.situacao }}</span></div>
