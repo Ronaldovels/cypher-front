@@ -1,6 +1,6 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient, withFetch } from '@angular/common/http';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -119,5 +119,21 @@ describe('ChromeTopbarComponent', () => {
     http.expectOne(`${environment.apiUrl}/auth/logout`).flush(null);
 
     expect(navegar).toHaveBeenCalledWith(['/login-estacao']);
+  });
+});
+
+describe('ChromeTopbarComponent — nome da empresa (design doc de multi-tenant, §5)', () => {
+  it('mostra empresaNome do AuthService quando nao ha config local', () => {
+    const authStub = { role: signal('GESTOR'), empresaNome: signal('Acme Industrial') };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideRouter([]),
+        { provide: AuthService, useValue: authStub }],
+    });
+    const fixture = TestBed.createComponent(ChromeTopbarComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.company()).toBe('ACME INDUSTRIAL');
+    expect(fixture.componentInstance.initial()).toBe('A');
   });
 });
