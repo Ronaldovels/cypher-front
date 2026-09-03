@@ -31,6 +31,7 @@ Board Trello: `[PREENCHER: link do board Trello, com permissão de visualizaçã
 | Spec + plano — Gamificação por equipe (E5) | Heartbeat de câmera, placar por delta de conformidade, metas por equipe. Bloqueado por gating externo no `cypher-capture`. `docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` + `docs/superpowers/plans/e5-gamificacao/` | Lucas Grecco | ✅ Concluído (execução bloqueada) |
 | Spec + plano — Relatórios e exportação (E6) | CSV de incidentes (liberado), CSV de placar + PDF de resumo (depende de E5). `docs/superpowers/specs/planejadas/2026-08-29-relatorios-e6-design.md` + `docs/superpowers/plans/e6-relatorios/` | Lucas Grecco | ✅ Concluído |
 | Spec + plano — Análise de risco com LLM multimodal | Botão "Analisar com IA" no detalhe do incidente, cliente alternável Claude/Gemini via `@ConditionalOnProperty`. `docs/superpowers/specs/planejadas/2026-09-01-analise-llm-multimodal-design.md` + `docs/superpowers/plans/analise-llm/` | Lucas Grecco | ✅ Concluído |
+| Spec + plano — Orquestrador de pipelines por câmera | Reconcilia o catálogo de câmeras com processos `run_pipeline.py`, mono-tenant por instância. Nasceu de um gap achado no teste manual de multi-tenant (2026-09-03), não do backlog original de 6 entregas. `docs/superpowers/specs/planejadas/2026-09-03-orquestrador-pipelines-design.md` + `docs/superpowers/plans/orquestrador-pipelines/` | Lucas Grecco | ✅ Concluído |
 
 ### Análise LLM multimodal (puxado em 2026-09-01, implementado via subagent-driven development, mergeado em 2026-09-02)
 
