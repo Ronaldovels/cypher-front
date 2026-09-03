@@ -3,7 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { LoginEstacaoResponse, LoginResponse, MeResponse, Papel, SetupStatusResponse } from './auth.models';
+import { LoginEstacaoResponse, LoginResponse, MeResponse, Papel } from './auth.models';
 
 /**
  * Sessão do usuário (cookie `JSESSIONID`, `HttpOnly` — este serviço nunca vê
@@ -18,9 +18,13 @@ export class AuthService {
 
   private readonly _role = signal<Papel | null>(null);
   private readonly _estacaoId = signal<string | null>(null);
+  private readonly _empresaId = signal<string | null>(null);
+  private readonly _empresaNome = signal<string | null>(null);
 
   readonly role = this._role.asReadonly();
   readonly estacaoId = this._estacaoId.asReadonly();
+  readonly empresaId = this._empresaId.asReadonly();
+  readonly empresaNome = this._empresaNome.asReadonly();
 
   /**
    * Cacheia a checagem inicial: guards e componentes podem chamar
@@ -44,11 +48,15 @@ export class AuthService {
           tap(resp => {
             this._role.set(resp.papel);
             this._estacaoId.set(resp.estacaoId ?? null);
+            this._empresaId.set(resp.empresaId);
+            this._empresaNome.set(resp.empresaNome ?? null);
           }),
           map(() => undefined),
           catchError(() => {
             this._role.set(null);
             this._estacaoId.set(null);
+            this._empresaId.set(null);
+            this._empresaNome.set(null);
             return of(undefined);
           }),
           shareReplay(1),
@@ -65,6 +73,8 @@ export class AuthService {
       .pipe(tap(resp => {
         this._role.set(resp.papel);
         this._estacaoId.set(resp.estacaoId ?? null);
+        this._empresaId.set(resp.empresaId);
+        this._empresaNome.set(resp.empresaNome ?? null);
       }));
   }
 
@@ -75,6 +85,8 @@ export class AuthService {
       .pipe(tap(resp => {
         this._role.set(resp.papel);
         this._estacaoId.set(resp.estacaoId);
+        this._empresaId.set(resp.empresaId);
+        this._empresaNome.set(resp.empresaNome ?? null);
       }));
   }
 
@@ -82,41 +94,26 @@ export class AuthService {
   logout(): void {
     this._role.set(null);
     this._estacaoId.set(null);
+    this._empresaId.set(null);
+    this._empresaNome.set(null);
     this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
       .subscribe({ error: () => { /* sessão local já foi limpa */ } });
   }
 
   /**
-   * `GET /setup/status` (design doc §2.5) — não toca `role`/`estacaoId`, só
-   * informa se o onboarding já rodou. Usado por `canActivateOnboarding`
-   * (Task 2). Erro de rede/5xx vira `false` (mostra o wizard) em vez de
-   * propagar: um blip transitório não pode blank-pagear `/` — se o setup já
-   * tivesse rodado de verdade, `POST /setup` devolveria 409 e `launch()` já
-   * trata isso como erro visível, sem navegar.
+   * `POST /setup` (design doc de multi-tenant, §3/§5) — cria a `Empresa` e o
+   * gestor mestre dela, autenticando a sessão de resposta. `username` aqui é
+   * só o "nome" (sem "@empresa") — o backend compõe o username completo.
    */
-  checkSetupStatus(): Observable<boolean> {
+  bootstrap(username: string, password: string, empresaId: string, empresaNome: string): Observable<LoginResponse> {
     return this.http
-      .get<SetupStatusResponse>(`${environment.apiUrl}/setup/status`, { withCredentials: true })
-      .pipe(
-        map(resp => resp.configured),
-        catchError(() => of(false)),
-      );
-  }
-
-  /**
-   * `POST /setup` (design doc §2.5) — cria o gestor mestre e autentica a
-   * sessão de resposta, mesmo formato de `login()`. Mesmo `tap`, porque o
-   * efeito colateral em `role`/`estacaoId` é idêntico: só a pré-condição do
-   * lado do servidor muda (tabela vazia vs. credencial existente). Usado por
-   * `OnboardingService.launch()` (Task 3).
-   */
-  bootstrap(username: string, password: string): Observable<LoginResponse> {
-    return this.http
-      .post<LoginResponse>(`${environment.apiUrl}/setup`, { username, password },
+      .post<LoginResponse>(`${environment.apiUrl}/setup`, { username, password, empresaId, empresaNome },
         { withCredentials: true })
       .pipe(tap(resp => {
         this._role.set(resp.papel);
         this._estacaoId.set(null);
+        this._empresaId.set(resp.empresaId);
+        this._empresaNome.set(resp.empresaNome ?? null);
       }));
   }
 }

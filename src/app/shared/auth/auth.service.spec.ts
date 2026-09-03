@@ -26,10 +26,20 @@ describe('AuthService', () => {
   it('checa a sessão no boot; sessão válida define role e estacaoId', () => {
     const req = http.expectOne(`${environment.apiUrl}/auth/me`);
     expect(req.request.withCredentials).toBe(true);
-    req.flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+    req.flush({ papel: 'OPERADOR', estacaoId: 'EST-01', empresaId: 'demo' });
 
     expect(service.role()).toBe('OPERADOR');
     expect(service.estacaoId()).toBe('EST-01');
+    expect(service.empresaId()).toBe('demo');
+    expect(service.empresaNome()).toBeNull();
+  });
+
+  it('checkSession popula empresaNome quando o /auth/me traz o nome da empresa', () => {
+    http.expectOne(`${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'GESTOR', username: 'g1', empresaId: 'acme', empresaNome: 'Acme Industrial' });
+
+    expect(service.empresaId()).toBe('acme');
+    expect(service.empresaNome()).toBe('Acme Industrial');
   });
 
   it('401 no boot vira role null, nao erro', () => {
@@ -58,7 +68,7 @@ describe('AuthService', () => {
     const req = http.expectOne(`${environment.apiUrl}/auth/login`);
     expect(req.request.body).toEqual({ username: 'gestor1', password: 'senha123' });
     expect(req.request.withCredentials).toBe(true);
-    req.flush({ papel: 'GESTOR', username: 'gestor1' });
+    req.flush({ papel: 'GESTOR', username: 'gestor1', empresaId: 'demo' });
 
     expect(service.role()).toBe('GESTOR');
     expect(service.estacaoId()).toBeNull();
@@ -86,14 +96,14 @@ describe('AuthService', () => {
 
     const req = http.expectOne(`${environment.apiUrl}/auth/login-estacao`);
     expect(req.request.body).toEqual({ token: 'est-tok-01' });
-    req.flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+    req.flush({ papel: 'OPERADOR', estacaoId: 'EST-01', empresaId: 'demo' });
 
     expect(service.role()).toBe('OPERADOR');
     expect(service.estacaoId()).toBe('EST-01');
   });
 
   it('logout limpa a sessao local de imediato, sem esperar a resposta do servidor', () => {
-    http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'gestor1' });
+    http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'gestor1', empresaId: 'demo' });
     expect(service.role()).toBe('GESTOR');
 
     service.logout();
@@ -105,48 +115,35 @@ describe('AuthService', () => {
     req.flush(null);
   });
 
-  it('checkSetupStatus reflete o campo configured da resposta (design doc de E4, §2.5)', () => {
+  it('bootstrap envia empresaId/empresaNome e atualiza os signals a partir da resposta', () => {
     http.expectOne(`${environment.apiUrl}/auth/me`)
       .flush(null, { status: 401, statusText: 'Unauthorized' });
 
-    let configurado: boolean | undefined;
-    service.checkSetupStatus().subscribe(v => { configurado = v; });
+    service.bootstrap('gestor', 'senha123', 'acme', 'Acme Industrial').subscribe();
 
-    const req = http.expectOne(`${environment.apiUrl}/setup/status`);
-    expect(req.request.withCredentials).toBe(true);
-    req.flush({ configured: true });
-
-    expect(configurado).toBe(true);
-  });
-
-  it('checkSetupStatus com erro de rede/5xx resolve para false, sem propagar (nao blank-pageia /)', () => {
-    http.expectOne(`${environment.apiUrl}/auth/me`)
-      .flush(null, { status: 401, statusText: 'Unauthorized' });
-
-    let configurado: boolean | undefined;
-    let falhou = false;
-    service.checkSetupStatus().subscribe({
-      next: v => { configurado = v; },
-      error: () => { falhou = true; },
+    const req = http.expectOne(`${environment.apiUrl}/setup`);
+    expect(req.request.body).toEqual({
+      username: 'gestor', password: 'senha123', empresaId: 'acme', empresaNome: 'Acme Industrial',
     });
+    req.flush({ papel: 'GESTOR', username: 'gestor@acme', empresaId: 'acme', empresaNome: 'Acme Industrial' });
 
-    const req = http.expectOne(`${environment.apiUrl}/setup/status`);
-    req.flush({ erro: 'fora do ar' }, { status: 500, statusText: 'Internal Server Error' });
-
-    expect(falhou).toBe(false);
-    expect(configurado).toBe(false);
+    expect(service.role()).toBe('GESTOR');
+    expect(service.empresaId()).toBe('acme');
+    expect(service.empresaNome()).toBe('Acme Industrial');
   });
 
   it('bootstrap cria o gestor mestre e autentica a sessao, igual ao login', () => {
     http.expectOne(`${environment.apiUrl}/auth/me`)
       .flush(null, { status: 401, statusText: 'Unauthorized' });
 
-    service.bootstrap('admin', 'senhaAdmin1').subscribe();
+    service.bootstrap('admin', 'senhaAdmin1', 'acme', 'Acme').subscribe();
 
     const req = http.expectOne(`${environment.apiUrl}/setup`);
-    expect(req.request.body).toEqual({ username: 'admin', password: 'senhaAdmin1' });
+    expect(req.request.body).toEqual({
+      username: 'admin', password: 'senhaAdmin1', empresaId: 'acme', empresaNome: 'Acme',
+    });
     expect(req.request.withCredentials).toBe(true);
-    req.flush({ papel: 'GESTOR', username: 'admin' });
+    req.flush({ papel: 'GESTOR', username: 'admin', empresaId: 'acme' });
 
     expect(service.role()).toBe('GESTOR');
     expect(service.estacaoId()).toBeNull();
@@ -157,7 +154,7 @@ describe('AuthService', () => {
       .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     let falhou = false;
-    service.bootstrap('admin', 'senhaAdmin1').subscribe({ error: () => { falhou = true; } });
+    service.bootstrap('admin', 'senhaAdmin1', 'acme', 'Acme').subscribe({ error: () => { falhou = true; } });
 
     http.expectOne(`${environment.apiUrl}/setup`)
       .flush({ erro: 'Setup já concluído' }, { status: 409, statusText: 'Conflict' });

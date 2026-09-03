@@ -1,5 +1,6 @@
 export interface OnboardingData {
   company: string;
+  empresaSlug: string;
   cnpj: string;
   sector: string;
   logoUrl: string;
@@ -136,7 +137,7 @@ export const ROLE_PRESETS: RolePreset[] = [
 ];
 
 export const DEFAULT_DATA: OnboardingData = {
-  company: '', cnpj: '', sector: '', logoUrl: '', logoName: '',
+  company: '', empresaSlug: '', cnpj: '', sector: '', logoUrl: '', logoName: '',
   accent: '#F4622A', masterUsername: '', masterPassword: '', epis: [], cas: {}, picks: {},
 };
 

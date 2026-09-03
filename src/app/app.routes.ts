@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { LandingComponent } from './landing/landing.component';
 import { OnboardingComponent } from './onboarding/onboarding.component';
 import { LoginComponent } from './auth/login.component';
 import { LoginEstacaoComponent } from './auth/login-estacao.component';
@@ -15,11 +16,12 @@ import { SettingsPageComponent } from './config/settings/settings-page.component
 import { StationsTabComponent } from './config/stations/stations-tab.component';
 import { EquipeUsuariosTabComponent } from './config/equipe/equipe-usuarios-tab.component';
 import {
-  canActivateGestor, canActivateOnboarding, canActivateOperadorOuGestor,
+  canActivateGestor, canActivateOperadorOuGestor,
 } from './shared/auth/auth.guards';
 
 export const routes: Routes = [
-  { path: '', component: OnboardingComponent, canActivate: [canActivateOnboarding] },
+  { path: '', component: LandingComponent },
+  { path: 'onboarding', component: OnboardingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'login-estacao', component: LoginEstacaoComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [canActivateGestor] },

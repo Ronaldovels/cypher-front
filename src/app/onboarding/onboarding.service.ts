@@ -56,6 +56,9 @@ export class OnboardingService {
 
     if (key === 'identity') {
       if (!d.company.trim()) e['company'] = 'Nome obrigatório';
+      if (!/^[a-z0-9-]{2,30}$/.test(d.empresaSlug)) {
+        e['empresaSlug'] = 'Use apenas minúsculas, números e hífen, 2 a 30 caracteres';
+      }
       if (d.cnpj && d.cnpj.replace(/\D/g, '').length < 14) e['cnpj'] = 'CNPJ incompleto';
       if (!d.sector) e['sector'] = 'Selecione um setor';
     }
@@ -117,8 +120,8 @@ export class OnboardingService {
   launch(): void {
     this.launching.set(true);
     this.setupError.set(null);
-    const { masterUsername, masterPassword } = this.data();
-    this.auth.bootstrap(masterUsername, masterPassword).subscribe({
+    const { masterUsername, masterPassword, empresaSlug, company } = this.data();
+    this.auth.bootstrap(masterUsername, masterPassword, empresaSlug, company).subscribe({
       next: () => {
         setTimeout(() => {
           this.launched.set(true);
