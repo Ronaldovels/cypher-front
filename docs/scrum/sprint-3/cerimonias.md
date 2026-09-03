@@ -72,7 +72,10 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 - Lucas Grecco — feito: Planning de `ala`/`alb` registrado, cards movidos para "Em andamento"; próximo: Task 1 de `ala` (modelo de dados — `AnalysisStatus`, `RiskAnalysisResponse`, `IncidentLlmAnalysis`); bloqueio: nenhum.
 - Lucas Grecco — feito: `ala` (7 tasks) e `alb` (3 tasks) implementadas via subagent-driven development, cada task com implementação + revisão; revisão final de branch inteira em ambos os repositórios, com correções aplicadas e re-revisadas antes do PR — PRs abertos: backend [#6](https://github.com/lucvs07/Cypher-Api/pull/6), front [#5](https://github.com/Ronaldovels/cypher-front/pull/5); próximo: revisão/merge dos PRs, depois demonstração (3 cenários reais); bloqueio: nenhum.
 
-*(continuar registrando um bloco por dia de trabalho real em `ala`/`alb`.)*
+### 2026-09-02 (multi-tenant `mta`/`mtb`)
+- Lucas Grecco — feito: `mta` (9 tasks, backend `cypher`) e `mtb` (4 tasks, front `cypher-front`) implementadas via subagent-driven development em paralelo (1 implementador por repositório, alternado), cada task com implementação TDD + revisão de spec/qualidade dedicada; revisão final de branch inteira em ambos os repositórios, com correções aplicadas e re-revisadas antes do PR — PRs abertos: backend [#7](https://github.com/lucvs07/Cypher-Api/pull/7) (315 testes), front [#6](https://github.com/Ronaldovels/cypher-front/pull/6) (291 testes); próximo: revisão/merge dos PRs, depois puxar webhook e zonas de risco (ordem 2 do roteiro, dependem de multi-tenant); bloqueio: nenhum.
+
+*(continuar registrando um bloco por dia de trabalho real.)*
 
 ---
 
@@ -143,3 +146,30 @@ Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
 Gerar as evidências dos 3 cenários exigidos pelo trabalho acadêmico (prazo 21/09). Em paralelo, retomar a ordem de produto do roteiro (multi-tenant primeiro).
+
+### 3.2 Review — Multi-tenant / Empresa (`mta`/`mtb`)
+
+**Data:** 2026-09-02
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Entregue
+- Backend (`mta`, `cypher`) — 8 tasks do plano (`plans/multi-tenant/2026-08-29-mta-backend-empresa.md`): entidade `Empresa` (slug como PK, imutável) + `TenantContext` (`key`/`codigo`/`currentEmpresaId`); `empresaId` em `Estacao`/`Camera`/`Equipe`/`Usuario`/`Alerta`/`WebhookSubscription`, com PK de catálogo passando a armazenar `empresaId:codigo` (sem chave composta, sem FK nova — mesmo padrão de referência solta já usado na base); os três `Authentication` (`Gestor`/`Operador`/`Pipeline`) resolvendo `empresaId` real na sessão; `POST /setup` reescrito para criar a `Empresa` e compor `username@empresaId` no servidor; `GET /setup/status` removido; escopo por tenant em listagens (estações/câmeras/equipes/usuários), busca de incidentes, SSE e disparo de webhook; teste de ponta a ponta (`MultiTenantIsolationApiTest`) provando que duas empresas com códigos de estação idênticos nunca se enxergam. PR [#7](https://github.com/lucvs07/Cypher-Api/pull/7) — **aberto em 02/09**, 315/315 testes passando.
+- Front (`mtb`, `cypher-front`) — 4 tasks do plano (`plans/multi-tenant/2026-08-29-mtb-front-empresa.md`): campo de slug no passo de identidade do onboarding; `AuthService` expondo `empresaId`/`empresaNome` e `bootstrap()` enviando o slug a `POST /setup`; rota `''` virando `LandingComponent` (duas ações — "Criar empresa"/"Entrar" — sem depender mais do booleano global de `GET /setup/status`); topbar exibindo o nome da empresa da sessão. PR [#6](https://github.com/Ronaldovels/cypher-front/pull/6) — **aberto em 02/09**, 291/291 testes passando.
+- Implementado via subagent-driven development (task-by-task, com revisão de spec+qualidade dedicada por task e uma revisão final de branch inteira em cada repositório), executando os dois repositórios em paralelo (um implementador ativo por vez em cada um, para não haver dois trabalhando no mesmo repositório simultaneamente).
+- **A revisão de tasks e a revisão final encontraram e corrigiram, dentro da própria branch, 4 vazamentos reais de dado entre empresas** (nenhum ficou pendente para depois do PR):
+  1. `PUT`/`DELETE /api/v1/users/{username}` permitia takeover de conta entre empresas — a guarda de segurança verificava o campo `username` do **corpo** da requisição, mas buscava o usuário-alvo sem filtrar pelo tenant da sessão. Corrigido escopando a busca por `empresaId` atual, com teste provando 404 e a vítima inalterada.
+  2. `GET/PUT/POST /api/v1/incidents/{id}` (e `/status`, `/analyze`) não tinham escopo de tenant — um gestor podia ler, mutar ou disparar análise de LLM (custo de API) em incidente de outra empresa iterando o id numérico; um caso relacionado permitia a um operador acessar incidente de outra empresa quando os códigos de câmera colidiam entre tenants. Corrigido escopando a busca por id+empresa.
+  3. O SSE de incidentes em tempo real (`IncidentSseService`) entregava incidentes de todas as empresas para qualquer gestor sem filtro de estação; o resumo/heatmap (`GET /summary`) somava contagens de todas as empresas e atribuía incidentes à célula errada do heatmap quando códigos de câmera colidiam entre tenants. Ambos corrigidos com filtro por `empresaId`, provados por teste de não-entrega/não-vazamento.
+  4. A checagem de conflito de URL de câmera (`CatalogService.exigirUrlLivre`) era global — bloqueava indevidamente o cadastro de câmeras entre empresas diferentes (comum em URLs RTSP de rede privada) e vazava o código da câmera de outra empresa na mensagem de erro 409.
+- Cada achado foi tratado como bloqueante do próprio ciclo de revisão (nunca adiado silenciosamente): fix dedicado, teste comprovando a correção, e uma segunda revisão focada confirmando que o achado foi endereçado sem quebrar nada.
+
+#### O que não foi concluído / passa para o backlog
+- Merge dos PRs #7/#6 — aguardando revisão humana (execução ficou autorizada só até a abertura do PR, não até o merge).
+- Nota de migração do H2 (`./data/` precisa ser apagado antes do primeiro boot com o novo schema — mudança de PK e colunas `NOT NULL`) recomendada para o README do `cypher`, ainda não movida da spec/plano para lá.
+- Board Trello ainda não reflete estes cards como concluídos/em revisão (atualização manual pendente — servidor MCP do Trello indisponível no momento do registro).
+
+#### Feedback recebido
+Nenhum registrado ainda (banca/mentoria).
+
+#### Próximos passos
+Revisar e mergear os PRs #7 (backend) e #6 (front). Após o merge, puxar webhook (`wha`/`whb`) e zonas de risco (`zra`/`zrb`/`zrc`) — ordem 2 do roteiro, ambas dependentes só de multi-tenant e independentes entre si, podendo avançar em paralelo.

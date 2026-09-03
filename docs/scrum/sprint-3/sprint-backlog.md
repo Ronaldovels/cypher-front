@@ -41,16 +41,23 @@ Board Trello: `[PREENCHER: link do board Trello, com permissão de visualizaçã
 
 Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.1. Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.1. Testado ponta a ponta com câmera real (webcam local, Cloudinary e Gemini reais) antes do merge.
 
+### Multi-tenant (puxado em 2026-09-02, implementado via subagent-driven development, PRs abertos)
+
+| Card | Descrição | Checklist (tasks do plano) | Responsável | Status |
+|---|---|---|---|---|
+| Multi-tenant — backend (`mta`) | `Empresa`, `TenantContext`, PK prefixada nas 6 entidades, sessão real por empresa, escopo de listagens/incidentes/SSE/webhook. 4 vazamentos cross-tenant reais encontrados e corrigidos durante a execução (ver Review) — PR [#7](https://github.com/lucvs07/Cypher-Api/pull/7), **aberto**, 315/315 testes | 8 tasks — `plans/multi-tenant/2026-08-29-mta-backend-empresa.md` | Lucas Grecco | 🔎 Em revisão |
+| Multi-tenant — front (`mtb`) | Slug no onboarding, `AuthService.bootstrap()` com `empresaId`, `LandingComponent`, topbar mostrando nome da empresa — PR [#6](https://github.com/Ronaldovels/cypher-front/pull/6), **aberto**, 291/291 testes | 4 tasks — `plans/multi-tenant/2026-08-29-mtb-front-empresa.md` | Lucas Grecco | 🔎 Em revisão |
+
+Planning informal (sem ata dedicada — seguiu direto o roteiro de entregas, ordem 1). Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.2. Aguardando revisão humana e merge dos PRs antes de mover para `Concluído`.
+
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 
 Um card por fatia de repositório de cada plano — o checklist do card é a lista de tasks do próprio arquivo do plano (`docs/superpowers/plans/<entrega>/`). Ordem de cima pra baixo = ordem de retirada recomendada pelo roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3); cards sem dependência pendente podem ser puxados em paralelo.
 
-**Coluna inicial no Trello: `Product Backlog`**, para os 11 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`) já foram puxados e concluídos — ver seção acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
+**Coluna inicial no Trello: `Product Backlog`**, para os 9 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`) e Multi-tenant (`mta`/`mtb`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
 
 | Ordem | Card | Descrição | Checklist (tasks do plano) | Depende de |
 |---|---|---|---|---|
-| 1 | Multi-tenant — backend (`mta`) | `Empresa`, `TenantContext`, PK prefixada nas 6 entidades, sessão real por empresa, escopo de listagens/incidentes/SSE/webhook | 9 tasks — `plans/multi-tenant/2026-08-29-mta-backend-empresa.md` | E1–E4 (nenhuma pendente) |
-| 2 | Multi-tenant — front (`mtb`) | Slug no onboarding, `AuthService.bootstrap()` com `empresaId`, `LandingComponent`, topbar mostrando nome da empresa | 4 tasks — `plans/multi-tenant/2026-08-29-mtb-front-empresa.md` | mta |
 | 5 | Webhook — backend (`wha`) | CRUD de `WebhookSubscription`, histórico paginado de `WebhookDelivery` | 2 tasks — `plans/webhook/2026-08-29-wha-backend-webhook.md` | multi-tenant |
 | 6 | Webhook — front (`whb`) | Aba "Webhooks" em `/config` (assinantes + histórico) | 4 tasks — `plans/webhook/2026-08-29-whb-front-webhook.md` | wha |
 | 7 | Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | multi-tenant |
