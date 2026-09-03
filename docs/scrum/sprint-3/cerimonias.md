@@ -75,6 +75,29 @@ Lucas Grecco — único repositório tocado (`cypher-capture`).
 
 ---
 
+### 1.3 Planning — Webhook pela interface, backend e front (`wha`/`whb`)
+
+**Data:** 2026-09-03
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto de entrada
+Card de ordem 2 do roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3), liberado desde que multi-tenant mergeou. Fecha o gap registrado em E1 §9 ("Interface de cadastro de webhook") — hoje o assinante só é cadastrado via `application.yaml` + restart do backend. Puxado junto com o orquestrador de pipelines (§1.2), em paralelo, por serem independentes entre si (nenhum arquivo em comum, repositórios distintos).
+
+#### Sprint Goal
+Implementar o CRUD de `WebhookSubscription` GESTOR-only no backend `cypher` (plano `plans/webhook/2026-08-29-wha-backend-webhook.md`, 2 tasks) e a aba "Webhooks" em `/config` no `cypher-front` (plano `plans/webhook/2026-08-29-whb-front-webhook.md`, 4 tasks) — cadastro/edição/desativação de assinantes e histórico paginado de entregas, seguindo TDD tarefa a tarefa. O front reaproveita 100% os primitivos globais já existentes em `src/styles.scss`, refinado com a skill `frontend-design`.
+
+#### Itens puxados do Product Backlog
+Cards `wha`/`whb` de `sprint-backlog.md` (itens 6/7 do product-backlog) — movidos de `Product Backlog` para `Em andamento`.
+
+#### Capacidade e divisão de trabalho
+Lucas Grecco — backend (`cypher`) e front (`cypher-front`) desta entrega, cada um executado por um agente dedicado (subagent-driven development, um por repositório), em paralelo com o orquestrador de pipelines (`cypher-capture`, §1.2) — os três cards não compartilham arquivo nem repositório entre si.
+
+#### Riscos identificados no planning
+- `WebhookResponse` expõe `secret` em texto puro (diferente de `Camera.fonte`, nunca exposto) — decisão de design já registrada na spec §2 (é um valor conhecido pelo próprio GESTOR que cadastrou, digitado por ele, não gerado pelo sistema). Não é um risco a mitigar nesta entrega, só uma diferença de padrão a não estranhar em review.
+- `whb` depende do CRUD de `wha` estar disponível para teste manual ponta a ponta no browser; os specs automatizados de `whb` usam `HttpTestingController`/mock interceptor e não dependem do backend real rodando.
+
+---
+
 ## 2. Dailies (registro resumido, assíncrono)
 
 Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**.
@@ -101,6 +124,7 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 ### 2026-09-03 (teste manual ponta a ponta + merge de `mta`/`mtb` + planning do orquestrador)
 - Lucas Grecco — feito: subiu os três projetos localmente num notebook (backend `feat/mt-backend-empresa`, front `feat/mt-front-empresa`, capture em `main`), testou onboarding/sign-up/isolamento manualmente; achou e registrou como backlog um bug de UX pré-existente da E4 (401 no passo "Estações e câmeras" do onboarding) e abriu a discussão sobre orquestração de pipelines, que virou a spec `2026-09-03-orquestrador-pipelines-design.md`; revisou e mergeou os PRs #7 (backend → `main`) e #6 (front → `dev`); moveu os cards `mta`/`mtb` para `Concluído` no Trello; specs de multi-tenant e LLM multimodal movidas de `planejadas/` para `implementadas/`; próximo: decidir entre puxar webhook/zonas de risco ou priorizar o orquestrador de pipelines; bloqueio: nenhum.
 - Lucas Grecco — feito: brainstorming completo do orquestrador de pipelines (caminho arquitetural, três abordagens avaliadas, mono-tenant por instância decidido), spec escrita e autorrevisada (`2026-09-03-orquestrador-pipelines-design.md`), plano de implementação TDD escrito e autorrevisado (5 tasks — `plans/orquestrador-pipelines/2026-09-03-oqa-capture-orquestrador.md`); roteiro de entregas atualizado com a priorização (card `oqa` movido para o topo da fila de ordem 2); próximo: puxar o card `oqa` para `Em andamento` e começar a execução; bloqueio: nenhum.
+- Lucas Grecco — feito: Planning de `wha`/`whb` registrado (§1.3); os três cards liberados (`oqa`, `wha`, `whb`) movidos de `Sprint Backlog`/`Product Backlog` para `Em andamento` no Trello e neste documento; execução iniciada em paralelo, um agente dedicado por repositório (subagent-driven development) — `oqa` em `cypher-capture`, `wha` em `cypher`, `whb` em `cypher-front`, com `whb` seguindo o style guide já implementado e refinado via skill `frontend-design`; próximo: acompanhar as três execuções, revisar branch inteira de cada uma antes do PR; bloqueio: nenhum.
 
 *(continuar registrando um bloco por dia de trabalho real.)*
 

@@ -51,19 +51,26 @@ Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.1. Review registr
 
 Planning informal (sem ata dedicada — seguiu direto o roteiro de entregas, ordem 1). Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.2. Testado manualmente ponta a ponta com os três projetos rodando localmente (onboarding, sign-up, isolamento entre empresas) antes do merge.
 
+### Orquestrador de pipelines + Webhook (puxados em 2026-09-03, execução iniciada via subagent-driven development, um agente por repositório)
+
+| Card | Descrição | Checklist (tasks do plano) | Repositório | Responsável | Status |
+|---|---|---|---|---|---|
+| Orquestrador de pipelines por câmera (`oqa`) | Reconcilia o catálogo de câmeras com processos `run_pipeline.py` rodando — sobe o que falta, derruba o desativado, reinicia o que mudou de config ou morreu sozinho. Mono-tenant por instância. | 5 tasks — `plans/orquestrador-pipelines/2026-09-03-oqa-capture-orquestrador.md` | `cypher-capture` | Lucas Grecco | 🔄 Em andamento |
+| Webhook — backend (`wha`) | CRUD de `WebhookSubscription`, histórico paginado de `WebhookDelivery` | 2 tasks — `plans/webhook/2026-08-29-wha-backend-webhook.md` | `cypher` | Lucas Grecco | 🔄 Em andamento |
+| Webhook — front (`whb`) | Aba "Webhooks" em `/config` (assinantes + histórico), redesenhada via skill `frontend-design` seguindo o style guide já implementado | 4 tasks — `plans/webhook/2026-08-29-whb-front-webhook.md` | `cypher-front` | Lucas Grecco | 🔄 Em andamento |
+
+Planning de `oqa` registrado em `docs/scrum/sprint-3/cerimonias.md` §1.2. Planning de `wha`/`whb` registrado em `docs/scrum/sprint-3/cerimonias.md` §1.3. Os três cards movidos de `Sprint Backlog`/`Product Backlog` para `Em andamento` em 2026-09-03, com implementação delegada a um agente por repositório (subagent-driven development em paralelo), já que `oqa` e `wha`/`whb` não compartilham arquivo nem repositório entre si.
+
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 
 Um card por fatia de repositório de cada plano — o checklist do card é a lista de tasks do próprio arquivo do plano (`docs/superpowers/plans/<entrega>/`). Ordem de cima pra baixo = ordem de retirada recomendada pelo roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3); cards sem dependência pendente podem ser puxados em paralelo.
 
-**Coluna inicial no Trello: `Product Backlog`**, para os 10 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`) e Multi-tenant (`mta`/`mtb`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
+**Coluna inicial no Trello: `Product Backlog`**, para os 7 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`), Multi-tenant (`mta`/`mtb`), Orquestrador (`oqa`) e Webhook (`wha`/`whb`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
 
 **Orquestrador de pipelines (`oqa`) inserido no topo da fila em 2026-09-03** — decisão de produto, registrada em `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3 ("Priorização do orquestrador"), motivada por um gap real encontrado no teste manual ponta a ponta de multi-tenant. As demais linhas foram renumeradas (+1) para manter a ordem de retirada sequencial.
 
 | Ordem | Card | Descrição | Checklist (tasks do plano) | Depende de |
 |---|---|---|---|---|
-| 5 | Orquestrador de pipelines por câmera (`oqa`) | Reconcilia o catálogo de câmeras com processos `run_pipeline.py` rodando — sobe o que falta, derruba o desativado, reinicia o que mudou de config ou morreu sozinho. Mono-tenant por instância. | 5 tasks — `plans/orquestrador-pipelines/2026-09-03-oqa-capture-orquestrador.md` | multi-tenant |
-| 6 | Webhook — backend (`wha`) | CRUD de `WebhookSubscription`, histórico paginado de `WebhookDelivery` | 2 tasks — `plans/webhook/2026-08-29-wha-backend-webhook.md` | multi-tenant |
-| 7 | Webhook — front (`whb`) | Aba "Webhooks" em `/config` (assinantes + histórico) | 4 tasks — `plans/webhook/2026-08-29-whb-front-webhook.md` | wha |
 | 8 | Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | multi-tenant |
 | 9 | Zonas de risco — capture (`zrb`) | `ZoneManager` com zonas pré-carregadas, `ZoneConfigClient` (ladder de degradação) | 3 tasks — `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md` | zra |
 | 10 | Zonas de risco — front (`zrc`) | Editor de polígono em canvas, integrado a `/config/estacoes` | 5 tasks — `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md` | zra |
