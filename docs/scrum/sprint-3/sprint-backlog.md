@@ -54,18 +54,21 @@ Planning informal (sem ata dedicada — seguiu direto o roteiro de entregas, ord
 
 Um card por fatia de repositório de cada plano — o checklist do card é a lista de tasks do próprio arquivo do plano (`docs/superpowers/plans/<entrega>/`). Ordem de cima pra baixo = ordem de retirada recomendada pelo roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3); cards sem dependência pendente podem ser puxados em paralelo.
 
-**Coluna inicial no Trello: `Product Backlog`**, para os 9 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`) e Multi-tenant (`mta`/`mtb`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
+**Coluna inicial no Trello: `Product Backlog`**, para os 10 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`) e Multi-tenant (`mta`/`mtb`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
+
+**Orquestrador de pipelines (`oqa`) inserido no topo da fila em 2026-09-03** — decisão de produto, registrada em `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3 ("Priorização do orquestrador"), motivada por um gap real encontrado no teste manual ponta a ponta de multi-tenant. As demais linhas foram renumeradas (+1) para manter a ordem de retirada sequencial.
 
 | Ordem | Card | Descrição | Checklist (tasks do plano) | Depende de |
 |---|---|---|---|---|
-| 5 | Webhook — backend (`wha`) | CRUD de `WebhookSubscription`, histórico paginado de `WebhookDelivery` | 2 tasks — `plans/webhook/2026-08-29-wha-backend-webhook.md` | multi-tenant |
-| 6 | Webhook — front (`whb`) | Aba "Webhooks" em `/config` (assinantes + histórico) | 4 tasks — `plans/webhook/2026-08-29-whb-front-webhook.md` | wha |
-| 7 | Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | multi-tenant |
-| 8 | Zonas de risco — capture (`zrb`) | `ZoneManager` com zonas pré-carregadas, `ZoneConfigClient` (ladder de degradação) | 3 tasks — `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md` | zra |
-| 9 | Zonas de risco — front (`zrc`) | Editor de polígono em canvas, integrado a `/config/estacoes` | 5 tasks — `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md` | zra |
-| 10 | Relatórios — backend, CSV de incidentes (`e6a`, tarefa 1) | `CsvReportBuilder`, `GET /reports/incidents.csv` | 1 task — `plans/e6-relatorios/2026-08-29-e6a-backend-relatorios.md` (tarefa 1) | multi-tenant |
-| 11 | Relatórios — front, CSV de incidentes (`e6b`, tarefa 1) | Link de exportação na timeline de incidentes | 1 task — `plans/e6-relatorios/2026-08-29-e6b-front-relatorios.md` (tarefa 1) | e6a tarefa 1 |
-| 12 | Gamificação — backend/capture/front (`e5a`/`e5b`/`e5c`) | Heartbeat, `PlacarService`, metas por equipe, tela de placar | 3+2+3 tasks — `plans/e5-gamificacao/` | ⛔ bloqueado — gating de calibração no `cypher-capture`, sem data. Não puxar antes de liberado. |
+| 5 | Orquestrador de pipelines por câmera (`oqa`) | Reconcilia o catálogo de câmeras com processos `run_pipeline.py` rodando — sobe o que falta, derruba o desativado, reinicia o que mudou de config ou morreu sozinho. Mono-tenant por instância. | 5 tasks — `plans/orquestrador-pipelines/2026-09-03-oqa-capture-orquestrador.md` | multi-tenant |
+| 6 | Webhook — backend (`wha`) | CRUD de `WebhookSubscription`, histórico paginado de `WebhookDelivery` | 2 tasks — `plans/webhook/2026-08-29-wha-backend-webhook.md` | multi-tenant |
+| 7 | Webhook — front (`whb`) | Aba "Webhooks" em `/config` (assinantes + histórico) | 4 tasks — `plans/webhook/2026-08-29-whb-front-webhook.md` | wha |
+| 8 | Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | multi-tenant |
+| 9 | Zonas de risco — capture (`zrb`) | `ZoneManager` com zonas pré-carregadas, `ZoneConfigClient` (ladder de degradação) | 3 tasks — `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md` | zra |
+| 10 | Zonas de risco — front (`zrc`) | Editor de polígono em canvas, integrado a `/config/estacoes` | 5 tasks — `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md` | zra |
+| 11 | Relatórios — backend, CSV de incidentes (`e6a`, tarefa 1) | `CsvReportBuilder`, `GET /reports/incidents.csv` | 1 task — `plans/e6-relatorios/2026-08-29-e6a-backend-relatorios.md` (tarefa 1) | multi-tenant |
+| 12 | Relatórios — front, CSV de incidentes (`e6b`, tarefa 1) | Link de exportação na timeline de incidentes | 1 task — `plans/e6-relatorios/2026-08-29-e6b-front-relatorios.md` (tarefa 1) | e6a tarefa 1 |
+| 13 | Gamificação — backend/capture/front (`e5a`/`e5b`/`e5c`) | Heartbeat, `PlacarService`, metas por equipe, tela de placar | 3+2+3 tasks — `plans/e5-gamificacao/` | ⛔ bloqueado — gating de calibração no `cypher-capture`, sem data. Não puxar antes de liberado. |
 | 13 | Relatórios — placar/PDF (`e6a`/`e6b`, tarefa 2) | CSV de placar + PDF de resumo executivo | tarefa 2 de cada arquivo — `plans/e6-relatorios/` | item 12 (E5) |
 
 ### Gestão ágil e protótipo (em andamento — objeto real desta Sprint)

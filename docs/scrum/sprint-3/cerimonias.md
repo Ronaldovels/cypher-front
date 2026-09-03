@@ -52,6 +52,29 @@ Lucas Grecco — backend e front desta entrega.
 
 ---
 
+### 1.2 Planning — Orquestrador de pipelines por câmera (`oqa`)
+
+**Data:** 2026-09-03
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto de entrada
+Surgiu do teste manual ponta a ponta de multi-tenant (§3.2): cadastrar uma câmera pela interface não bastava para ela rodar no pipeline — é preciso subir `run_pipeline.py --camera-id ...` manualmente, um processo por câmera, sem nenhum mecanismo que descubra câmeras novas ou reinicie as que caem. Passou por brainstorming completo (caminho arquitetural — três abordagens avaliadas, mono-tenant por instância decidido como restrição de design) antes de virar spec e plano.
+
+#### Sprint Goal
+Implementar `src/orchestrator/` no `cypher-capture` (plano `plans/orquestrador-pipelines/2026-09-03-oqa-capture-orquestrador.md`, 5 tasks): `OrchestratorSession` (login como conta de serviço GESTOR + re-login automático), `ProcessRegistry` (inicia/encerra processos, persiste PID para sobreviver a um restart do próprio orquestrador), `Reconciler` (ciclo de reconciliação — sobe/derruba/reinicia com backoff), CLI real (`python -m src.orchestrator`).
+
+#### Itens puxados do Product Backlog
+Card 5 (`oqa`) de `sprint-backlog.md` — inserido no topo da fila de "Próximas entregas" por decisão de produto (ver roteiro §3), movido de `Product Backlog` para `Sprint Backlog`.
+
+#### Capacidade e divisão de trabalho
+Lucas Grecco — único repositório tocado (`cypher-capture`).
+
+#### Riscos identificados no planning
+- Orquestrador é sempre mono-tenant por instância (decisão de design, não limitação a resolver depois) — rodar câmeras de duas empresas no mesmo host exige dois processos de orquestrador separados, cada um com sua própria conta de serviço. Documentado na spec §1.3 e §9.
+- Sem containerização nem provisionamento automático de instância nesta entrega — fora de escopo, fica para quando a arquitetura de deploy em nuvem for definida (spec §8).
+
+---
+
 ## 2. Dailies (registro resumido, assíncrono)
 
 Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**.
@@ -75,8 +98,9 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 ### 2026-09-02 (multi-tenant `mta`/`mtb`)
 - Lucas Grecco — feito: `mta` (9 tasks, backend `cypher`) e `mtb` (4 tasks, front `cypher-front`) implementadas via subagent-driven development em paralelo (1 implementador por repositório, alternado), cada task com implementação TDD + revisão de spec/qualidade dedicada; revisão final de branch inteira em ambos os repositórios, com correções aplicadas e re-revisadas antes do PR — PRs abertos: backend [#7](https://github.com/lucvs07/Cypher-Api/pull/7) (315 testes), front [#6](https://github.com/Ronaldovels/cypher-front/pull/6) (291 testes); próximo: revisão/merge dos PRs, depois puxar webhook e zonas de risco (ordem 2 do roteiro, dependem de multi-tenant); bloqueio: nenhum.
 
-### 2026-09-03 (teste manual ponta a ponta + merge de `mta`/`mtb`)
-- Lucas Grecco — feito: subiu os três projetos localmente num notebook (backend `feat/mt-backend-empresa`, front `feat/mt-front-empresa`, capture em `main`), testou onboarding/sign-up/isolamento manualmente; achou e registrou como backlog um bug de UX pré-existente da E4 (401 no passo "Estações e câmeras" do onboarding) e abriu a discussão sobre orquestração de pipelines, que virou a spec `2026-09-03-orquestrador-pipelines-design.md`; revisou e mergeou os PRs #7 (backend → `main`) e #6 (front → `dev`); moveu os cards `mta`/`mtb` para `Concluído` no Trello; próximo: decidir entre puxar webhook/zonas de risco ou priorizar o orquestrador de pipelines; bloqueio: nenhum.
+### 2026-09-03 (teste manual ponta a ponta + merge de `mta`/`mtb` + planning do orquestrador)
+- Lucas Grecco — feito: subiu os três projetos localmente num notebook (backend `feat/mt-backend-empresa`, front `feat/mt-front-empresa`, capture em `main`), testou onboarding/sign-up/isolamento manualmente; achou e registrou como backlog um bug de UX pré-existente da E4 (401 no passo "Estações e câmeras" do onboarding) e abriu a discussão sobre orquestração de pipelines, que virou a spec `2026-09-03-orquestrador-pipelines-design.md`; revisou e mergeou os PRs #7 (backend → `main`) e #6 (front → `dev`); moveu os cards `mta`/`mtb` para `Concluído` no Trello; specs de multi-tenant e LLM multimodal movidas de `planejadas/` para `implementadas/`; próximo: decidir entre puxar webhook/zonas de risco ou priorizar o orquestrador de pipelines; bloqueio: nenhum.
+- Lucas Grecco — feito: brainstorming completo do orquestrador de pipelines (caminho arquitetural, três abordagens avaliadas, mono-tenant por instância decidido), spec escrita e autorrevisada (`2026-09-03-orquestrador-pipelines-design.md`), plano de implementação TDD escrito e autorrevisado (5 tasks — `plans/orquestrador-pipelines/2026-09-03-oqa-capture-orquestrador.md`); roteiro de entregas atualizado com a priorização (card `oqa` movido para o topo da fila de ordem 2); próximo: puxar o card `oqa` para `Em andamento` e começar a execução; bloqueio: nenhum.
 
 *(continuar registrando um bloco por dia de trabalho real.)*
 
