@@ -75,6 +75,9 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 ### 2026-09-02 (multi-tenant `mta`/`mtb`)
 - Lucas Grecco — feito: `mta` (9 tasks, backend `cypher`) e `mtb` (4 tasks, front `cypher-front`) implementadas via subagent-driven development em paralelo (1 implementador por repositório, alternado), cada task com implementação TDD + revisão de spec/qualidade dedicada; revisão final de branch inteira em ambos os repositórios, com correções aplicadas e re-revisadas antes do PR — PRs abertos: backend [#7](https://github.com/lucvs07/Cypher-Api/pull/7) (315 testes), front [#6](https://github.com/Ronaldovels/cypher-front/pull/6) (291 testes); próximo: revisão/merge dos PRs, depois puxar webhook e zonas de risco (ordem 2 do roteiro, dependem de multi-tenant); bloqueio: nenhum.
 
+### 2026-09-03 (teste manual ponta a ponta + merge de `mta`/`mtb`)
+- Lucas Grecco — feito: subiu os três projetos localmente num notebook (backend `feat/mt-backend-empresa`, front `feat/mt-front-empresa`, capture em `main`), testou onboarding/sign-up/isolamento manualmente; achou e registrou como backlog um bug de UX pré-existente da E4 (401 no passo "Estações e câmeras" do onboarding) e abriu a discussão sobre orquestração de pipelines, que virou a spec `2026-09-03-orquestrador-pipelines-design.md`; revisou e mergeou os PRs #7 (backend → `main`) e #6 (front → `dev`); moveu os cards `mta`/`mtb` para `Concluído` no Trello; próximo: decidir entre puxar webhook/zonas de risco ou priorizar o orquestrador de pipelines; bloqueio: nenhum.
+
 *(continuar registrando um bloco por dia de trabalho real.)*
 
 ---
@@ -162,14 +165,17 @@ Gerar as evidências dos 3 cenários exigidos pelo trabalho acadêmico (prazo 21
   3. O SSE de incidentes em tempo real (`IncidentSseService`) entregava incidentes de todas as empresas para qualquer gestor sem filtro de estação; o resumo/heatmap (`GET /summary`) somava contagens de todas as empresas e atribuía incidentes à célula errada do heatmap quando códigos de câmera colidiam entre tenants. Ambos corrigidos com filtro por `empresaId`, provados por teste de não-entrega/não-vazamento.
   4. A checagem de conflito de URL de câmera (`CatalogService.exigirUrlLivre`) era global — bloqueava indevidamente o cadastro de câmeras entre empresas diferentes (comum em URLs RTSP de rede privada) e vazava o código da câmera de outra empresa na mensagem de erro 409.
 - Cada achado foi tratado como bloqueante do próprio ciclo de revisão (nunca adiado silenciosamente): fix dedicado, teste comprovando a correção, e uma segunda revisão focada confirmando que o achado foi endereçado sem quebrar nada.
+- **Testado manualmente ponta a ponta em 2026-09-03**, com os três projetos (`cypher`, `cypher-capture`, `cypher-front`) rodando localmente num único notebook: H2 recriado do zero (schema mudou — PK prefixada e colunas `NOT NULL` novas), onboarding criando a `Empresa` de verdade via `POST /setup`. Dois achados dessa rodada de teste, ambos registrados como itens de backlog separados (não bloquearam o merge, nenhum é regressão desta entrega):
+  1. O passo "Estações e câmeras" do wizard de onboarding devolve 401 ao tentar cadastrar — bug pré-existente da E4 (confirmado por diff: `POST /api/v1/stations` já exigia `GESTOR` desde `df9d9d8`, antes do multi-tenant existir; o wizard só autentica a sessão no último passo, "Confirmação"). Não bloqueia o fluxo (o próprio código já trata isso — `'stations' não bloqueia` — dá pra avançar e cadastrar depois em `/config/estacoes`), mas é uma UX quebrada real que passa para o backlog.
+  2. Discussão sobre como uma câmera cadastrada pela interface chega a rodar no pipeline levou a uma spec nova: `docs/superpowers/specs/planejadas/2026-09-03-orquestrador-pipelines-design.md` — um orquestrador mono-tenant no `cypher-capture` que reconcilia o catálogo de câmeras do backend com processos de pipeline rodando, sem execução iniciada ainda (spec aprovada em brainstorming, plano de implementação pendente).
+- **PRs mergeados em 2026-09-03**: backend PR [#7](https://github.com/lucvs07/Cypher-Api/pull/7) → `main` (merge `288115d`); front PR [#6](https://github.com/Ronaldovels/cypher-front/pull/6) → `dev` (merge `dbc6a1b`).
 
 #### O que não foi concluído / passa para o backlog
-- Merge dos PRs #7/#6 — aguardando revisão humana (execução ficou autorizada só até a abertura do PR, não até o merge).
-- Nota de migração do H2 (`./data/` precisa ser apagado antes do primeiro boot com o novo schema — mudança de PK e colunas `NOT NULL`) recomendada para o README do `cypher`, ainda não movida da spec/plano para lá.
-- Board Trello ainda não reflete estes cards como concluídos/em revisão (atualização manual pendente — servidor MCP do Trello indisponível no momento do registro).
+- Nota de migração do H2 (`./data/` precisa ser apagado antes do primeiro boot com o novo schema) recomendada para o README do `cypher`, ainda não movida da spec/plano para lá.
+- Bug de UX pré-existente da E4 no passo "Estações e câmeras" do onboarding (401 antes da sessão existir) — descrito acima, item novo de backlog.
 
 #### Feedback recebido
 Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
-Revisar e mergear os PRs #7 (backend) e #6 (front). Após o merge, puxar webhook (`wha`/`whb`) e zonas de risco (`zra`/`zrb`/`zrc`) — ordem 2 do roteiro, ambas dependentes só de multi-tenant e independentes entre si, podendo avançar em paralelo.
+Cards `mta`/`mtb` movidos para `Concluído` no Trello e neste documento. Próximo: decidir a ordem entre puxar webhook (`wha`/`whb`)/zonas de risco (`zra`/`zrb`/`zrc`) — ordem 2 do roteiro, ambas dependentes só de multi-tenant — e o orquestrador de pipelines (spec nova, ainda sem plano nem ordem definida no roteiro).

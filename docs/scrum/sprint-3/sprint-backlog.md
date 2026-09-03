@@ -41,14 +41,14 @@ Board Trello: `[PREENCHER: link do board Trello, com permissão de visualizaçã
 
 Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.1. Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.1. Testado ponta a ponta com câmera real (webcam local, Cloudinary e Gemini reais) antes do merge.
 
-### Multi-tenant (puxado em 2026-09-02, implementado via subagent-driven development, PRs abertos)
+### Multi-tenant (puxado em 2026-09-02, implementado via subagent-driven development, mergeado em 2026-09-03)
 
 | Card | Descrição | Checklist (tasks do plano) | Responsável | Status |
 |---|---|---|---|---|
-| Multi-tenant — backend (`mta`) | `Empresa`, `TenantContext`, PK prefixada nas 6 entidades, sessão real por empresa, escopo de listagens/incidentes/SSE/webhook. 4 vazamentos cross-tenant reais encontrados e corrigidos durante a execução (ver Review) — PR [#7](https://github.com/lucvs07/Cypher-Api/pull/7), **aberto**, 315/315 testes | 8 tasks — `plans/multi-tenant/2026-08-29-mta-backend-empresa.md` | Lucas Grecco | 🔎 Em revisão |
-| Multi-tenant — front (`mtb`) | Slug no onboarding, `AuthService.bootstrap()` com `empresaId`, `LandingComponent`, topbar mostrando nome da empresa — PR [#6](https://github.com/Ronaldovels/cypher-front/pull/6), **aberto**, 291/291 testes | 4 tasks — `plans/multi-tenant/2026-08-29-mtb-front-empresa.md` | Lucas Grecco | 🔎 Em revisão |
+| Multi-tenant — backend (`mta`) | `Empresa`, `TenantContext`, PK prefixada nas 6 entidades, sessão real por empresa, escopo de listagens/incidentes/SSE/webhook. 4 vazamentos cross-tenant reais encontrados e corrigidos durante a execução (ver Review) — PR [#7](https://github.com/lucvs07/Cypher-Api/pull/7), **mergeado**, 315/315 testes | 8 tasks — `plans/multi-tenant/2026-08-29-mta-backend-empresa.md` | Lucas Grecco | ✅ Concluído |
+| Multi-tenant — front (`mtb`) | Slug no onboarding, `AuthService.bootstrap()` com `empresaId`, `LandingComponent`, topbar mostrando nome da empresa — PR [#6](https://github.com/Ronaldovels/cypher-front/pull/6), **mergeado**, 291/291 testes | 4 tasks — `plans/multi-tenant/2026-08-29-mtb-front-empresa.md` | Lucas Grecco | ✅ Concluído |
 
-Planning informal (sem ata dedicada — seguiu direto o roteiro de entregas, ordem 1). Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.2. Aguardando revisão humana e merge dos PRs antes de mover para `Concluído`.
+Planning informal (sem ata dedicada — seguiu direto o roteiro de entregas, ordem 1). Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.2. Testado manualmente ponta a ponta com os três projetos rodando localmente (onboarding, sign-up, isolamento entre empresas) antes do merge.
 
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 
