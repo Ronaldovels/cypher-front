@@ -61,23 +61,30 @@ Planning informal (sem ata dedicada — seguiu direto o roteiro de entregas, ord
 
 Planning de `oqa` registrado em `docs/scrum/sprint-3/cerimonias.md` §1.2. Planning de `wha`/`whb` registrado em `docs/scrum/sprint-3/cerimonias.md` §1.3. Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.3. Os três cards movidos de `Sprint Backlog`/`Product Backlog` para `Em andamento` em 2026-09-03 (implementação delegada a um agente por repositório, subagent-driven development em paralelo), para `Em revisão` no mesmo dia com os 3 PRs abertos, e para `Concluído` em 2026-09-04 depois de um teste manual ponta a ponta com os três projetos rodando localmente (webcam real do notebook, inferência em CUDA) e o merge dos 3 PRs.
 
+### Zonas de risco (puxado em 2026-09-04, implementação via subagent-driven development, em andamento)
+
+| Card | Descrição | Checklist (tasks do plano) | Repositório | Responsável | Status |
+|---|---|---|---|---|---|
+| Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | `cypher` | Lucas Grecco | 🔄 Em andamento |
+| Zonas de risco — capture (`zrb`) | `ZoneManager` com zonas pré-carregadas, `ZoneConfigClient` (ladder de degradação) | 3 tasks — `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md` | `cypher-capture` | Lucas Grecco | 🔄 Em andamento |
+| Zonas de risco — front (`zrc`) | Editor de polígono em canvas, integrado a `/config/estacoes` | 5 tasks — `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md` | `cypher-front` | Lucas Grecco | 🔄 Em andamento |
+
+Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.4. Os três cards movidos de `Product Backlog` para `Em andamento` em 2026-09-04 — execução delegada a um agente por repositório (subagent-driven development), uma sessão separada para `zra` (backend), `zrb` (capture) e `zrc` (front). `zrb`/`zrc` não têm bloqueio duro sobre `zra` (capture tem cache + arquivo local como fallback, front tem modo mock), mas o teste ponta a ponta final (spec §6) exige as três prontas.
+
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 
 Um card por fatia de repositório de cada plano — o checklist do card é a lista de tasks do próprio arquivo do plano (`docs/superpowers/plans/<entrega>/`). Ordem de cima pra baixo = ordem de retirada recomendada pelo roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3); cards sem dependência pendente podem ser puxados em paralelo.
 
-**Coluna inicial no Trello: `Product Backlog`**, para os 7 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`), Multi-tenant (`mta`/`mtb`), Orquestrador (`oqa`) e Webhook (`wha`/`whb`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
+**Coluna inicial no Trello: `Product Backlog`**, para os 4 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`), Multi-tenant (`mta`/`mtb`), Orquestrador (`oqa`), Webhook (`wha`/`whb`) e Zonas de risco (`zra`/`zrb`/`zrc`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
 
-**Orquestrador de pipelines (`oqa`) inserido no topo da fila em 2026-09-03** — decisão de produto, registrada em `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3 ("Priorização do orquestrador"), motivada por um gap real encontrado no teste manual ponta a ponta de multi-tenant. As demais linhas foram renumeradas (+1) para manter a ordem de retirada sequencial.
+**Orquestrador de pipelines (`oqa`) inserido no topo da fila em 2026-09-03** — decisão de produto, registrada em `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3 ("Priorização do orquestrador"), motivada por um gap real encontrado no teste manual ponta a ponta de multi-tenant. As demais linhas foram renumeradas (+1) para manter a ordem de retirada sequencial. Com `zra`/`zrb`/`zrc` puxados em 2026-09-04, as linhas restantes foram renumeradas novamente.
 
 | Ordem | Card | Descrição | Checklist (tasks do plano) | Depende de |
 |---|---|---|---|---|
-| 8 | Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | multi-tenant |
-| 9 | Zonas de risco — capture (`zrb`) | `ZoneManager` com zonas pré-carregadas, `ZoneConfigClient` (ladder de degradação) | 3 tasks — `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md` | zra |
-| 10 | Zonas de risco — front (`zrc`) | Editor de polígono em canvas, integrado a `/config/estacoes` | 5 tasks — `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md` | zra |
-| 11 | Relatórios — backend, CSV de incidentes (`e6a`, tarefa 1) | `CsvReportBuilder`, `GET /reports/incidents.csv` | 1 task — `plans/e6-relatorios/2026-08-29-e6a-backend-relatorios.md` (tarefa 1) | multi-tenant |
-| 12 | Relatórios — front, CSV de incidentes (`e6b`, tarefa 1) | Link de exportação na timeline de incidentes | 1 task — `plans/e6-relatorios/2026-08-29-e6b-front-relatorios.md` (tarefa 1) | e6a tarefa 1 |
-| 13 | Gamificação — backend/capture/front (`e5a`/`e5b`/`e5c`) | Heartbeat, `PlacarService`, metas por equipe, tela de placar | 3+2+3 tasks — `plans/e5-gamificacao/` | ⛔ bloqueado — gating de calibração no `cypher-capture`, sem data. Não puxar antes de liberado. |
-| 13 | Relatórios — placar/PDF (`e6a`/`e6b`, tarefa 2) | CSV de placar + PDF de resumo executivo | tarefa 2 de cada arquivo — `plans/e6-relatorios/` | item 12 (E5) |
+| 8 | Relatórios — backend, CSV de incidentes (`e6a`, tarefa 1) | `CsvReportBuilder`, `GET /reports/incidents.csv` | 1 task — `plans/e6-relatorios/2026-08-29-e6a-backend-relatorios.md` (tarefa 1) | multi-tenant |
+| 9 | Relatórios — front, CSV de incidentes (`e6b`, tarefa 1) | Link de exportação na timeline de incidentes | 1 task — `plans/e6-relatorios/2026-08-29-e6b-front-relatorios.md` (tarefa 1) | e6a tarefa 1 |
+| 10 | Gamificação — backend/capture/front (`e5a`/`e5b`/`e5c`) | Heartbeat, `PlacarService`, metas por equipe, tela de placar | 3+2+3 tasks — `plans/e5-gamificacao/` | ⛔ bloqueado — gating de calibração no `cypher-capture`, sem data. Não puxar antes de liberado. |
+| 10 | Relatórios — placar/PDF (`e6a`/`e6b`, tarefa 2) | CSV de placar + PDF de resumo executivo | tarefa 2 de cada arquivo — `plans/e6-relatorios/` | item 9 (E5) |
 
 ### Gestão ágil e protótipo (em andamento — objeto real desta Sprint)
 

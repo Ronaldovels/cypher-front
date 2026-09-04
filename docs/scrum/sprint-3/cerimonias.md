@@ -98,6 +98,30 @@ Lucas Grecco — backend (`cypher`) e front (`cypher-front`) desta entrega, cada
 
 ---
 
+### 1.4 Planning — Zonas de risco pela interface (`zra`/`zrb`/`zrc`)
+
+**Data:** 2026-09-04
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto de entrada
+Ordem 2 do roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3), liberado desde que multi-tenant mergeou. Zonas hoje não têm nenhum cadastro remoto — é um arquivo JSON local por processo, editado por uma ferramenta de anotação por mouse rodando no host do pipeline, sem `camera_id` estruturado. Puxado depois de orquestrador/webhook por decisão de capacidade do time (roteiro §3).
+
+#### Sprint Goal
+Introduzir a entidade `Zona` do zero e sua API no backend `cypher` (plano `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md`, 2 tasks); o `ZoneConfigClient` com ladder de degradação (API → cache normalizado → arquivo local pixel absoluto) e conversão normalizado→pixel no `cypher-capture` (plano `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md`, 3 tasks); e o `ZoneEditorComponent` — canvas de desenho de polígono sobre frame congelado, integrado ao cadastro de câmera — no `cypher-front` (plano `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md`, 5 tasks).
+
+#### Itens puxados do Product Backlog
+Cards `zra`/`zrb`/`zrc` de `sprint-backlog.md` — movidos de `Product Backlog` para `Em andamento`.
+
+#### Capacidade e divisão de trabalho
+Lucas Grecco — os três repositórios, cada um executado por um agente dedicado (subagent-driven development, uma sessão separada por repositório). `zra` primeiro por ser a única dependência real (`zrb`/`zrc` degradam sem ele — cache/arquivo local no capture, mock interceptor no front); `zrb` e `zrc` iniciados em paralelo sem esperar `zra` terminar.
+
+#### Riscos identificados no planning
+- Sem hot-reload nesta entrega (spec §3.4/§7) — mudança na UI só se aplica no próximo boot do pipeline daquela câmera; o editor mostra aviso explícito disso ao salvar.
+- Canvas de desenho do polígono (`zrc`, spec §4.3) é a única peça do front sem equivalente nos primitivos globais (`.field`/`.input`) — exceção deliberada e já registrada na spec, não um padrão novo a generalizar.
+- `EPI_VIOLATION` continua sem disparar de fato (spec §7) — `requiredPpe` é cadastrado e devolvido pela API, mas o cruzamento zona×EPI depende do retreino do detector já pendente desde E1 §4.6; fora do escopo desta entrega.
+
+---
+
 ## 2. Dailies (registro resumido, assíncrono)
 
 Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**.
@@ -129,6 +153,7 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 
 ### 2026-09-04 (teste manual ponta a ponta de `oqa`/`wha`/`whb` + merge dos 3 PRs)
 - Lucas Grecco — feito: subiu os três projetos localmente (backend `feat/wh-backend-webhook`, front `feat/wh-front-webhook`, capture `feat/oqa-orquestrador`) usando a webcam real do notebook e inferência em CUDA (RTX 3050 Laptop, ~25 FPS); criou empresa/gestor/estação/câmera novos e isolados só pra esse teste; validou a aba Webhooks (cadastro, histórico) e o vídeo ao vivo no dashboard; achou e registrou como backlog um gap pré-existente no `cypher-capture` — `GET /cameras/{id}/config` exige `PIPELINE`/`GESTOR` mas o cliente não autentica a chamada, então uma câmera nunca provisionada antes fica em loop de backoff no orquestrador (contornado no teste rodando o pipeline com `--source` explícito); mergeou os 3 PRs (orquestrador #8 em `cypher-capture`, webhook backend #8 em `cypher`, webhook front #7 em `cypher-front`); moveu os cards `oqa`/`wha`/`whb` para `Concluído` no Trello; specs de orquestrador e webhook movidas de `planejadas/` para `implementadas/`, roteiro de entregas atualizado; próximo: zonas de risco (`zra`/`zrb`/`zrc`, ordem 2 do roteiro); bloqueio: nenhum.
+- Lucas Grecco — feito: Planning de zonas de risco registrado (§1.4); os três cards (`zra`/`zrb`/`zrc`) movidos de `Product Backlog` para `Em andamento` no Trello e neste documento, execução iniciada em sessões separadas por repositório (subagent-driven development) — `zra` em `cypher`, `zrb` em `cypher-capture`, `zrc` em `cypher-front`; próximo: acompanhar as três execuções, revisar branch inteira de cada uma antes do PR; bloqueio: nenhum.
 
 *(continuar registrando um bloco por dia de trabalho real.)*
 
