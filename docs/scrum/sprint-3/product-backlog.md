@@ -28,12 +28,12 @@ Trabalho real de refinamento de backlog: cada item abaixo tem um documento de de
 | # | Item | Valor | Spec | Plano | Status |
 |---|---|---|---|---|---|
 | 6 | Multi-tenant (Empresa) — pré-requisito das próximas 4 entregas | Must | `2026-08-29-multi-tenant-design.md` | `plans/multi-tenant/` | ✅ Concluído (PRs [#7](https://github.com/lucvs07/Cypher-Api/pull/7)/[#6](https://github.com/Ronaldovels/cypher-front/pull/6) mergeados) |
-| 7 | Cadastro de webhook pela interface (hoje só via `application.yaml`+restart) | Should | `2026-08-29-cadastro-webhook-design.md` | `plans/webhook/` | 🔄 Em andamento (`wha`/`whb` puxados em 2026-09-03) |
+| 7 | Cadastro de webhook pela interface (hoje só via `application.yaml`+restart) | Should | `2026-08-29-cadastro-webhook-design.md` | `plans/webhook/` | 🔎 Em revisão (PRs [#8](https://github.com/lucvs07/Cypher-Api/pull/8) backend / [#7](https://github.com/Ronaldovels/cypher-front/pull/7) front abertos) |
 | 8 | Zonas de risco configuráveis pela interface | Should | `2026-08-29-zonas-de-risco-design.md` | `plans/zonas-de-risco/` | 📝 Pronto para dev |
 | 9 | Gamificação por equipe (placar, metas, sequência) | Should | `2026-08-29-gamificacao-e5-design.md` | `plans/e5-gamificacao/` | ⛔ Planejado, bloqueado (gating de calibração no `cypher-capture`, sem data) |
 | 10 | Relatórios e exportação (CSV/PDF) | Could | `2026-08-29-relatorios-e6-design.md` | `plans/e6-relatorios/` | 📝 Parcialmente liberado (CSV de incidentes já pode ser feito; resto depende do item 9) |
 | 11 | Análise de risco com LLM multimodal (Claude/Gemini) no detalhe do incidente | Must (prazo externo 21/09) | `2026-09-01-analise-llm-multimodal-design.md` | `plans/analise-llm/` | ✅ Concluído (PRs [#6](https://github.com/lucvs07/Cypher-Api/pull/6)/[#5](https://github.com/Ronaldovels/cypher-front/pull/5) mergeados, testado com câmera real) |
-| 24 | Orquestrador de pipelines por câmera (`cypher-capture` sobe/derruba/reinicia processo por câmera) | Must (gap real achado no teste ponta a ponta de multi-tenant) | `2026-09-03-orquestrador-pipelines-design.md` | `plans/orquestrador-pipelines/` | 🔄 Em andamento (`oqa` puxado em 2026-09-03) |
+| 24 | Orquestrador de pipelines por câmera (`cypher-capture` sobe/derruba/reinicia processo por câmera) | Must (gap real achado no teste ponta a ponta de multi-tenant) | `2026-09-03-orquestrador-pipelines-design.md` | `plans/orquestrador-pipelines/` | 🔎 Em revisão (PR [#8](https://github.com/lucvs07/cypher-capture/pull/8) aberto) |
 
 ## Sprint 3 (em andamento — gestão ágil)
 
