@@ -1,6 +1,6 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 
-import { Page } from '../../shared/incident.models';
+import { Page, mensagemDeErro } from '../../shared/incident.models';
 import { WebhookDelivery } from '../../shared/webhook.models';
 import { WebhookService } from '../../shared/webhook.service';
 
@@ -23,17 +23,28 @@ export class WebhookHistoricoComponent {
 
   readonly pagina = signal<Page<WebhookDelivery> | null>(null);
   readonly pageIndex = signal(0);
+  readonly erro = signal('');
   readonly tamanhoPagina = 20;
+
+  private ultimoId: number | null | undefined = undefined;
 
   constructor() {
     effect(() => {
       const id = this.webhookId();
+      if (id !== this.ultimoId) {
+        this.ultimoId = id;
+        this.pageIndex.set(0);
+      }
       const page = this.pageIndex();
       if (id == null) {
         this.pagina.set(null);
         return;
       }
-      this.webhook.deliveries(id, page, this.tamanhoPagina).subscribe(p => this.pagina.set(p));
+      this.erro.set('');
+      this.webhook.deliveries(id, page, this.tamanhoPagina).subscribe({
+        next: p => this.pagina.set(p),
+        error: e => this.erro.set(mensagemDeErro(e)),
+      });
     });
   }
 

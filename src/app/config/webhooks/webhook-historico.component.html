@@ -1,5 +1,7 @@
 @if (webhookId() == null) {
   <p class="vazio">escolha um assinante acima para ver o histórico de entregas</p>
+} @else if (erro()) {
+  <p class="field-error" role="alert">{{ erro() }}</p>
 } @else if (pagina() === null) {
   <p class="vazio">carregando histórico…</p>
 } @else if (pagina()!.content.length === 0) {

@@ -40,4 +40,41 @@ describe('WebhookHistoricoComponent — sub-aba Histórico', () => {
 
     expect(fixture.componentInstance.pagina()?.content).toHaveLength(0);
   });
+
+  it('reseta pageIndex para 0 ao trocar de assinante', () => {
+    fixture.componentRef.setInput('webhookId', 1);
+    fixture.detectChanges();
+
+    http.expectOne(r => r.url === `${environment.apiUrl}/webhooks/1/deliveries`).flush({
+      content: [{ id: 1, incidentKey: 'inc-1', status: 'ENTREGUE', tentativas: 1, ultimoErro: null, proximaTentativa: null }],
+      totalElements: 40, totalPages: 2, number: 0, size: 20,
+    });
+
+    fixture.componentInstance.proximaPagina();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.pageIndex()).toBe(1);
+
+    http.expectOne(r => r.url === `${environment.apiUrl}/webhooks/1/deliveries` && r.params.get('page') === '1').flush({
+      content: [{ id: 2, incidentKey: 'inc-2', status: 'ENTREGUE', tentativas: 1, ultimoErro: null, proximaTentativa: null }],
+      totalElements: 40, totalPages: 2, number: 1, size: 20,
+    });
+
+    fixture.componentRef.setInput('webhookId', 2);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.pageIndex()).toBe(0);
+    http.expectOne(r => r.url === `${environment.apiUrl}/webhooks/2/deliveries` && r.params.get('page') === '0')
+      .flush({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 20 });
+  });
+
+  it('mostra mensagem de erro e sai do estado de carregando quando a busca falha', () => {
+    fixture.componentRef.setInput('webhookId', 1);
+    fixture.detectChanges();
+
+    http.expectOne(r => r.url === `${environment.apiUrl}/webhooks/1/deliveries`)
+      .flush({ message: 'falha ao buscar historico' }, { status: 500, statusText: 'Erro' });
+
+    expect(fixture.componentInstance.pagina()).toBeNull();
+    expect(fixture.componentInstance.erro()).not.toBe('');
+  });
 });

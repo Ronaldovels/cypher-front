@@ -17,11 +17,11 @@
     </div>
     <div class="field">
       <label>Notificar a partir de</label>
-      <select class="select" [value]="novoAssinante().minSeverity"
+      <select class="select"
               (change)="novoAssinante.set({ ...novoAssinante(), minSeverity: +($any($event.target).value) })">
-        <option value="0">Qualquer evento</option>
+        <option value="0" [selected]="novoAssinante().minSeverity === 0">Qualquer evento</option>
         @for (n of [1, 2, 3, 4]; track n) {
-          <option [value]="n">Severidade {{ n }}+</option>
+          <option [value]="n" [selected]="novoAssinante().minSeverity === n">Severidade {{ n }}+</option>
         }
       </select>
     </div>

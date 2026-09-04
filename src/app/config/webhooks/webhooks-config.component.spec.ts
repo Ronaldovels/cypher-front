@@ -43,6 +43,15 @@ describe('WebhooksConfigComponent — sub-aba Assinantes', () => {
     expect(fixture.componentInstance.erro()).toBeTruthy();
   });
 
+  it('mostra a severidade padrao (3) selecionada no select assim que renderiza', () => {
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector('select.select');
+
+    expect(fixture.componentInstance.novoAssinante().minSeverity).toBe(3);
+    expect(select.value).toBe('3');
+    const selecionada = Array.from(select.options).find(o => o.selected);
+    expect(selecionada?.value).toBe('3');
+  });
+
   it('desativar chama DELETE e recarrega', () => {
     fixture.componentInstance.desativar(1);
 
