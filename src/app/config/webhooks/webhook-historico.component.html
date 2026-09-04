@@ -1,0 +1,29 @@
+@if (webhookId() == null) {
+  <p class="vazio">escolha um assinante acima para ver o histórico de entregas</p>
+} @else if (erro()) {
+  <p class="field-error" role="alert">{{ erro() }}</p>
+} @else if (pagina() === null) {
+  <p class="vazio">carregando histórico…</p>
+} @else if (pagina()!.content.length === 0) {
+  <p class="vazio">nenhuma entrega registrada para esse assinante ainda</p>
+} @else {
+  <div>
+    @for (d of pagina()!.content; track d.id) {
+      <div class="list-row">
+        <span class="ph-meta">{{ d.incidentKey }}</span>
+        <span class="status" [class.on]="d.status === 'ENTREGUE'">{{ statusLabel(d.status) }}</span>
+        <span class="chip">{{ tentativasLabel(d.tentativas) }}</span>
+        @if (d.proximaTentativa && d.status !== 'ENTREGUE') {
+          <span class="ph-meta">próxima tentativa {{ formatarData(d.proximaTentativa) }}</span>
+        }
+        @if (d.ultimoErro) {
+          <p class="field-error">{{ d.ultimoErro }}</p>
+        }
+      </div>
+    }
+  </div>
+  <div style="display:flex;gap:12px;margin-top:16px">
+    <button type="button" class="btn ghost sm" [disabled]="pageIndex() === 0" (click)="paginaAnterior()">anterior</button>
+    <button type="button" class="btn ghost sm" [disabled]="pageIndex() >= pagina()!.totalPages - 1" (click)="proximaPagina()">próxima</button>
+  </div>
+}

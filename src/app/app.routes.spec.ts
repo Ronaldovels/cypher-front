@@ -50,6 +50,22 @@ describe('routes — guards de acesso (design doc de E4, §4.3)', () => {
   });
 });
 
+describe('routes — filhas de /config', () => {
+  it('/config/webhooks existe como filha de /config', () => {
+    const config = routes.find(r => r.path === 'config');
+    expect(config?.children?.find(c => c.path === 'webhooks')).toBeDefined();
+  });
+
+  it('as demais abas de /config continuam presentes', () => {
+    const config = routes.find(r => r.path === 'config');
+    expect(config?.children?.find(c => c.path === 'estacoes')).toBeDefined();
+    expect(config?.children?.find(c => c.path === 'identidade')).toBeDefined();
+    expect(config?.children?.find(c => c.path === 'epis')).toBeDefined();
+    expect(config?.children?.find(c => c.path === 'cas')).toBeDefined();
+    expect(config?.children?.find(c => c.path === 'equipe')).toBeDefined();
+  });
+});
+
 describe('routes — redirecionamento de ponta a ponta sem sessao', () => {
   let http: HttpTestingController;
   let router: Router;

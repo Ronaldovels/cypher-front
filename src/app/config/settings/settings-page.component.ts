@@ -14,6 +14,7 @@ const TABS: SettingsTab[] = [
   { path: 'epis', label: 'EPIs monitorados', hint: 'Seleção dos equipamentos' },
   { path: 'cas', label: 'CAs e validades', hint: 'Certificados de aprovação' },
   { path: 'equipe', label: 'Equipes e usuários', hint: 'Alocação e acesso' },
+  { path: 'webhooks', label: 'Webhooks', hint: 'Assinantes externos' },
 ];
 
 /**

@@ -1,0 +1,37 @@
+<div class="tab-head">
+  <div>
+    <div class="eyebrow-accent">Webhooks</div>
+    <h2 class="tab-title">Quem <em style="color:var(--accent);font-style:normal">recebe cada incidente.</em></h2>
+    <p class="sub" style="font-size:14px;margin-top:6px">Assinantes externos notificados por HTTP a cada incidente acima da severidade mínima.</p>
+  </div>
+</div>
+
+<div class="subtabs" style="margin-top:24px">
+  <button type="button" class="chip" [class.on]="subaba() === 'assinantes'" (click)="irPara('assinantes')">Assinantes</button>
+  <button type="button" class="chip" [class.on]="subaba() === 'historico'" (click)="irPara('historico')">Histórico</button>
+</div>
+
+<div style="margin-top:24px">
+  @if (subaba() === 'assinantes') {
+    <app-webhooks-config />
+  } @else {
+    @if (assinantes().length === 0) {
+      <p class="vazio">nenhum assinante cadastrado ainda —
+        <button type="button" class="btn ghost sm" (click)="irPara('assinantes')">cadastre um para ver o histórico</button>
+      </p>
+    } @else {
+      <div class="field" style="max-width:360px">
+        <label>Assinante</label>
+        <select class="select" (change)="selecionarAssinante($any($event.target).value)">
+          <option value="">selecione um assinante</option>
+          @for (w of assinantes(); track w.id) {
+            <option [value]="w.id" [selected]="assinanteSelecionado() === w.id">{{ w.url }}</option>
+          }
+        </select>
+      </div>
+      <div style="margin-top:24px">
+        <app-webhook-historico [webhookId]="assinanteSelecionado()" />
+      </div>
+    }
+  }
+</div>

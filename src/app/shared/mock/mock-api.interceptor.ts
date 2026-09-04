@@ -4,9 +4,11 @@ import { Observable, delay, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CameraAdmin, Station } from '../incident.models';
 import { Equipe, Usuario } from '../team.models';
+import { Webhook, WebhookPayload } from '../webhook.models';
 import {
   CAMERAS_MUTAVEL, EMITIDOS, EQUIPES_MUTAVEL, INCIDENTS, SESSAO_MOCK, SETUP_MOCK,
-  STATIONS_MUTAVEL, TOKENS_ESTACAO, USUARIOS_MUTAVEL, resumo,
+  STATIONS_MUTAVEL, TOKENS_ESTACAO, USUARIOS_MUTAVEL, WEBHOOKS_MUTAVEL,
+  WEBHOOK_DELIVERIES_MUTAVEL, proximoIdWebhook, resumo,
 } from './fixtures';
 
 const ATRASO_MS = 150;
@@ -230,6 +232,62 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
     }
     USUARIOS_MUTAVEL.splice(idx, 1);
     return null;
+  }
+
+  // ---------------- webhooks ----------------
+
+  if (req.method === 'GET' && req.url === `${base}/webhooks`) {
+    return WEBHOOKS_MUTAVEL.map(w => ({ ...w }));
+  }
+
+  if (req.method === 'POST' && req.url === `${base}/webhooks`) {
+    const corpo = req.body as WebhookPayload;
+    if (WEBHOOKS_MUTAVEL.some(w => w.url === corpo.url)) {
+      return conflito(`URL ja usada por outro assinante: ${corpo.url}`);
+    }
+    const novo: Webhook = { id: proximoIdWebhook(), url: corpo.url, secret: corpo.secret,
+      minSeverity: corpo.minSeverity, ativo: corpo.ativo ?? true };
+    WEBHOOKS_MUTAVEL.push(novo);
+    return novo;
+  }
+
+  if (req.method === 'PUT' && req.url.startsWith(`${base}/webhooks/`) && !req.url.includes('/deliveries')) {
+    const id = Number(req.url.slice(`${base}/webhooks/`.length));
+    const corpo = req.body as WebhookPayload;
+    const atual = WEBHOOKS_MUTAVEL.find(w => w.id === id);
+    if (!atual) {
+      return naoEncontrado(`Webhook inexistente: ${id}`);
+    }
+    if (WEBHOOKS_MUTAVEL.some(w => w.url === corpo.url && w.id !== id)) {
+      return conflito(`URL ja usada por outro assinante: ${corpo.url}`);
+    }
+    Object.assign(atual, corpo, { id, ativo: corpo.ativo ?? atual.ativo });
+    return atual;
+  }
+
+  if (req.method === 'DELETE' && req.url.startsWith(`${base}/webhooks/`)) {
+    const id = Number(req.url.slice(`${base}/webhooks/`.length));
+    const atual = WEBHOOKS_MUTAVEL.find(w => w.id === id);
+    if (!atual) {
+      return naoEncontrado(`Webhook inexistente: ${id}`);
+    }
+    atual.ativo = false;
+    return null;
+  }
+
+  if (req.method === 'GET' && /\/webhooks\/\d+\/deliveries$/.test(req.url)) {
+    const id = Number(req.url.match(/\/webhooks\/(\d+)\/deliveries$/)![1]);
+    const page = Number(req.params.get('page') ?? '0');
+    const size = Number(req.params.get('size') ?? '20');
+    const doAssinante = WEBHOOK_DELIVERIES_MUTAVEL; // mock não relaciona por subscriptionId — mesma lista para qualquer id
+    const inicio = page * size;
+    return {
+      content: doAssinante.slice(inicio, inicio + size),
+      totalElements: doAssinante.length,
+      totalPages: Math.max(1, Math.ceil(doAssinante.length / size)),
+      number: page,
+      size,
+    };
   }
 
   // ---------------- escrita de estação ----------------

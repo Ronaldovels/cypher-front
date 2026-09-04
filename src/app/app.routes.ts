@@ -15,6 +15,7 @@ import { IdentityTabComponent } from './config/settings/identity-tab.component';
 import { SettingsPageComponent } from './config/settings/settings-page.component';
 import { StationsTabComponent } from './config/stations/stations-tab.component';
 import { EquipeUsuariosTabComponent } from './config/equipe/equipe-usuarios-tab.component';
+import { WebhooksTabComponent } from './config/webhooks/webhooks-tab.component';
 import {
   canActivateGestor, canActivateOperadorOuGestor,
 } from './shared/auth/auth.guards';
@@ -41,6 +42,7 @@ export const routes: Routes = [
       { path: 'epis', component: EpisTabComponent },
       { path: 'cas', component: CasTabComponent },
       { path: 'equipe', component: EquipeUsuariosTabComponent },
+      { path: 'webhooks', component: WebhooksTabComponent },
     ],
   },
 ];

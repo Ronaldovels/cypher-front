@@ -7,9 +7,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { environment } from '../../../environments/environment';
 import { Camera, Incident, Page } from '../incident.models';
 import { Equipe, Usuario } from '../team.models';
+import { Webhook, WebhookDelivery } from '../webhook.models';
 import {
   EMITIDOS, GESTOR_DEMO, INCIDENTS, TOKENS_ESTACAO, agoraNaPlanta, resetMockCatalog,
-  resetMockSessao, resetMockSetup, resetMockTeams, resumo,
+  resetMockSessao, resetMockSetup, resetMockTeams, resetMockWebhooks, resumo,
 } from './fixtures';
 import { mockApiInterceptor } from './mock-api.interceptor';
 
@@ -22,6 +23,7 @@ describe('mockApiInterceptor', () => {
     resetMockSessao();
     resetMockSetup();
     resetMockTeams();
+    resetMockWebhooks();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withFetch(), withInterceptors([mockApiInterceptor])),
@@ -325,6 +327,75 @@ describe('mockApiInterceptor', () => {
     expect(primeira.find(e => e.id === 'EQ-01')?.ativa).toBe(true);
     const depois = await firstValueFrom(http.get<Equipe[]>(`${environment.apiUrl}/teams`));
     expect(depois.find(e => e.id === 'EQ-01')?.ativa).toBe(false);
+  });
+
+  it('GET /webhooks lista os assinantes semeados', async () => {
+    const webhooks = await firstValueFrom(http.get<Webhook[]>(`${environment.apiUrl}/webhooks`));
+
+    expect(webhooks.length).toBeGreaterThan(0);
+    expect(webhooks[0].id).toBe(1);
+  });
+
+  it('POST /webhooks cadastra e GET reflete', async () => {
+    const novo = await firstValueFrom(http.post<Webhook>(`${environment.apiUrl}/webhooks`,
+      { url: 'https://novo.exemplo.com/hook', secret: 'segredo', minSeverity: 2 }));
+
+    expect(novo.ativo).toBe(true);
+    const webhooks = await firstValueFrom(http.get<Webhook[]>(`${environment.apiUrl}/webhooks`));
+    expect(webhooks.some(w => w.url === 'https://novo.exemplo.com/hook')).toBe(true);
+  });
+
+  it('POST /webhooks com URL repetida devolve 409', async () => {
+    await expect(firstValueFrom(http.post(`${environment.apiUrl}/webhooks`,
+      { url: 'https://webhook.site/exemplo', secret: 'x', minSeverity: 1 })))
+      .rejects.toMatchObject({ status: 409 });
+  });
+
+  it('PUT /webhooks/{id} edita e preserva ativo quando o corpo nao informa', async () => {
+    const editado = await firstValueFrom(http.put<Webhook>(`${environment.apiUrl}/webhooks/1`,
+      { url: 'https://webhook.site/exemplo-editado', secret: 'novo-segredo', minSeverity: 4 }));
+
+    expect(editado.url).toBe('https://webhook.site/exemplo-editado');
+    expect(editado.ativo).toBe(true);
+    const webhooks = await firstValueFrom(http.get<Webhook[]>(`${environment.apiUrl}/webhooks`));
+    expect(webhooks.find(w => w.id === 1)?.minSeverity).toBe(4);
+  });
+
+  it('PUT /webhooks/{id} com URL repetida de outro assinante devolve 409', async () => {
+    await firstValueFrom(http.post<Webhook>(`${environment.apiUrl}/webhooks`,
+      { url: 'https://outro.exemplo.com/hook', secret: 'segredo', minSeverity: 1 }));
+
+    await expect(firstValueFrom(http.put(`${environment.apiUrl}/webhooks/1`,
+      { url: 'https://outro.exemplo.com/hook', secret: 'x', minSeverity: 2 })))
+      .rejects.toMatchObject({ status: 409 });
+  });
+
+  it('PUT /webhooks/{id} inexistente devolve 404', async () => {
+    await expect(firstValueFrom(http.put(`${environment.apiUrl}/webhooks/999`,
+      { url: 'https://x.com', secret: 'x', minSeverity: 1 })))
+      .rejects.toMatchObject({ status: 404 });
+  });
+
+  it('DELETE /webhooks/{id} desativa em vez de remover, e 404 se inexistente', async () => {
+    await firstValueFrom(http.delete(`${environment.apiUrl}/webhooks/1`));
+
+    const webhooks = await firstValueFrom(http.get<Webhook[]>(`${environment.apiUrl}/webhooks`));
+    expect(webhooks.find(w => w.id === 1)?.ativo).toBe(false);
+
+    await expect(firstValueFrom(http.delete(`${environment.apiUrl}/webhooks/999`)))
+      .rejects.toMatchObject({ status: 404 });
+  });
+
+  it('GET /webhooks/{id}/deliveries devolve pagina respeitando page e size', async () => {
+    const pagina = await firstValueFrom(
+      http.get<Page<WebhookDelivery>>(`${environment.apiUrl}/webhooks/1/deliveries`,
+        { params: { page: '0', size: '1' } }));
+
+    expect(pagina.content).toHaveLength(1);
+    expect(pagina.totalElements).toBeGreaterThan(0);
+    expect(pagina.totalPages).toBeGreaterThan(0);
+    expect(pagina.number).toBe(0);
+    expect(pagina.size).toBe(1);
   });
 
   it('GET /users nunca traz senha', async () => {

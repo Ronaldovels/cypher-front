@@ -1,0 +1,45 @@
+<section>
+  @if (erro()) {
+    <p class="vazio" role="alert">{{ erro() }}</p>
+  }
+
+  <form class="auth-form" style="max-width:560px" (submit)="$event.preventDefault(); salvar()">
+    <div class="field">
+      <label>URL</label>
+      <input class="input" [value]="novoAssinante().url" placeholder="https://exemplo.com/webhook"
+             (input)="novoAssinante.set({ ...novoAssinante(), url: $any($event.target).value })" />
+    </div>
+    <div class="field">
+      <label>Segredo</label>
+      <input class="input" type="text" [value]="novoAssinante().secret" placeholder="combinado com o assinante"
+             (input)="novoAssinante.set({ ...novoAssinante(), secret: $any($event.target).value })" />
+      <p class="vazio">Usado para assinar cada envio — o assinante confere a assinatura para confirmar que o evento veio daqui.</p>
+    </div>
+    <div class="field">
+      <label>Notificar a partir de</label>
+      <select class="select"
+              (change)="novoAssinante.set({ ...novoAssinante(), minSeverity: +($any($event.target).value) })">
+        <option value="0" [selected]="novoAssinante().minSeverity === 0">Qualquer evento</option>
+        @for (n of [1, 2, 3, 4]; track n) {
+          <option [value]="n" [selected]="novoAssinante().minSeverity === n">Severidade {{ n }}+</option>
+        }
+      </select>
+    </div>
+    <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar assinante</button>
+  </form>
+
+  <div style="margin-top:28px">
+    @for (w of assinantes(); track w.id) {
+      <div class="list-row">
+        <span>{{ w.url }}</span>
+        <span class="chip">severidade {{ w.minSeverity }}+</span>
+        <span class="status" [class.on]="w.ativo">{{ w.ativo ? 'ativo' : 'inativo' }}</span>
+        @if (w.ativo) {
+          <button type="button" class="btn ghost sm" (click)="desativar(w.id)">desativar</button>
+        }
+      </div>
+    } @empty {
+      <p class="vazio">nenhum assinante cadastrado ainda</p>
+    }
+  </div>
+</section>
