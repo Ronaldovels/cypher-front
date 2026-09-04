@@ -1,5 +1,6 @@
 import { Camera, CameraAdmin, Incident, Station, Summary } from '../incident.models';
 import { Equipe, Usuario } from '../team.models';
+import { Webhook, WebhookDelivery } from '../webhook.models';
 
 /**
  * Dados de exemplo do modo `useMockData`.
@@ -227,3 +228,29 @@ export function resetMockTeams(): void {
 }
 
 resetMockTeams();
+
+// ---------------- webhooks (mock) ----------------
+
+export const WEBHOOKS: Webhook[] = [
+  { id: 1, url: 'https://webhook.site/exemplo', secret: 'test-secret-123', minSeverity: 3, ativo: true },
+];
+
+export const WEBHOOK_DELIVERIES: WebhookDelivery[] = [
+  { id: 1, incidentKey: 'CAM-01:run-1:1:2026-08-01T10:00:00Z', status: 'ENTREGUE', tentativas: 1, ultimoErro: null, proximaTentativa: null },
+];
+
+export let WEBHOOKS_MUTAVEL: Webhook[] = [];
+export let WEBHOOK_DELIVERIES_MUTAVEL: WebhookDelivery[] = [];
+let PROXIMO_ID_WEBHOOK = 2;
+
+export function resetMockWebhooks(): void {
+  WEBHOOKS_MUTAVEL = WEBHOOKS.map(w => ({ ...w }));
+  WEBHOOK_DELIVERIES_MUTAVEL = WEBHOOK_DELIVERIES.map(d => ({ ...d }));
+  PROXIMO_ID_WEBHOOK = 2;
+}
+
+export function proximoIdWebhook(): number {
+  return PROXIMO_ID_WEBHOOK++;
+}
+
+resetMockWebhooks();
