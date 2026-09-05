@@ -91,6 +91,7 @@
           <div class="camera-row">
             <span class="codigo">{{ c.id }}</span>
             <span class="nome">{{ c.nome }}</span>
+            <button type="button" class="btn ghost sm" (click)="editarZonasDe(c)">editar zonas</button>
             <button type="button" class="btn ghost sm" (click)="desativarCamera(c.id)">desativar</button>
           </div>
         } @empty {
@@ -102,3 +103,13 @@
     }
   </div>
 </section>
+
+@if (cameraEmEdicaoDeZonas(); as camera) {
+  <div class="panel" style="margin-top:32px">
+    <div class="panel-head">
+      <span class="ph-title">Zonas de risco — {{ camera.nome }}</span>
+      <button type="button" class="btn ghost sm" (click)="fecharEditorDeZonas()">fechar</button>
+    </div>
+    <app-zone-editor [codigo]="camera.id" [streamUrl]="camera.streamUrl" />
+  </div>
+}

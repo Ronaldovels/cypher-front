@@ -1,0 +1,79 @@
+<div class="panel">
+  <p class="vazio">O pipeline desta câmera revalida as zonas periodicamente em segundo plano — a mudança aparece em até cerca de 30s, sem precisar reiniciar.</p>
+
+  @if (erro()) {
+    <p class="vazio" role="alert">{{ erro() }}</p>
+  }
+
+  <img #liveImg [src]="streamUrl()" alt="frame ao vivo da câmera"
+       style="max-width:100%;border:1px solid var(--border,#333)"
+       [style.display]="frameCapturado() ? 'none' : 'block'" />
+  <canvas #canvas style="max-width:100%;border:1px solid var(--border,#333);cursor:crosshair"
+          [style.display]="frameCapturado() ? 'block' : 'none'"
+          (click)="onCanvasClick($event)"></canvas>
+
+  <div style="display:flex;gap:12px;margin-top:12px">
+    <button type="button" class="btn" (click)="capturarFrame()">Capturar frame</button>
+    @if (frameCapturado() && !poligonoFechado()) {
+      <button type="button" class="btn" (click)="removerUltimoVertice()" [disabled]="vertices().length === 0">
+        remover último vértice
+      </button>
+      <button type="button" class="btn primary" (click)="fecharPoligono()">Fechar polígono</button>
+    }
+    @if (frameCapturado() && poligonoFechado()) {
+      <button type="button" class="btn ghost" (click)="reabrirPoligono()">reabrir polígono para editar pontos</button>
+    }
+  </div>
+
+  @if (poligonoFechado()) {
+    <form class="auth-form" style="max-width:560px;margin-top:20px" (submit)="$event.preventDefault(); salvar()">
+      <div class="field">
+        <label>Nome</label>
+        <input class="input" [value]="form().nome"
+               (input)="form.set({ ...form(), nome: $any($event.target).value })" />
+      </div>
+      <div class="field">
+        <label>Tipo</label>
+        <select class="select" [value]="form().zoneType"
+                (change)="form.set({ ...form(), zoneType: $any($event.target).value })">
+          <option value="RESTRICTED">Área restrita</option>
+          <option value="ATTENTION">Área de atenção</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Severidade (1–4)</label>
+        <input class="input" type="number" min="1" max="4" [value]="form().severity"
+               (input)="form.set({ ...form(), severity: +($any($event.target).value) })" />
+      </div>
+      <div class="field">
+        <label>EPIs obrigatórios nesta zona</label>
+        <div class="subtabs">
+          @for (epi of episDisponiveis(); track epi) {
+            <button type="button" class="chip" [class.on]="form().requiredPpe.includes(epi)"
+                    (click)="alternarPpe(epi)">{{ epi }}</button>
+          }
+        </div>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button type="submit" class="btn primary" [disabled]="salvando()">
+          {{ editandoId() != null ? 'Salvar edição' : 'Cadastrar zona' }}
+        </button>
+        <button type="button" class="btn ghost" (click)="reiniciarDesenho()">cancelar</button>
+      </div>
+    </form>
+  }
+
+  <div style="margin-top:28px">
+    @for (z of zonas(); track z.id) {
+      <div class="list-row">
+        <span class="ph-meta">{{ z.nome }}</span>
+        <span class="chip">{{ z.zoneType }}</span>
+        <span class="chip">severidade {{ z.severity }}</span>
+        <button type="button" class="btn ghost sm" (click)="editar(z)">editar</button>
+        <button type="button" class="btn ghost sm" (click)="desativar(z.id)">desativar</button>
+      </div>
+    } @empty {
+      <p class="vazio">nenhuma zona cadastrada nesta câmera ainda</p>
+    }
+  </div>
+</div>

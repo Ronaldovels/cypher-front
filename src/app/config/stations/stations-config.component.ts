@@ -1,7 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { CatalogService } from '../../shared/catalog.service';
-import { CODIGO_PADRAO, mensagemDeErro } from '../../shared/incident.models';
+import { CODIGO_PADRAO, Camera, mensagemDeErro } from '../../shared/incident.models';
+import { ZoneEditorComponent } from '../zones/zone-editor.component';
 
 interface FormEstacao { id: string; nome: string; setor: string; }
 interface FormCamera {
@@ -21,6 +22,7 @@ const CAMERA_VAZIA: FormCamera = {
  */
 @Component({
   selector: 'app-stations-config',
+  imports: [ZoneEditorComponent],
   templateUrl: './stations-config.component.html',
   styleUrl: './stations-config.component.scss',
 })
@@ -44,6 +46,9 @@ export class StationsConfigComponent implements OnInit {
   /** Verdadeiro quando o sistema tem ao menos uma câmera ativa vendo algo. */
   readonly cadastroCompleto = computed(() =>
     this.estacoes().some(e => e.ativa && e.cameras.length > 0));
+
+  /** Câmera cujo editor de zonas de risco está aberto, se alguma. */
+  readonly cameraEmEdicaoDeZonas = signal<Camera | null>(null);
 
   ngOnInit(): void {
     // Inclui inativas: é preciso vê-las para poder reativá-las.
@@ -135,6 +140,14 @@ export class StationsConfigComponent implements OnInit {
     this.catalog.deactivateCamera(id).subscribe({
       error: e => this.erro.set(mensagemDeErro(e)),
     });
+  }
+
+  editarZonasDe(camera: Camera): void {
+    this.cameraEmEdicaoDeZonas.set(camera);
+  }
+
+  fecharEditorDeZonas(): void {
+    this.cameraEmEdicaoDeZonas.set(null);
   }
 
   reativarEstacao(id: string): void {
