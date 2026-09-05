@@ -97,6 +97,36 @@ describe('ZoneEditorComponent — captura de frame e desenho', () => {
     expect(comp.vertices()).toEqual([{ x: 1, y: 1 }, { x: 2, y: 2 }]);
   });
 
+  it('reabrirPoligono libera o poligono fechado sem perder os vertices', () => {
+    const comp = fixture.componentInstance;
+    comp.frameCapturado.set(true);
+    comp.vertices.set([{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 2, y: 2 }]);
+    comp.poligonoFechado.set(true);
+
+    comp.reabrirPoligono();
+
+    expect(comp.poligonoFechado()).toBe(false);
+    expect(comp.vertices()).toEqual([{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 2, y: 2 }]);
+  });
+
+  it('apos reabrirPoligono, onCanvasClick volta a adicionar vertices', () => {
+    const comp = fixture.componentInstance;
+    comp.frameCapturado.set(true);
+    comp.vertices.set([{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 2, y: 2 }]);
+    comp.poligonoFechado.set(true);
+    comp.reabrirPoligono();
+
+    const canvasEl: HTMLCanvasElement = fixture.nativeElement.querySelector('canvas');
+    canvasEl.width = 1280;
+    canvasEl.height = 720;
+    vi.spyOn(canvasEl, 'getBoundingClientRect').mockReturnValue({
+      left: 0, top: 0, width: 1280, height: 720, right: 1280, bottom: 720, x: 0, y: 0, toJSON: () => ({}),
+    } as DOMRect);
+    comp.onCanvasClick(new MouseEvent('click', { clientX: 300, clientY: 300 }));
+
+    expect(comp.vertices()).toEqual([{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 300, y: 300 }]);
+  });
+
   it('trocar de camera (mesma instancia) reseta o estado de desenho e recarrega as zonas', () => {
     const comp = fixture.componentInstance;
     comp.frameCapturado.set(true);

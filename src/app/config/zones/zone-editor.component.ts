@@ -101,6 +101,13 @@ export class ZoneEditorComponent {
     this.redesenhar();
   }
 
+  /** Libera um polígono já fechado para voltar a receber cliques (adicionar/remover vértices) — sem isso, uma zona carregada via editar() nunca podia ter seus pontos ajustados. */
+  reabrirPoligono(): void {
+    this.poligonoFechado.set(false);
+    this.erro.set('');
+    this.redesenhar();
+  }
+
   fecharPoligono(): void {
     if (this.vertices().length < 3) {
       this.erro.set('Um polígono precisa de ao menos 3 vértices.');

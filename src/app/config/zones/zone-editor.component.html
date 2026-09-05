@@ -5,8 +5,11 @@
     <p class="vazio" role="alert">{{ erro() }}</p>
   }
 
-  <img #liveImg [src]="streamUrl()" alt="frame ao vivo" style="display:none" />
+  <img #liveImg [src]="streamUrl()" alt="frame ao vivo da câmera"
+       style="max-width:100%;border:1px solid var(--border,#333)"
+       [style.display]="frameCapturado() ? 'none' : 'block'" />
   <canvas #canvas style="max-width:100%;border:1px solid var(--border,#333);cursor:crosshair"
+          [style.display]="frameCapturado() ? 'block' : 'none'"
           (click)="onCanvasClick($event)"></canvas>
 
   <div style="display:flex;gap:12px;margin-top:12px">
@@ -16,6 +19,9 @@
         remover último vértice
       </button>
       <button type="button" class="btn primary" (click)="fecharPoligono()">Fechar polígono</button>
+    }
+    @if (frameCapturado() && poligonoFechado()) {
+      <button type="button" class="btn ghost" (click)="reabrirPoligono()">reabrir polígono para editar pontos</button>
     }
   </div>
 
