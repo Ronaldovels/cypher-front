@@ -8,9 +8,10 @@ import { environment } from '../../../environments/environment';
 import { Camera, Incident, Page } from '../incident.models';
 import { Equipe, Usuario } from '../team.models';
 import { Webhook, WebhookDelivery } from '../webhook.models';
+import { Zone } from '../zone.models';
 import {
   EMITIDOS, GESTOR_DEMO, INCIDENTS, TOKENS_ESTACAO, agoraNaPlanta, resetMockCatalog,
-  resetMockSessao, resetMockSetup, resetMockTeams, resetMockWebhooks, resumo,
+  resetMockSessao, resetMockSetup, resetMockTeams, resetMockWebhooks, resetMockZonas, resumo,
 } from './fixtures';
 import { mockApiInterceptor } from './mock-api.interceptor';
 
@@ -24,6 +25,7 @@ describe('mockApiInterceptor', () => {
     resetMockSetup();
     resetMockTeams();
     resetMockWebhooks();
+    resetMockZonas();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withFetch(), withInterceptors([mockApiInterceptor])),
@@ -396,6 +398,50 @@ describe('mockApiInterceptor', () => {
     expect(pagina.totalPages).toBeGreaterThan(0);
     expect(pagina.number).toBe(0);
     expect(pagina.size).toBe(1);
+  });
+
+  it('GET /cameras/{id}/zones começa vazio (sem semente, mesma decisão de EMITIDOS)', async () => {
+    const zonas = await firstValueFrom(http.get<Zone[]>(`${environment.apiUrl}/cameras/CAM-01/zones`));
+
+    expect(zonas).toEqual([]);
+  });
+
+  it('POST /cameras/{id}/zones cadastra e GET reflete', async () => {
+    const nova = await firstValueFrom(http.post<Zone>(`${environment.apiUrl}/cameras/CAM-01/zones`,
+      { nome: 'Área da prensa', zoneType: 'RESTRICTED', polygon: [{ x: 0.1, y: 0.1 }], severity: 3, requiredPpe: ['HELMET'] }));
+
+    expect(nova.id).toBeDefined();
+    expect(nova.cameraId).toBe('CAM-01');
+    expect(nova.ativa).toBe(true);
+    const zonas = await firstValueFrom(http.get<Zone[]>(`${environment.apiUrl}/cameras/CAM-01/zones`));
+    expect(zonas).toHaveLength(1);
+  });
+
+  it('PUT /cameras/{id}/zones/{zoneId} edita, e 404 se inexistente', async () => {
+    const nova = await firstValueFrom(http.post<Zone>(`${environment.apiUrl}/cameras/CAM-01/zones`,
+      { nome: 'Área da prensa', zoneType: 'RESTRICTED', polygon: [], severity: 3, requiredPpe: [] }));
+
+    const editada = await firstValueFrom(http.put<Zone>(`${environment.apiUrl}/cameras/CAM-01/zones/${nova.id}`,
+      { nome: 'Área da prensa (revisada)', zoneType: 'ATTENTION', polygon: [{ x: 0.5, y: 0.5 }], severity: 1, requiredPpe: [] }));
+    expect(editada.nome).toBe('Área da prensa (revisada)');
+    expect(editada.zoneType).toBe('ATTENTION');
+
+    await expect(firstValueFrom(http.put(`${environment.apiUrl}/cameras/CAM-01/zones/999`,
+      { nome: 'x', zoneType: 'ATTENTION', polygon: [], severity: 1, requiredPpe: [] })))
+      .rejects.toMatchObject({ status: 404 });
+  });
+
+  it('DELETE /cameras/{id}/zones/{zoneId} desativa em vez de remover, some do GET, e 404 se inexistente', async () => {
+    const nova = await firstValueFrom(http.post<Zone>(`${environment.apiUrl}/cameras/CAM-01/zones`,
+      { nome: 'Área da prensa', zoneType: 'RESTRICTED', polygon: [], severity: 3, requiredPpe: [] }));
+
+    await firstValueFrom(http.delete(`${environment.apiUrl}/cameras/CAM-01/zones/${nova.id}`));
+
+    const zonas = await firstValueFrom(http.get<Zone[]>(`${environment.apiUrl}/cameras/CAM-01/zones`));
+    expect(zonas).toHaveLength(0);
+
+    await expect(firstValueFrom(http.delete(`${environment.apiUrl}/cameras/CAM-01/zones/999`)))
+      .rejects.toMatchObject({ status: 404 });
   });
 
   it('GET /users nunca traz senha', async () => {

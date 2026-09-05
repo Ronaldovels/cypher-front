@@ -5,10 +5,11 @@ import { environment } from '../../../environments/environment';
 import { CameraAdmin, Station } from '../incident.models';
 import { Equipe, Usuario } from '../team.models';
 import { Webhook, WebhookPayload } from '../webhook.models';
+import { Zone, ZonePayload } from '../zone.models';
 import {
   CAMERAS_MUTAVEL, EMITIDOS, EQUIPES_MUTAVEL, INCIDENTS, SESSAO_MOCK, SETUP_MOCK,
   STATIONS_MUTAVEL, TOKENS_ESTACAO, USUARIOS_MUTAVEL, WEBHOOKS_MUTAVEL,
-  WEBHOOK_DELIVERIES_MUTAVEL, proximoIdWebhook, resumo,
+  WEBHOOK_DELIVERIES_MUTAVEL, ZONAS_MUTAVEL, proximoIdWebhook, proximoIdZona, resumo,
 } from './fixtures';
 
 const ATRASO_MS = 150;
@@ -288,6 +289,45 @@ function responder(req: HttpRequest<unknown>): unknown | HttpErrorResponse | und
       number: page,
       size,
     };
+  }
+
+  // ---------------- zonas de risco ----------------
+
+  const matchZones = req.url.match(/\/cameras\/([^/]+)\/zones(?:\/(\d+))?$/);
+  if (matchZones) {
+    const [, cameraId, idStr] = matchZones;
+    const id = idStr ? Number(idStr) : null;
+
+    if (req.method === 'GET' && id === null) {
+      return ZONAS_MUTAVEL.filter(z => z.cameraId === cameraId && z.ativa)
+        .map(z => ({ ...z, polygon: [...z.polygon], requiredPpe: [...z.requiredPpe] }));
+    }
+
+    if (req.method === 'POST' && id === null) {
+      const corpo = req.body as ZonePayload;
+      const nova: Zone = { id: proximoIdZona(), cameraId, ...corpo, ativa: true };
+      ZONAS_MUTAVEL.push(nova);
+      return nova;
+    }
+
+    if (req.method === 'PUT' && id !== null) {
+      const corpo = req.body as ZonePayload;
+      const atual = ZONAS_MUTAVEL.find(z => z.id === id && z.cameraId === cameraId);
+      if (!atual) {
+        return naoEncontrado(`Zona inexistente: ${id}`);
+      }
+      Object.assign(atual, corpo);
+      return atual;
+    }
+
+    if (req.method === 'DELETE' && id !== null) {
+      const atual = ZONAS_MUTAVEL.find(z => z.id === id && z.cameraId === cameraId);
+      if (!atual) {
+        return naoEncontrado(`Zona inexistente: ${id}`);
+      }
+      atual.ativa = false;
+      return null;
+    }
   }
 
   // ---------------- escrita de estação ----------------

@@ -1,6 +1,7 @@
 import { Camera, CameraAdmin, Incident, Station, Summary } from '../incident.models';
 import { Equipe, Usuario } from '../team.models';
 import { Webhook, WebhookDelivery } from '../webhook.models';
+import { Zone } from '../zone.models';
 
 /**
  * Dados de exemplo do modo `useMockData`.
@@ -254,3 +255,21 @@ export function proximoIdWebhook(): number {
 }
 
 resetMockWebhooks();
+
+// ---------------- zonas de risco (mock) ----------------
+
+export const ZONAS: Zone[] = [];
+
+export let ZONAS_MUTAVEL: Zone[] = [];
+let PROXIMO_ID_ZONA = 1;
+
+export function resetMockZonas(): void {
+  ZONAS_MUTAVEL = ZONAS.map(z => ({ ...z, polygon: [...z.polygon], requiredPpe: [...z.requiredPpe] }));
+  PROXIMO_ID_ZONA = 1;
+}
+
+export function proximoIdZona(): number {
+  return PROXIMO_ID_ZONA++;
+}
+
+resetMockZonas();
