@@ -135,6 +135,11 @@ export class ZoneEditorComponent implements OnInit {
   }
 
   salvar(): void {
+    if (this.canvasWidth() === 0 || this.canvasHeight() === 0) {
+      this.erro.set('Capture o frame antes de editar/salvar uma zona.');
+      return;
+    }
+
     const f = this.form();
     if (!f.nome.trim()) {
       this.erro.set('Informe um nome.');
@@ -176,6 +181,11 @@ export class ZoneEditorComponent implements OnInit {
   }
 
   editar(zona: Zone): void {
+    if (this.canvasWidth() === 0 || this.canvasHeight() === 0) {
+      this.erro.set('Capture o frame antes de editar/salvar uma zona.');
+      return;
+    }
+
     this.editandoId.set(zona.id);
     this.form.set({
       nome: zona.nome, zoneType: zona.zoneType, severity: zona.severity, requiredPpe: [...zona.requiredPpe],
