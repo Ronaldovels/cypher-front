@@ -157,6 +157,11 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 - Lucas Grecco — feito: `zrc` (front, `cypher-front`) concluído via subagent-driven development — 5 tasks + 3 fix loops de task (payload NaN sem frame capturado, teste de clique real, cobertura de DOM na integração) + 1 fix wave da revisão final (reset ao trocar de câmera, frame realmente congelado, zonas existentes desenhadas sobre o frame — o último era gap do próprio plano, corrigido mesmo assim), 341/341 testes; PR aberto [#8](https://github.com/Ronaldovels/cypher-front/pull/8); card `zrc` movido para `Em revisão` no Trello e neste documento (ver Review §3.4); próximo: aguardar `zra`/`zrb` para teste ponta a ponta completo; bloqueio: nenhum.
 - Lucas Grecco — feito: `zra` (backend, `cypher`) e `zrb` (capture, `cypher-capture`) concluídos via subagent-driven development, em sessões separadas — `zra`: 2 tasks, revisão final encontrou 4 achados Important (3 lacunas de teste corrigidas; reativação de zona via API decidida fora de escopo, spec não pede), 339/339 testes, PR [#9](https://github.com/lucvs07/Cypher-Api/pull/9); `zrb`: 3 tasks, endurecimento pós-revisão (payload malformado não derruba boot, polígono degenerado ignorado com log, `--zones` explícito vence cadastro remoto), 269 testes sem regressão, PR [#9](https://github.com/lucvs07/cypher-capture/pull/9) — cards movidos para `Em revisão` no Trello e neste documento (ver Review §3.5); com os 3 PRs de zonas de risco abertos (`zra`/`zrb`/`zrc`), próximo: teste manual ponta a ponta (spec §6) com as três branches rodando juntas antes do merge; bloqueio: nenhum.
 
+### 2026-09-05 (teste manual ponta a ponta de `zra`/`zrb`/`zrc` + merge dos 3 PRs)
+- Lucas Grecco — feito: subiu os três projetos localmente (backend `feat/zr-backend-zonas` com Gemini configurado, capture `feat/zr-capture-zonas` com webcam real + Cloudinary já configurado, front `feat/zr-front-zonas`); achou e corrigiu via TDD um gap de autenticação real em `CameraConfigClient`/`ZoneConfigClient` (nunca enviavam `X-Cypher-Key`, sempre 401) — a mesma correção fechou de brinde o gap de bootstrap de câmera nova no orquestrador (roteiro §5, achado em 2026-09-04); próximo: continuar o teste manual e corrigir o que mais aparecer; bloqueio: nenhum.
+- Lucas Grecco — feito: por pedido explícito durante o teste, corrigiu UX do editor de zonas (preview ao vivo antes de capturar frame; botão pra reabrir um polígono já fechado e editar os pontos — antes disso era literalmente impossível ajustar os vértices de uma zona já criada) e implementou hot-reload de zonas (`ZoneHotReloader`, revalida a cada ~30s em segundo plano, sem reiniciar o pipeline) — trazido pra dentro do escopo mesmo estando registrado como fora de escopo na spec (§7); confirmado empiricamente que uma zona cadastrada pela UI foi buscada e aplicada pelo pipeline sem reiniciar; specs e roteiro de entregas atualizados; próximo: encerrar os três projetos e aguardar decisão de merge; bloqueio: nenhum.
+- Lucas Grecco — feito: revisou e mergeou os 3 PRs (`zra` #9 em `cypher` → `main`, `zrb` #9 em `cypher-capture` → `main`, `zrc` #8 em `cypher-front` → `dev`); moveu os cards `zra`/`zrb`/`zrc` para `Concluído` no Trello; spec de zonas de risco movida de `planejadas/` para `implementadas/`, roteiro de entregas atualizado (gaps de hot-reload e bootstrap do orquestrador marcados como resolvidos); próximo: retomar E5 (gamificação, ainda bloqueada) e E6 (relatórios, CSV de incidentes liberado); bloqueio: nenhum.
+
 *(continuar registrando um bloco por dia de trabalho real.)*
 
 ---
@@ -342,3 +347,32 @@ Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
 Com os 3 PRs de zonas de risco abertos (`zra` #9 em `cypher`, `zrb` #9 em `cypher-capture`, `zrc` #8 em `cypher-front`), subir os três projetos localmente para o teste manual ponta a ponta completo antes do merge, seguindo o mesmo padrão já usado em multi-tenant e orquestrador/webhook (webcam real, empresa/câmera isolados só para o teste). Cards `zra`/`zrb` movidos para `Em revisão` no Trello e neste documento.
+
+### 3.6 Review — Teste manual ponta a ponta e merge de zonas de risco (`zra`/`zrb`/`zrc`)
+
+**Data:** 2026-09-05
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Entregue
+Os três projetos subidos localmente com webcam real do notebook, inferência em CUDA, Gemini configurado (`CYPHER_LLM_PROVIDER=gemini`) e Cloudinary já configurado no `.env` do `cypher-capture` (empresa `webcam-demo`, câmera `CAM-WEBCAM` reaproveitadas de teste anterior). Cadastro/edição de zona testado de verdade pela UI contra o backend real.
+
+**Achados do teste manual, todos corrigidos antes do merge:**
+- **Gap de autenticação real (Critical para a funcionalidade, não Critical de segurança):** `CameraConfigClient`/`ZoneConfigClient` (`cypher-capture`) nunca enviavam nenhum cabeçalho de autenticação em `GET /cameras/{id}/config` e `.../zones/config`, mesmo já havendo uma `X-Cypher-Key` provisionada em cache — a API sempre respondia `401` e a escada de degradação caía direto pro próximo degrau. Corrigido via TDD: `api_key` passou a ser parâmetro de `fetch()` nos dois clientes, e o provisionamento da chave em `run_pipeline.py` foi movido pra antes dessas buscas (era feito só depois, na hora de montar o `HttpIncidentSink`). PR #9 do `cypher-capture` ganhou um segundo commit com esse fix (274→283 testes, +9 novos: 2 no client de câmera, 2 no de zonas, 5 no hot-reload abaixo). **Efeito colateral positivo:** essa mesma correção fecha o gap de "bootstrap de câmera nova no orquestrador" já registrado no roteiro §5 (2026-09-04) — o orquestrador sobe exatamente esse `run_pipeline.py` como subprocesso.
+- **UX do editor de zonas (`zrc`):** o `<img>` do stream ficava sempre `display:none`, então o gestor não via a câmera antes de clicar "Capturar frame" — corrigido pra mostrar o preview ao vivo até a captura. `editar()` fechava o polígono de uma zona existente sem nenhum jeito de reabri-lo — a zona carregada nunca podia ter os pontos ajustados, só os campos do formulário; corrigido com um botão "reabrir polígono para editar pontos". PR #8 do `cypher-front` ganhou um commit com esses dois fixes (343 testes, +2 novos).
+- **Hot-reload trazido pra dentro do escopo por pedido explícito:** originalmente fora de escopo (spec §7, "comunicação entre a UI e o pipeline já rodando"). Implementado como `ZoneHotReloader` (`cypher-capture`) — thread separada, revalida a cada ~30s (configurável via `--zone-refresh-seconds`, 0 desativa), só troca `ZoneManager`/`ZoneDetector` quando a lista de zonas muda de verdade (comparação estrutural), não trava o loop de frames com a chamada de rede síncrona. `--zones` (arquivo local explícito) continua desativando o hot-reload. Aviso na UI atualizado de "reinicie o pipeline" para "aplica em até ~30s, sem reiniciar". Specs de zonas de risco e roteiro de entregas atualizados para refletir a mudança de escopo.
+- Confirmado empiricamente: uma zona cadastrada pela UI ("Teste") foi buscada remotamente pelo pipeline reiniciado com o fix, convertida de normalizado para pixel na resolução real da câmera (640×480).
+
+**Suítes finais antes do merge:** `zra` 339/339 (inalterado); `zrb` 283/283 (269 originais + 5 do fix de auth + 9 do hot-reload, entrando em dois commits separados); `zrc` 343/343 (341 originais + 2 dos fixes de UX).
+
+Os 3 PRs mergeados: `zra` PR [#9](https://github.com/lucvs07/Cypher-Api/pull/9) → `main`; `zrb` PR [#9](https://github.com/lucvs07/cypher-capture/pull/9) → `main`; `zrc` PR [#8](https://github.com/Ronaldovels/cypher-front/pull/8) → `dev`.
+
+#### O que não foi concluído / passa para o backlog
+- Verificação visual manual dos dois fixes de canvas que jsdom não testa automaticamente (frame realmente parado, zonas existentes em cinza sobre o frame) — confirmados funcionando no teste real, mas sem cobertura automatizada possível (limitação conhecida, documentada desde a Task 3 de `zrc`).
+- Worktree órfão `.worktrees/e2c-front-cadastro` (de uma entrega antiga já mergeada) segue no `cypher-front`, causando falha de `npx vitest run` sem argumento explícito — não removido, fora do escopo desta sessão.
+- Demonstração formal do fluxo completo (spec §6: incidente `ZONE_VIOLATION` disparado por invasão real de zona) não foi executada nesta rodada — o teste validou cadastro, hot-reload e busca remota, não uma invasão real filmada.
+
+#### Feedback recebido
+Nenhum registrado ainda (banca/mentoria).
+
+#### Próximos passos
+Cards `zra`/`zrb`/`zrc` movidos para `Concluído` no Trello e neste documento. Spec de zonas de risco movida de `planejadas/` para `implementadas/`, roteiro de entregas atualizado (gaps de hot-reload e bootstrap do orquestrador marcados como resolvidos). Próximo: retomar E5 (gamificação, ainda bloqueada por gating externo) e E6 (relatórios, CSV de incidentes já liberado).
