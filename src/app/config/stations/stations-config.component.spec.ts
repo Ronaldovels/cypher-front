@@ -199,4 +199,15 @@ describe('StationsConfigComponent', () => {
     expect(fixture.nativeElement.textContent.toLowerCase())
       .toContain('nenhuma estação');
   });
+
+  it('abre e fecha o editor de zonas de uma câmera', () => {
+    const fixture = montar();
+    const comp = fixture.componentInstance;
+
+    comp.editarZonasDe({ id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01', streamUrl: 'http://x/stream' });
+    expect(comp.cameraEmEdicaoDeZonas()?.id).toBe('CAM-01');
+
+    comp.fecharEditorDeZonas();
+    expect(comp.cameraEmEdicaoDeZonas()).toBeNull();
+  });
 });
