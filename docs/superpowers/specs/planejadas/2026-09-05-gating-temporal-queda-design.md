@@ -2,11 +2,13 @@
 
 **Data:** 2026-09-05
 **Status:** aprovado (design)
-**Escopo:** eliminar a oscilação de categoria `IMMEDIATE_RISK` (queda) no `PostureClassifier` do `cypher-capture` que hoje faz uma única queda real virar mais de um incidente no dashboard — item registrado como "Pós-NEXT" em `docs/apresentacao-esqueleto.md` e citado como bloqueio explícito da E5 (`docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` §7).
+**Escopo:** melhorar a precisão de `IMMEDIATE_RISK` (queda) no `PostureClassifier` do `cypher-capture`, eliminando o resíduo de falsos alarmes de `fall_velocity` durante agachamentos/flexões rápidos — item já identificado em `docs/metricas-dia2.md` §5.2 como "próximo nível de precisão (não feito)" e citado como bloqueio explícito da E5 (`docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` §7).
 
 **Repositório:** `cypher-capture` (nenhuma mudança em `cypher`/`cypher-front`).
 
-**Motivação:** a E5 (gamificação por equipe) constrói um placar de conformidade sobre a contagem de incidentes — um placar calculado sobre uma taxa de falso positivo conhecida (2 quedas reais → 3 incidentes) nasceria com credibilidade baixa e não tem segunda chance de recuperar confiança do usuário. Esta spec resolve essa causa raiz para destravar a E5.
+**Motivação:** a E5 (gamificação por equipe) constrói um placar de conformidade sobre a contagem de incidentes — um placar calculado sobre um detector com precisão de `IMMEDIATE_RISK` de apenas **0,418** (medido em `cenario2.mp4`, `docs/metricas-dia2.md` §5.2) nasceria com credibilidade baixa e não tem segunda chance de recuperar confiança do usuário. Esta spec ataca a causa raiz dessa imprecisão para destravar a E5.
+
+**Nota de correção (2026-09-05):** a primeira versão desta spec citava como evidência o caso "2 quedas reais → 3 incidentes" de `docs/e1b-verificacao.md`. Ao ler a fonte primária, esse documento diz explicitamente que essa divergência **não é defeito** — são 2 quedas reais + 1 agachamento real = 3 incidentes genuínos, e o "2" esperado era artefato de replay de arquivo de vídeo (tempo de vídeo vs. tempo de relógio), que nem se aplica em produção (câmera ao vivo). Essa referência foi substituída pela evidência real: a métrica de precisão 0,418 e o resíduo de `fall_velocity` documentados em `docs/metricas-dia2.md` §5.2. O mecanismo desenhado (§2) não muda — ele já era exatamente o que esse documento propunha ("gating 'queda só conta se terminar em postura caída'"); só a motivação e os critérios de aceite (§5/§7/§8) foram corrigidos.
 
 ---
 
@@ -18,7 +20,7 @@
 - `fall_velocity` — `TemporalAnalyzer.update` (`src/pose/temporal.py`) mede velocidade/aceleração do centro do quadril; dispara quando a queda está *em andamento*, antes da pessoa necessariamente terminar deitada.
 - `balance_loss_risk` (`_detect_instability`) — torção brusca do tronco. Fora do escopo desta spec.
 
-A histerese atual (`_apply_hysteresis`) entra em `IMMEDIATE_RISK` rápido (`enter_frames_risk = 2`, prioriza recall) mas só sai depois de 15 frames consecutivos em `NORMAL`. Numa queda real, o sinal de `fall_velocity`/`person_fallen` pode cair abaixo do limiar por alguns frames intermitentes sem chegar a 15 seguidos — mas quando isso se soma ao pipeline real rodando mais devagar que o vídeo de origem, o intervalo entre uma reabertura e outra do mesmo track pode ultrapassar a janela de merge do `IncidentTracker` (`merge_window_seconds = 15s`), e a mesma queda física vira dois incidentes na notificação em vez de um. Combinado com um episódio de `ERGONOMIC_RISK` genuíno entre as duas quedas do cenário medido, o resultado documentado (`docs/e1b-verificacao.md`) é **2 quedas reais → 3 incidentes**.
+`docs/metricas-dia2.md` §5.2 mede, em `cenario2.mp4` (2 quedas reais + agachamentos/flexões), **recall de `IMMEDIATE_RISK` = 0,996 mas precisão = apenas 0,418** com a calibração atual (cues "caído" + `exit=45` + `fall_risk_min=0.85`). A decomposição instrumentada (§5.5 do mesmo documento) confirma: **nenhum cue geométrico (`vertical_extent`, `trunk_flexion`, aspect da bbox) dispara falso em agachamento/flexão** — os falsos "fall" que restam são só `fall_velocity` (o quadril descendo rápido num agachamento produz o mesmo sinal de velocidade que uma queda real, mais jitter de pose). O próprio documento já registra a solução, não implementada: *"gating 'queda só conta se terminar em postura caída' (lógica temporal) eliminaria o resíduo de `fall_velocity` em agachamentos rápidos"*.
 
 O `IncidentTracker` (`src/notify/tracker.py`) não é o lugar certo para corrigir isso: ele só recebe a categoria já decidida pelo classificador (via `PersonEvent.posture`), sem acesso aos sinais brutos que diferenciam "queda em andamento" de "queda confirmada". A correção pertence ao classificador.
 
@@ -40,7 +42,7 @@ Quando `_evaluate_rules` decide `IMMEDIATE_RISK` **via `fall_velocity` sem `pers
 
 ### 2.1 Decisão de trade-off: recall vs. precisão
 
-Um tropeço real onde a pessoa se recupera sozinha antes do fim da janela de confirmação **deixa de contar como `IMMEDIATE_RISK`** — pode virar `ERGONOMIC_RISK` ou nenhuma categoria de risco, dependendo dos ângulos daquele frame. Esta é uma escolha deliberada (não um efeito colateral): resolve a causa raiz do bug medido, na linha do que `docs/metricas-dia2.md` já propunha ("queda só conta se terminar em postura caída"), aceitando que a métrica de recall pode cair marginalmente em troca de eliminar o incidente espúrio. O impacto real precisa ser medido contra o conjunto de validação existente (§5) antes do merge — se o recall cair abaixo de um limiar aceitável, a janela (`fall_confirm_seconds`) é o parâmetro de ajuste, não o mecanismo.
+Um tropeço real onde a pessoa se recupera sozinha antes do fim da janela de confirmação **deixa de contar como `IMMEDIATE_RISK`** — pode virar `ERGONOMIC_RISK` ou nenhuma categoria de risco, dependendo dos ângulos daquele frame. Esta é uma escolha deliberada (não um efeito colateral): resolve exatamente o resíduo de `fall_velocity` em agachamentos rápidos medido em `docs/metricas-dia2.md` §5.2 (precisão 0,418), aceitando que a métrica de recall pode cair marginalmente em troca de eliminar os falsos alarmes. O impacto real precisa ser medido contra o conjunto de validação existente (§5) antes do merge — se o recall cair abaixo de um limiar aceitável, a janela (`fall_confirm_seconds`) é o parâmetro de ajuste, não o mecanismo.
 
 ### 2.2 Custo de latência
 
@@ -77,11 +79,19 @@ Convertido para frames internamente via `target_fps` (mesmo padrão de `merge_wi
 
 **Unitário (`tests/test_classifier.py`)** — novos testes cobrindo: (a) `fall_velocity` seguido de `person_fallen` confirmado dentro da janela → `IMMEDIATE_RISK` reportado; (b) `fall_velocity` sem confirmação dentro da janela → nunca reporta `IMMEDIATE_RISK`; (c) `person_fallen` verdadeiro desde o primeiro frame → confirma imediato, sem esperar a janela; (d) confirmação antecipada quando `person_fallen` vira verdadeiro antes do fim da janela.
 
-**Fixture/regressão (`tests/test_incident_tracker.py`, `tests/fixtures/cenario2_transitions.json`)** — a fixture de transições precisa ser regravada rodando o classificador atualizado contra `data/validation/cenario2.mp4`, já que as transições brutas mudam (menos oscilações chegando ao tracker). O teste `test_cenario2_produz_dois_incidentes_para_duas_quedas` precisa continuar verde.
+**Fixture/regressão (`tests/test_incident_tracker.py`, `tests/fixtures/cenario2_transitions.json`)** — a fixture de transições precisa ser regravada rodando o classificador atualizado contra `data/validation/cenario2.mp4`, já que as transições brutas mudam (menos oscilações de `fall_velocity` chegando ao tracker). O teste `test_cenario2_produz_dois_incidentes_para_duas_quedas` precisa continuar verde (esse teste isola o comportamento do tracker sobre a fixture — não é o alvo desta spec, só não pode quebrar).
 
-**Validação de recall (`data/validation/`)** — reexecutar a suíte de medição existente (mesma usada em `docs/metricas-dia2.md`) contra o classificador atualizado, comparando recall antes/depois. Critério de aceite: recall não regride abaixo do que já está documentado como baseline aceito, ou a regressão é pequena o bastante para ser uma troca consciente e documentada (não uma surpresa).
+**Validação de precisão/recall (`scripts/evaluate_pose.py`)** — reexecutar o harness oficial contra `cenario2.mp4`, mesma metodologia de `docs/metricas-dia2.md` §5.2/§5.4:
 
-**Ponta a ponta** — rodar `cenario2.mp4` real (não a fixture, o vídeo) através do pipeline completo (`run_pipeline.py`) e confirmar que o resultado final é **2 incidentes `FALL_RISK`**, não 3 — a divergência exata que motivou esta spec (`docs/e1b-verificacao.md`).
+```bash
+python scripts/evaluate_pose.py \
+    --annotations data/annotations/cenario2_gt.json \
+    --video data/validation/cenario2.mp4
+```
+
+Critério de aceite: **precisão de `immediate_risk` melhora de forma mensurável a partir do baseline documentado (0,418)**, e **recall não regride abaixo de 0,95** (baseline documentado: 0,996 no harness de sweep, 0,986 confirmado pelo caminho oficial em §5.4 de `docs/metricas-dia2.md`) — folga deliberada abaixo do baseline porque a introdução da janela de confirmação pode custar recall em quedas muito rápidas, e o objetivo desta spec é precisão, não recall perfeito. Também reexecutar contra `cenario.mp4` (validação cruzada anti-overfitting, mesmo padrão de `docs/metricas-dia2.md` §5.5) para confirmar que nenhum falso "fall" novo aparece em ergonomia pura.
+
+**Ponta a ponta** — rodar `cenario2.mp4` real através do pipeline completo (`run_pipeline.py`) e inspecionar os incidentes `FALL_RISK` gerados: confirmar que as 2 quedas reais (`~f700–845`, `~f1050–1190`) seguem sendo reportadas (recall preservado no caminho de produção), e que os incidentes de agachamento/flexão (`ERGONOMIC_RISK`) não viram `FALL_RISK` esporádico por resíduo de `fall_velocity`.
 
 ---
 
@@ -97,7 +107,7 @@ Convertido para frames internamente via `target_fps` (mesmo padrão de `merge_wi
 ## 7. Premissas
 
 - Correção acontece só no `cypher-capture`; nenhuma mudança em `cypher`/`cypher-front`.
-- Uma vez validado (recall aceitável + `cenario2.mp4` produzindo 2 incidentes), o bloqueio §7 da spec de gamificação (E5) é considerado resolvido — decisão de desbloqueio cabe a quem revisar os números de validação, não é automática só por este código existir.
+- Uma vez validado (precisão de `immediate_risk` melhorada, recall ≥ 0,95, sem falso novo em `cenario.mp4`), o bloqueio §7 da spec de gamificação (E5) é considerado resolvido — decisão de desbloqueio cabe a quem revisar os números de validação, não é automática só por este código existir.
 
 ---
 
@@ -105,6 +115,6 @@ Convertido para frames internamente via `target_fps` (mesmo padrão de `merge_wi
 
 1. **Classificador.** Estado de confirmação pendente em `PostureClassifier`/`_apply_hysteresis`, config `fall_confirm_seconds`. Testes unitários dos 4 casos de §5.
 2. **Regravar fixture.** Rodar `cenario2.mp4` contra o classificador atualizado, regravar `cenario2_transitions.json`, confirmar `test_incident_tracker.py` verde.
-3. **Validação de recall.** Reexecutar a suíte de medição contra `data/validation/`, comparar com o baseline documentado.
-4. **Ponta a ponta.** `cenario2.mp4` via `run_pipeline.py` completo, confirmar 2 incidentes `FALL_RISK`.
+3. **Validação de precisão/recall.** `scripts/evaluate_pose.py` contra `cenario2.mp4` (precisão/recall de `immediate_risk`) e `cenario.mp4` (validação cruzada anti-overfitting), comparar com o baseline documentado em `docs/metricas-dia2.md`.
+4. **Ponta a ponta.** `cenario2.mp4` via `run_pipeline.py` completo, inspecionar os incidentes `FALL_RISK`/`ERGONOMIC_RISK` gerados.
 5. **Decisão de desbloqueio da E5** com base nos números de (3) e (4).
