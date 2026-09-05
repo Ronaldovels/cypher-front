@@ -68,6 +68,8 @@ Toda spec com mudanças em `cypher-front` registra explicitamente (numa nota de 
 ## 5. Gaps conhecidos, ainda sem spec
 
 - **`/config/epis`** (E1 §14.1, E2 §10) — condicionada ao retreino do detector com classes `no_*` de violação de EPI; sem consumidor até lá.
-- **Hot-reload de zonas** (`2026-08-29-zonas-de-risco-design.md` §7) — comunicação entre a UI e o pipeline já rodando, sem precisar reiniciar. Registrado como entrega futura, sem spec própria ainda.
 - **Painel de super-admin multi-empresa** (`2026-08-29-multi-tenant-design.md` §9) — gestão de empresas entre si (suporte, billing). Não foi pedido.
-- **Bootstrap de câmera nova no orquestrador** (achado no teste ponta a ponta de 2026-09-04, ver §3) — `GET /cameras/{id}/config` exige `PIPELINE`/`GESTOR`, mas `CameraConfigClient` não autentica a chamada; uma câmera nunca provisionada antes (sem `X-Cypher-Key`, sem cache local) fica em loop de backoff no orquestrador. Sem spec própria ainda.
+
+**Resolvidos durante o teste manual ponta a ponta de zonas de risco (2026-09-05):**
+- ~~Hot-reload de zonas~~ — implementado (`ZoneHotReloader`, `2026-08-29-zonas-de-risco-design.md` §3.4), trazido pra dentro da entrega `zrb`/`zrc` por pedido explícito depois de originalmente registrado como fora de escopo.
+- ~~Bootstrap de câmera nova no orquestrador~~ (achado no teste ponta a ponta de 2026-09-04, ver §3) — `CameraConfigClient`/`ZoneConfigClient` nunca enviavam `X-Cypher-Key`, então `GET /cameras/{id}/config` e `.../zones/config` sempre voltavam 401 mesmo com uma chave já em cache. Corrigido no `cypher-capture` (`feat/zr-capture-zonas`, achado no teste manual de zonas de risco): o provisionamento da chave em `run_pipeline.py` passou a acontecer antes dessas buscas, e o mesmo processo é o que o orquestrador sobe via `subprocess.Popen` — resolve os dois casos com a mesma correção.

@@ -107,9 +107,9 @@ O backend nunca abre a câmera — não tem como saber a resolução real do fra
 
 Ambos continuam recebendo `Zone` com `polygon` em pixels — `ZoneConfigClient` entrega esse formato depois de converter (casos 1 e 2) ou já vem pronto assim (caso 3). Nenhuma mudança em `cv2.pointPolygonTest` nem no cache estático de polígonos.
 
-### 3.4 Sem hot-reload nesta entrega
+### 3.4 Hot-reload em segundo plano
 
-Mudança feita na UI só é aplicada no próximo boot do pipeline daquela câmera — mesma limitação que já existe hoje. Comunicação em tempo real entre a UI e o pipeline já rodando fica registrada como item de entrega futura (§7).
+**Atualizado após o teste manual ponta a ponta desta entrega** — originalmente registrado como fora de escopo (§7), trazido pra dentro por pedido explícito. `ZoneHotReloader` (`src/zones/hot_reload.py`) roda `ZoneConfigClient.fetch` periodicamente (`--zone-refresh-seconds`, default 30s) numa thread separada — não trava o loop de frames com a chamada de rede síncrona do transporte real (timeout de 5s). Só troca `ZoneManager`/`ZoneDetector` do pipeline quando a lista de zonas muda de verdade (comparação estrutural de `Zone`), evitando recriação à toa a cada ciclo sem mudança. `--zones` (arquivo local explícito) continua desativando o hot-reload, mesmo espírito de "`--source` vence o cadastro" já usado para a fonte de captura; `--zone-refresh-seconds 0` desativa manualmente.
 
 ---
 
@@ -141,9 +141,9 @@ Formulário por zona: `nome`, `zoneType` (`RESTRICTED`/`ATTENTION`), `severity` 
 
 `mock-api.interceptor.ts` ganha seção de zonas, array mutável `ZONAS_MUTAVEL` filtrável por `cameraId`, mesmo esqueleto das seções já existentes.
 
-### 4.6 Aviso de reinício
+### 4.6 Aviso de aplicação
 
-Como não há hot-reload (§3.4), ao salvar uma zona o painel mostra um aviso explícito: "reinicie o pipeline desta câmera para aplicar a mudança" — mesma transparência já praticada em outros lugares do produto (ex.: badge de conexão do SSE em E1 §6.3), em vez de deixar a mudança parecer aplicada quando não está.
+**Atualizado após o hot-reload (§3.4):** o painel mostra um aviso explícito de que o pipeline revalida as zonas periodicamente em segundo plano e a mudança aparece em até ~30s, sem precisar reiniciar — mesma transparência já praticada em outros lugares do produto (ex.: badge de conexão do SSE em E1 §6.3), em vez de deixar o tempo de propagação parecer instantâneo quando não é.
 
 ---
 
@@ -157,7 +157,7 @@ Como não há hot-reload (§3.4), ao salvar uma zona o painel mostra um aviso ex
 | API indisponível no boot do pipeline | Escada de §3.1: cache normalizado convertido → arquivo local pixel absoluto → lista vazia |
 | Resolução da câmera muda entre execuções | Zonas continuam corretas — conversão normalizado→pixel refeita a cada boot com a resolução atual |
 | Zona desativada | Some de `.../zones/config`; pipeline para de aplicá-la no próximo boot daquela câmera |
-| Zona salva com o pipeline já rodando | Aviso explícito na UI: sem efeito até reiniciar (§3.4/§4.6) |
+| Zona salva com o pipeline já rodando | Aplicada em segundo plano em até ~30s via hot-reload (§3.4/§4.6), sem reiniciar |
 
 ---
 
@@ -169,13 +169,14 @@ Como não há hot-reload (§3.4), ao salvar uma zona o painel mostra um aviso ex
 
 **Angular** — spec do `ZoneEditorComponent` cobrindo captura de frame, adição/edição/remoção de vértice, conversão pixel↔normalizado do canvas; spec do `ZoneService` via `HttpTestingController`; interceptor mock.
 
-**Ponta a ponta** — cadastrar uma zona pela UI sobre uma câmera real, reiniciar o pipeline daquela câmera, provocar uma invasão de zona e confirmar que o incidente `ZONE_VIOLATION` é gerado com o `zoneName` correto.
+**Python (hot-reload)** — `ZoneHotReloader.tick()` cobrindo: aplica só quando a lista muda; ignora quando o cliente não tem nada; repassa `api_key`/resolução; erro do cliente durante o loop não derruba a thread; `start()`/`stop()` rodando `tick()` em segundo plano com intervalo real curto e encerrando de forma limpa.
+
+**Ponta a ponta** — cadastrar uma zona pela UI sobre uma câmera real com o pipeline já rodando, aguardar o ciclo de hot-reload (~30s) sem reiniciar nada, provocar uma invasão de zona e confirmar que o incidente `ZONE_VIOLATION` é gerado com o `zoneName` correto.
 
 ---
 
 ## 7. Fora de escopo
 
-- **Hot-reload** (comunicação entre a UI e o pipeline já rodando, sem reiniciar) — registrado para avaliação futura.
 - `EPI_VIOLATION` continua sem disparar de fato — `requiredPpe` é cadastrado e devolvido pela API, mas o cruzamento zona×EPI depende do mesmo retreino do detector já registrado como pendente em E1 §4.6; esta spec só move o *cadastro* do campo para a UI, não resolve a limitação do detector.
 - Anotação de múltiplas câmeras simultaneamente numa mesma tela (um editor por vez, uma câmera por vez).
 - Deletar de verdade uma zona (só soft delete, mesmo padrão do resto do catálogo).
