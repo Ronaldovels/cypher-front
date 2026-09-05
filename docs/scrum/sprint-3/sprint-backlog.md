@@ -75,16 +75,17 @@ Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.4. Review registr
 
 Um card por fatia de repositório de cada plano — o checklist do card é a lista de tasks do próprio arquivo do plano (`docs/superpowers/plans/<entrega>/`). Ordem de cima pra baixo = ordem de retirada recomendada pelo roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3); cards sem dependência pendente podem ser puxados em paralelo.
 
-**Coluna inicial no Trello: `Product Backlog`**, para os 4 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`), Multi-tenant (`mta`/`mtb`), Orquestrador (`oqa`), Webhook (`wha`/`whb`) e Zonas de risco (`zra`/`zrb`/`zrc`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
+**Coluna inicial no Trello: `Product Backlog`**, para os 5 cards abaixo — nenhum teve código iniciado ainda. Os cards de Análise LLM multimodal (`ala`/`alb`), Multi-tenant (`mta`/`mtb`), Orquestrador (`oqa`), Webhook (`wha`/`whb`) e Zonas de risco (`zra`/`zrb`/`zrc`) já foram puxados — ver seções acima. Mover os demais para `Sprint Backlog` só quando o time decidir puxá-los, respeitando a coluna "Depende de".
 
-**Orquestrador de pipelines (`oqa`) inserido no topo da fila em 2026-09-03** — decisão de produto, registrada em `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3 ("Priorização do orquestrador"), motivada por um gap real encontrado no teste manual ponta a ponta de multi-tenant. As demais linhas foram renumeradas (+1) para manter a ordem de retirada sequencial. Com `zra`/`zrb`/`zrc` puxados em 2026-09-04, as linhas restantes foram renumeradas novamente.
+**Orquestrador de pipelines (`oqa`) inserido no topo da fila em 2026-09-03** — decisão de produto, registrada em `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3 ("Priorização do orquestrador"), motivada por um gap real encontrado no teste manual ponta a ponta de multi-tenant. Com `zra`/`zrb`/`zrc` puxados em 2026-09-04, e o **gating temporal de queda (`gtq`) inserido no topo da fila em 2026-09-05** (destrava a E5, ver roteiro §3) as linhas restantes foram renumeradas novamente.
 
 | Ordem | Card | Descrição | Checklist (tasks do plano) | Depende de |
 |---|---|---|---|---|
-| 8 | Relatórios — backend, CSV de incidentes (`e6a`, tarefa 1) | `CsvReportBuilder`, `GET /reports/incidents.csv` | 1 task — `plans/e6-relatorios/2026-08-29-e6a-backend-relatorios.md` (tarefa 1) | multi-tenant |
-| 9 | Relatórios — front, CSV de incidentes (`e6b`, tarefa 1) | Link de exportação na timeline de incidentes | 1 task — `plans/e6-relatorios/2026-08-29-e6b-front-relatorios.md` (tarefa 1) | e6a tarefa 1 |
-| 10 | Gamificação — backend/capture/front (`e5a`/`e5b`/`e5c`) | Heartbeat, `PlacarService`, metas por equipe, tela de placar | 3+2+3 tasks — `plans/e5-gamificacao/` | ⛔ bloqueado — gating de calibração no `cypher-capture`, sem data. Não puxar antes de liberado. |
-| 10 | Relatórios — placar/PDF (`e6a`/`e6b`, tarefa 2) | CSV de placar + PDF de resumo executivo | tarefa 2 de cada arquivo — `plans/e6-relatorios/` | item 9 (E5) |
+| 8 | Gating temporal de queda (`gtq`) | Janela de confirmação no `PostureClassifier` antes de reportar `IMMEDIATE_RISK` via `fall_velocity` — elimina falso alarme em agachamentos rápidos, destrava a E5 | 5 tasks — `plans/gating-temporal-queda/2026-09-05-gtq-capture-gating-queda.md` | nenhuma — liberado agora |
+| 9 | Relatórios — backend, CSV de incidentes (`e6a`, tarefa 1) | `CsvReportBuilder`, `GET /reports/incidents.csv` | 1 task — `plans/e6-relatorios/2026-08-29-e6a-backend-relatorios.md` (tarefa 1) | multi-tenant |
+| 10 | Relatórios — front, CSV de incidentes (`e6b`, tarefa 1) | Link de exportação na timeline de incidentes | 1 task — `plans/e6-relatorios/2026-08-29-e6b-front-relatorios.md` (tarefa 1) | e6a tarefa 1 |
+| 11 | Gamificação — backend/capture/front (`e5a`/`e5b`/`e5c`) | Heartbeat, `PlacarService`, metas por equipe, tela de placar | 3+2+3 tasks — `plans/e5-gamificacao/` | ⛔ bloqueado — depende da Tarefa 5 do plano `gtq` confirmar precisão/recall aceitáveis. Não puxar antes disso. |
+| 11 | Relatórios — placar/PDF (`e6a`/`e6b`, tarefa 2) | CSV de placar + PDF de resumo executivo | tarefa 2 de cada arquivo — `plans/e6-relatorios/` | item 11 (E5) |
 
 ### Gestão ágil e protótipo (em andamento — objeto real desta Sprint)
 

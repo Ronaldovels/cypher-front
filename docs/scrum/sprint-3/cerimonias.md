@@ -122,6 +122,32 @@ Lucas Grecco — os três repositórios, cada um executado por um agente dedicad
 
 ---
 
+### 1.5 Planning — Gating temporal de queda (`gtq`)
+
+**Data:** 2026-09-05
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto de entrada
+Pedido explícito do usuário pra revisar a E5 (gamificação) pra poder implementá-la agora. Antes de brainstormar a E5 em si, foi necessário verificar o bloqueio já registrado na própria spec (§7): "implementação não deve começar antes do gating temporal de queda ser resolvido no `cypher-capture`". Investigação confirmou que o bloqueio segue válido (`docs/apresentacao-esqueleto.md` lista o item em "Pós-NEXT", sem data; nenhum commit recente o implementa). Como o usuário decidiu investigar/resolver o bloqueio em vez de esperar, uma segunda investigação técnica (classificador de postura, `src/pose/classifier.py`) mostrou que o gating é viável sem retreino de modelo — vira spec e plano no mesmo dia.
+
+**Achado importante durante o brainstorming:** a primeira versão da spec citava como evidência "2 quedas reais → 3 incidentes" (`docs/e1b-verificacao.md`) — mas ao ler a fonte primária, esse documento diz explicitamente que essa divergência **não é defeito** (3 incidentes genuínos: 2 quedas + 1 agachamento real; o "2" esperado era artefato de replay de vídeo, nem se aplica em produção). A evidência real, corrigida antes da aprovação final da spec: precisão de `immediate_risk` = 0,418 em `cenario2.mp4` (`docs/metricas-dia2.md` §5.2), causada pelo resíduo de `fall_velocity` em agachamentos rápidos. O mecanismo desenhado não mudou — só a motivação e os critérios de aceite.
+
+#### Sprint Goal
+Implementar a janela de confirmação no `PostureClassifier` (`cypher-capture`, plano `plans/gating-temporal-queda/2026-09-05-gtq-capture-gating-queda.md`, 5 tasks): `fall_velocity` sem `person_fallen` confirmado dentro de `fall_confirm_seconds` (default 1.0s) nunca vira `IMMEDIATE_RISK` — elimina o falso alarme de agachamento sem mexer no `IncidentTracker` nem retreinar modelo. Tasks 4-5 são validação empírica (precisão/recall via `scripts/evaluate_pose.py`, ponta a ponta) que terminam numa decisão explícita: o bloqueio §7 da E5 está resolvido ou não.
+
+#### Itens puxados do Product Backlog
+Card `gtq` de `sprint-backlog.md` — inserido no topo da fila de "Próximas entregas" por decisão de produto (destrava E5), movido de `Product Backlog` para `Sprint Backlog`.
+
+#### Capacidade e divisão de trabalho
+Lucas Grecco — único repositório tocado (`cypher-capture`).
+
+#### Riscos identificados no planning
+- O critério de aceite (spec §5/§7) não é um gate automático — precisão deve "melhorar de forma mensurável" e recall "não regredir abaixo de 0,95", mas a decisão final de considerar a E5 destravada é humana, sobre os números medidos nas Tasks 4-5, não uma assertiva de teste que passa/falha sozinha.
+- Trade-off de latência aceito conscientemente: uma queda real confirmada demora até 1s a mais pra virar incidente (janela de confirmação) — pequeno frente à duração típica de queda (~4.5s), mas registrado como custo real num sistema de segurança.
+- Regravar a fixture de regressão (`tests/fixtures/cenario2_transitions.json`, Task 3) exige rodar o pipeline real contra o vídeo (modelo YOLO, GPU/CPU) — não é um teste unitário puro, é geração de dado de teste via script novo (`scripts/regen_cenario2_fixture.py`).
+
+---
+
 ## 2. Dailies (registro resumido, assíncrono)
 
 Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**.
@@ -161,6 +187,7 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 - Lucas Grecco — feito: subiu os três projetos localmente (backend `feat/zr-backend-zonas` com Gemini configurado, capture `feat/zr-capture-zonas` com webcam real + Cloudinary já configurado, front `feat/zr-front-zonas`); achou e corrigiu via TDD um gap de autenticação real em `CameraConfigClient`/`ZoneConfigClient` (nunca enviavam `X-Cypher-Key`, sempre 401) — a mesma correção fechou de brinde o gap de bootstrap de câmera nova no orquestrador (roteiro §5, achado em 2026-09-04); próximo: continuar o teste manual e corrigir o que mais aparecer; bloqueio: nenhum.
 - Lucas Grecco — feito: por pedido explícito durante o teste, corrigiu UX do editor de zonas (preview ao vivo antes de capturar frame; botão pra reabrir um polígono já fechado e editar os pontos — antes disso era literalmente impossível ajustar os vértices de uma zona já criada) e implementou hot-reload de zonas (`ZoneHotReloader`, revalida a cada ~30s em segundo plano, sem reiniciar o pipeline) — trazido pra dentro do escopo mesmo estando registrado como fora de escopo na spec (§7); confirmado empiricamente que uma zona cadastrada pela UI foi buscada e aplicada pelo pipeline sem reiniciar; specs e roteiro de entregas atualizados; próximo: encerrar os três projetos e aguardar decisão de merge; bloqueio: nenhum.
 - Lucas Grecco — feito: revisou e mergeou os 3 PRs (`zra` #9 em `cypher` → `main`, `zrb` #9 em `cypher-capture` → `main`, `zrc` #8 em `cypher-front` → `dev`); moveu os cards `zra`/`zrb`/`zrc` para `Concluído` no Trello; spec de zonas de risco movida de `planejadas/` para `implementadas/`, roteiro de entregas atualizado (gaps de hot-reload e bootstrap do orquestrador marcados como resolvidos); próximo: retomar E5 (gamificação, ainda bloqueada) e E6 (relatórios, CSV de incidentes liberado); bloqueio: nenhum.
+- Lucas Grecco — feito: a pedido do usuário, investigou o bloqueio §7 da E5 antes de revisar o design — confirmou que o gating temporal de queda segue pendente no `cypher-capture` (sem prazo); investigação técnica do classificador mostrou que é viável sem retreino de modelo; brainstorming completo (spec escrita, achado e corrigido um erro de evidência citada — "2 quedas → 3 incidentes" não era o bug real, a métrica certa é precisão 0,418 de `docs/metricas-dia2.md`); plano de implementação escrito (5 tasks, `plans/gating-temporal-queda/`); card `gtq` inserido no topo da fila (destrava E5) e movido para `Sprint Backlog`; roteiro de entregas e sprint-backlog atualizados; próximo: puxar `gtq` pra `Em andamento`. bloqueio: nenhum.
 
 *(continuar registrando um bloco por dia de trabalho real.)*
 
