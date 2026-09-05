@@ -67,7 +67,7 @@ Planning de `oqa` registrado em `docs/scrum/sprint-3/cerimonias.md` §1.2. Plann
 |---|---|---|---|---|---|
 | Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | `cypher` | Lucas Grecco | 🔄 Em andamento |
 | Zonas de risco — capture (`zrb`) | `ZoneManager` com zonas pré-carregadas, `ZoneConfigClient` (ladder de degradação) | 3 tasks — `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md` | `cypher-capture` | Lucas Grecco | 🔄 Em andamento |
-| Zonas de risco — front (`zrc`) | Editor de polígono em canvas, integrado a `/config/estacoes` | 5 tasks — `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md` | `cypher-front` | Lucas Grecco | 🔄 Em andamento |
+| Zonas de risco — front (`zrc`) | Editor de polígono em canvas, integrado a `/config/estacoes`. PR [#8](https://github.com/Ronaldovels/cypher-front/pull/8), 341/341 testes | 5 tasks — `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md` | `cypher-front` | Lucas Grecco | 🔍 Em revisão |
 
 Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.4. Os três cards movidos de `Product Backlog` para `Em andamento` em 2026-09-04 — execução delegada a um agente por repositório (subagent-driven development), uma sessão separada para `zra` (backend), `zrb` (capture) e `zrc` (front). `zrb`/`zrc` não têm bloqueio duro sobre `zra` (capture tem cache + arquivo local como fallback, front tem modo mock), mas o teste ponta a ponta final (spec §6) exige as três prontas.
 
