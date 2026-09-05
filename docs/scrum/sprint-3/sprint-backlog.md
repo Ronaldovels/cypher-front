@@ -61,15 +61,15 @@ Planning informal (sem ata dedicada — seguiu direto o roteiro de entregas, ord
 
 Planning de `oqa` registrado em `docs/scrum/sprint-3/cerimonias.md` §1.2. Planning de `wha`/`whb` registrado em `docs/scrum/sprint-3/cerimonias.md` §1.3. Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.3. Os três cards movidos de `Sprint Backlog`/`Product Backlog` para `Em andamento` em 2026-09-03 (implementação delegada a um agente por repositório, subagent-driven development em paralelo), para `Em revisão` no mesmo dia com os 3 PRs abertos, e para `Concluído` em 2026-09-04 depois de um teste manual ponta a ponta com os três projetos rodando localmente (webcam real do notebook, inferência em CUDA) e o merge dos 3 PRs.
 
-### Zonas de risco (puxado em 2026-09-04, implementação via subagent-driven development, em andamento)
+### Zonas de risco (puxado em 2026-09-04, implementação via subagent-driven development, em revisão)
 
 | Card | Descrição | Checklist (tasks do plano) | Repositório | Responsável | Status |
 |---|---|---|---|---|---|
-| Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | `cypher` | Lucas Grecco | 🔄 Em andamento |
-| Zonas de risco — capture (`zrb`) | `ZoneManager` com zonas pré-carregadas, `ZoneConfigClient` (ladder de degradação) | 3 tasks — `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md` | `cypher-capture` | Lucas Grecco | 🔄 Em andamento |
+| Zonas de risco — backend (`zra`) | `Zona`, polígono normalizado, endpoints `/cameras/{codigo}/zones` + config para o pipeline. PR [#9](https://github.com/lucvs07/Cypher-Api/pull/9), 339/339 testes | 2 tasks — `plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md` | `cypher` | Lucas Grecco | 🔍 Em revisão |
+| Zonas de risco — capture (`zrb`) | `ZoneManager` com zonas pré-carregadas, `ZoneConfigClient` (ladder de degradação). PR [#9](https://github.com/lucvs07/cypher-capture/pull/9), 269 testes | 3 tasks — `plans/zonas-de-risco/2026-08-29-zrb-capture-zonas.md` | `cypher-capture` | Lucas Grecco | 🔍 Em revisão |
 | Zonas de risco — front (`zrc`) | Editor de polígono em canvas, integrado a `/config/estacoes`. PR [#8](https://github.com/Ronaldovels/cypher-front/pull/8), 341/341 testes | 5 tasks — `plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md` | `cypher-front` | Lucas Grecco | 🔍 Em revisão |
 
-Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.4. Os três cards movidos de `Product Backlog` para `Em andamento` em 2026-09-04 — execução delegada a um agente por repositório (subagent-driven development), uma sessão separada para `zra` (backend), `zrb` (capture) e `zrc` (front). `zrb`/`zrc` não têm bloqueio duro sobre `zra` (capture tem cache + arquivo local como fallback, front tem modo mock), mas o teste ponta a ponta final (spec §6) exige as três prontas.
+Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.4. Os três cards movidos de `Product Backlog` para `Em andamento` em 2026-09-04 — execução delegada a um agente por repositório (subagent-driven development), uma sessão separada para `zra` (backend), `zrb` (capture) e `zrc` (front). `zrb`/`zrc` não tinham bloqueio duro sobre `zra` (capture tem cache + arquivo local como fallback, front tem modo mock). As três execuções concluídas e movidas para `Em revisão` no mesmo dia, com os 3 PRs abertos — review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.4 (`zrc`) e §3.5 (`zra`/`zrb`). Próximo: teste manual ponta a ponta (spec §6) com as três branches rodando juntas antes do merge.
 
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 
