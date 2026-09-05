@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, computed, inject, input, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 
 import { ConfigService } from '../../shared/config.service';
 import { mensagemDeErro } from '../../shared/incident.models';
@@ -23,7 +23,7 @@ const FORM_VAZIO: FormZona = { nome: '', zoneType: 'RESTRICTED', severity: 3, re
   selector: 'app-zone-editor',
   templateUrl: './zone-editor.component.html',
 })
-export class ZoneEditorComponent implements OnInit {
+export class ZoneEditorComponent {
   readonly codigo = input.required<string>();
   readonly streamUrl = input<string | null>(null);
 
@@ -48,9 +48,27 @@ export class ZoneEditorComponent implements OnInit {
   readonly erro = signal('');
   readonly salvando = signal(false);
 
-  ngOnInit(): void {
-    this.zoneService.load(this.codigo());
-  }
+  private frameSnapshot: HTMLCanvasElement | null = null;
+
+  /**
+   * Reage à troca de câmera (`codigo()`) — inclusive quando o `@if` do
+   * componente pai reaproveita esta mesma instância ao trocar de câmera sem
+   * fechar o painel. Depende só de `codigo()`; nunca leia aqui um signal que
+   * este próprio efeito altera, ou vira loop infinito.
+   */
+  private readonly resetAoTrocarCamera = effect(() => {
+    const codigo = this.codigo();
+    this.frameCapturado.set(false);
+    this.canvasWidth.set(0);
+    this.canvasHeight.set(0);
+    this.frameSnapshot = null;
+    this.vertices.set([]);
+    this.poligonoFechado.set(false);
+    this.editandoId.set(null);
+    this.form.set({ ...FORM_VAZIO });
+    this.erro.set('');
+    this.zoneService.load(codigo);
+  });
 
   capturarFrame(): void {
     const img = this.imgRef()?.nativeElement;
@@ -63,6 +81,13 @@ export class ZoneEditorComponent implements OnInit {
     canvas.height = img.naturalHeight;
     this.canvasWidth.set(img.naturalWidth);
     this.canvasHeight.set(img.naturalHeight);
+
+    const snapshot = document.createElement('canvas');
+    snapshot.width = img.naturalWidth;
+    snapshot.height = img.naturalHeight;
+    snapshot.getContext('2d')?.drawImage(img, 0, 0, snapshot.width, snapshot.height);
+    this.frameSnapshot = snapshot;
+
     this.frameCapturado.set(true);
     this.erro.set('');
     this.redesenhar();
@@ -103,14 +128,34 @@ export class ZoneEditorComponent implements OnInit {
 
   private redesenhar(): void {
     const canvas = this.canvasRef()?.nativeElement;
-    const img = this.imgRef()?.nativeElement;
     const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx || !img) {
+    if (!canvas || !ctx || !this.frameSnapshot) {
       return;
     }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(this.frameSnapshot, 0, 0, canvas.width, canvas.height);
+    this.desenharZonasExistentes(ctx);
     this.desenharPoligono(ctx, this.vertices());
+  }
+
+  /** Desenha, num traço discreto, as zonas já cadastradas — exceto a que está em edição agora. */
+  private desenharZonasExistentes(ctx: CanvasRenderingContext2D): void {
+    const editandoId = this.editandoId();
+    this.zonas()
+      .filter(zona => zona.id !== editandoId)
+      .forEach(zona => {
+        const vertices = paraPixel(zona.polygon, this.canvasWidth(), this.canvasHeight());
+        if (vertices.length === 0) {
+          return;
+        }
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(vertices[0].x, vertices[0].y);
+        vertices.slice(1).forEach(v => ctx.lineTo(v.x, v.y));
+        ctx.closePath();
+        ctx.stroke();
+      });
   }
 
   private desenharPoligono(ctx: CanvasRenderingContext2D, vertices: PixelPonto[]): void {

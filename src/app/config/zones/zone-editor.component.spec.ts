@@ -96,6 +96,30 @@ describe('ZoneEditorComponent — captura de frame e desenho', () => {
 
     expect(comp.vertices()).toEqual([{ x: 1, y: 1 }, { x: 2, y: 2 }]);
   });
+
+  it('trocar de camera (mesma instancia) reseta o estado de desenho e recarrega as zonas', () => {
+    const comp = fixture.componentInstance;
+    comp.frameCapturado.set(true);
+    comp.vertices.set([{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 2, y: 2 }]);
+    comp.poligonoFechado.set(true);
+    comp.editandoId.set(7);
+    comp.form.set({ nome: 'Área da prensa', zoneType: 'RESTRICTED', severity: 4, requiredPpe: ['capacete'] });
+    comp.erro.set('algum erro anterior');
+
+    fixture.componentRef.setInput('codigo', 'CAM-02');
+    fixture.detectChanges();
+
+    const req = http.expectOne(`${environment.apiUrl}/cameras/CAM-02/zones`);
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+
+    expect(comp.vertices()).toEqual([]);
+    expect(comp.frameCapturado()).toBe(false);
+    expect(comp.poligonoFechado()).toBe(false);
+    expect(comp.editandoId()).toBeNull();
+    expect(comp.form()).toEqual({ nome: '', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [] });
+    expect(comp.erro()).toBe('');
+  });
 });
 
 describe('ZoneEditorComponent — formulário e persistência', () => {
