@@ -19,6 +19,7 @@ function incidente(overrides: Partial<Incident> = {}): Incident {
     actionLevel: 4, zoneName: null, zoneStatus: 'outside', epiPresent: [], epiMissing: [],
     snapshotUrl: null, detectedAt: '2026-08-10T14:00:00.000-03:00', endedAt: null,
     durationSeconds: null, peakSeverity: 4, closedReason: null, status: 'PENDENTE',
+    normaAplicavel: null,
     ...overrides,
   };
 }
@@ -84,6 +85,43 @@ describe('StationKioskComponent', () => {
     // A estação não muda depois disso: o effect não deve refazer a busca.
     harness.detectChanges();
     http.expectNone(r => r.url === `${environment.apiUrl}/incidents`);
+  });
+
+  it('mostra a norma aplicável e a dica no card de evento recente; nada quando normaAplicavel é null', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/estacao/EST-01', StationKioskComponent);
+
+    http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+    http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([
+      { id: 'EST-01', nome: 'Esteira', setor: null, ativa: true, cameras: [
+        { id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01', streamUrl: 'http://x/1' },
+      ] },
+    ]);
+    harness.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+    harness.detectChanges();
+
+    http.expectOne(r => r.url === `${environment.apiUrl}/incidents` && r.params.get('camera') === 'CAM-01')
+      .flush({
+        content: [
+          incidente({ id: 1, incidentKey: 'k1', cameraId: 'CAM-01', type: 'FALL_RISK',
+            detectedAt: '2026-08-10T15:00:00.000-03:00', normaAplicavel: 'NR-35' }),
+          incidente({ id: 2, incidentKey: 'k2', cameraId: 'CAM-01', type: 'EPI_VIOLATION',
+            detectedAt: '2026-08-10T14:00:00.000-03:00', normaAplicavel: null }),
+        ],
+        totalElements: 2, totalPages: 1, number: 0, size: 10,
+      });
+    harness.detectChanges();
+
+    const el = harness.routeNativeElement!;
+    expect(el.textContent).toContain('NR-35');
+    expect(el.textContent).toContain('Isolar a área e verificar pontos de ancoragem');
+
+    const linhas = el.querySelectorAll('.alert-row');
+    expect(linhas[0].querySelector('.chip')?.textContent).toBe('NR-35');
+    expect(linhas[1].querySelector('.chip')).toBeNull();
+    expect(el.querySelectorAll('.alerts-list .ph-meta').length).toBe(1);
   });
 
   it('OPERADOR nao ve o dock — o kiosk continua sem navegacao para o operador', async () => {

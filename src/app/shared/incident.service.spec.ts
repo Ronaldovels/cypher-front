@@ -34,6 +34,7 @@ function incidente(overrides: Partial<Incident> = {}): Incident {
     peakSeverity: 4,
     closedReason: null,
     status: 'PENDENTE',
+    normaAplicavel: null,
     ...overrides,
   };
 }

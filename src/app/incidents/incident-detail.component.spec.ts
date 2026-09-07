@@ -18,6 +18,7 @@ function incidente(overrides: Partial<Incident> = {}): Incident {
     actionLevel: 4, zoneName: null, zoneStatus: 'outside', epiPresent: ['HELMET'], epiMissing: [],
     snapshotUrl: null, detectedAt: '2026-08-10T14:31:02.482-03:00', endedAt: null,
     durationSeconds: null, peakSeverity: 4, closedReason: null, status: 'PENDENTE',
+    normaAplicavel: null,
     ...overrides,
   };
 }

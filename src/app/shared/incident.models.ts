@@ -52,6 +52,7 @@ export interface Incident {
   peakSeverity: number | null;
   closedReason: ClosedReason | null;
   status: AlertaStatus;
+  normaAplicavel: string | null;
 }
 
 export interface Page<T> {
@@ -180,6 +181,20 @@ export function incidentLabel(type: IncidentType): string {
  * O offset vem no próprio ISO, então a leitura é a da planta — não a do
  * navegador de quem está olhando o painel.
  */
+/**
+ * Dica estática de conduta por tipo de incidente (camada educativa, spec §4).
+ *
+ * Texto fixo no front — não vem da API; a norma (`normaAplicavel`) sim.
+ */
+export function dicaDe(type: IncidentType): string {
+  switch (type) {
+    case 'FALL_RISK': return 'Isolar a área e verificar pontos de ancoragem antes de liberar o acesso.';
+    case 'ERGONOMIC_RISK': return 'Reforçar pausa e postura na estação; revisar rodízio se recorrente.';
+    case 'ZONE_VIOLATION': return 'Confirmar sinalização da zona e treinamento de quem entrou nela.';
+    case 'EPI_VIOLATION': return 'Verificar disponibilidade do EPI no posto antes de liberar a operação.';
+  }
+}
+
 export function formatTime(iso: string): string {
   const match = iso.match(/T(\d{2}):(\d{2})/);
   return match ? `${match[1]}:${match[2]}` : '--:--';

@@ -9,7 +9,7 @@ import { ConfigService } from '../shared/config.service';
 import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
 import { LiveFeedComponent } from '../shared/live-feed/live-feed.component';
-import { Incident, formatTime, incidentLabel } from '../shared/incident.models';
+import { Incident, dicaDe, formatTime, incidentLabel } from '../shared/incident.models';
 
 const EVENTOS_POR_CAMERA = 10;
 const EVENTOS_EXIBIDOS = 10;
@@ -47,6 +47,7 @@ export class StationKioskComponent implements OnInit {
 
   hora = formatTime;
   rotulo = incidentLabel;
+  dica = dicaDe;
 
   private eventosBuscados = false;
 
