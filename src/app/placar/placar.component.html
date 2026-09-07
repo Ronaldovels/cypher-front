@@ -7,6 +7,9 @@
         <span class="ph-title">Equipes por melhora na semana</span>
         <span class="ph-meta">a ordem vem do backend — melhora de conformidade, não valor absoluto</span>
       </div>
+      <div class="ph-right">
+        <a class="btn ghost" [href]="urlPlacarCsv" target="_blank" rel="noopener">exportar CSV</a>
+      </div>
     </div>
 
     @if (carregando()) {
