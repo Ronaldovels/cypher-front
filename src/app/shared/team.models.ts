@@ -11,6 +11,9 @@ export interface Equipe {
   /** Uma equipe cobre uma ou mais estações, dentro de um único turno (design doc §3). */
   estacaoIds: string[];
   ativa: boolean;
+  metaConformidade: number | null;
+  metaZeroSeveridade4Ativa: boolean | null;
+  metaTempoReconhecimentoSegundos: number | null;
 }
 
 export interface EquipePayload {
@@ -19,6 +22,9 @@ export interface EquipePayload {
   turno: Turno;
   estacaoIds: string[];
   ativa?: boolean;
+  metaConformidade?: number | null;
+  metaZeroSeveridade4Ativa?: boolean | null;
+  metaTempoReconhecimentoSegundos?: number | null;
 }
 
 export interface Usuario {

@@ -211,8 +211,8 @@ export function resetMockSetup(): void {
 // ---------------- equipes e usuários (mock) ----------------
 
 export const EQUIPES: Equipe[] = [
-  { id: 'EQ-01', nome: 'Equipe A', turno: 'MANHA', estacaoIds: ['EST-01', 'EST-02'], ativa: true },
-  { id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-03'], ativa: true },
+  { id: 'EQ-01', nome: 'Equipe A', turno: 'MANHA', estacaoIds: ['EST-01', 'EST-02'], ativa: true, metaConformidade: null, metaZeroSeveridade4Ativa: null, metaTempoReconhecimentoSegundos: null },
+  { id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-03'], ativa: true, metaConformidade: null, metaZeroSeveridade4Ativa: null, metaTempoReconhecimentoSegundos: null },
 ];
 
 /** Senha guardada só no mock — nunca no tipo público `Usuario`. Semeada a partir de `GESTOR_DEMO`, fonte única da credencial de demonstração. */
