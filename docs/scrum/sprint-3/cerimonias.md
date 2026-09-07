@@ -231,6 +231,11 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 
 ---
 
+### 2026-09-08 (teste manual ponta a ponta e merge da E5)
+- Lucas Grecco — feito: subiu os três projetos localmente a partir das branches em revisão da E5 (Gemini + Cloudinary configurados, pipeline com webcam real do notebook em CUDA); corrigiu no caminho um cache de api-key stale que causava 401 em cascata (resíduo de sessão anterior, não bug da E5). Configurou dados de teste na empresa `demo`: GESTOR, as 5 câmeras reais da meta indústria (Fresa 1/2, Tenda, Sala 4, SICK) com `fonte` em placeholder, a webcam do notebook, 4 operadores e 3 equipes de teste populadas com 14 dias de histórico sintético nas câmeras genéricas, exercitando os 3 estados do placar. Recusou um pedido de commitar `data/cypherdb.mv.db` (o `.gitignore` do `cypher` já bloqueia isso de propósito — tokens/api-keys reais em texto puro) e substituiu por `scripts/seed-empresa-demo.sh`/`seed_gamificacao_demo.py` (commitado em `feat/e5-backend-gamificacao`) e `docs/empresa-demo-runbook.md` (commitado em `feat/e5-front-placar`), ambos sem segredo real gravado. Confirmou `POST /heartbeat` → 204 e `GET /placar` com os 3 estados esperados. Mergeou os 3 PRs (`e5a`→`main` do `cypher`, `e5b`→`main` do `cypher-capture`, `e5c`→`dev` do `cypher-front`) e encerrou os três processos locais. Cards `e5a`/`e5b`/`e5c` movidos para `Concluído` no Trello e neste documento; spec de gamificação movida de `planejadas/` para `implementadas/`; roteiro de entregas, sprint-backlog e este documento (Review §3.11) atualizados. Próximo: puxar E6 (relatórios), totalmente liberado. Bloqueio: nenhum.
+
+---
+
 ## 3. Ata do Sprint Review
 
 **Data:** 2026-09-01
@@ -247,7 +252,7 @@ Além do código de E4, esta janela também produziu o refinamento de backlog pa
 - [x] Multi-tenant (Empresa) — `docs/superpowers/specs/planejadas/2026-08-29-multi-tenant-design.md`
 - [x] Cadastro de webhook pela interface — `docs/superpowers/specs/planejadas/2026-08-29-cadastro-webhook-design.md`
 - [x] Zonas de risco pela interface — `docs/superpowers/specs/planejadas/2026-08-29-zonas-de-risco-design.md`
-- [x] Gamificação por equipe (E5) — `docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` (planos escritos; bloqueio §7 resolvido e planos revisados em 2026-09-07, execução iniciada — ver §1.6)
+- [x] Gamificação por equipe (E5) — `docs/superpowers/specs/implementadas/2026-08-29-gamificacao-e5-design.md` (implementada e mergeada em 2026-09-08 — ver §1.6, §3.8–§3.11)
 - [x] Relatórios e exportação (E6) — `docs/superpowers/specs/planejadas/2026-08-29-relatorios-e6-design.md`
 - [x] Análise de risco com LLM multimodal — `docs/superpowers/specs/planejadas/2026-09-01-analise-llm-multimodal-design.md`
 
@@ -589,3 +594,36 @@ Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
 Revisão/merge do PR [#10](https://github.com/Ronaldovels/cypher-front/pull/10) do `cypher-front`. Com as três fatias da E5 (`e5a`/`e5b`/`e5c`) em revisão, falta o teste manual ponta a ponta com os três projetos rodando localmente: placar refletindo conformidade/cobertura reais e a validação da propriedade central (desligar a captura reduz a cobertura, não o incidente — E1 §16.2), antes de mover os três cards para `Concluído`.
+
+---
+
+### 3.11 Review — Teste manual ponta a ponta e merge de gamificação (`e5a`/`e5b`/`e5c`)
+
+**Data:** 2026-09-08
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Entregue
+Os três projetos subidos localmente a partir das branches em revisão (`feat/e5-backend-gamificacao`, `feat/e5-capture-heartbeat`, `feat/e5-front-placar`), backend com `CYPHER_LLM_PROVIDER=gemini`/`CYPHER_GEMINI_API_KEY`, Cloudinary configurado no `.env` do `cypher-capture`, pipeline rodando com a **webcam real do notebook** (`/dev/video0`, 640×480) em CUDA — corrigindo no caminho um cache de api-key stale (`outputs/apikey-cache.json`, de uma câmera de outro tenant de 2026-09-04) que devolvia 401 em cascata em config/zonas/heartbeat; não era bug do `e5a`/`e5b`, era resíduo de sessão anterior.
+
+**Configuração de dados de teste, aproveitando os três projetos já de pé:**
+- Empresa `demo` (seedada pelo `CatalogSeeder`, sem usuário até então) ganhou um GESTOR (`gestor@demo`).
+- Cadastradas as 5 câmeras reais da meta indústria — Fresa 1, Fresa 2, Tenda, Sala 4, SICK Visionary-B (RTSP) — com `fonte` em placeholder (`${CYPHER_RTSP_USER}`/`${CYPHER_RTSP_PASS}`); a senha RTSP real foi só para o `.env` do `cypher-capture`, nunca para o banco. SICK ganhou estação própria sem local físico definido (renomeável depois).
+- Cadastrada a webcam do notebook (`CAM-WEBCAM`/`EST-WEBCAM`) e 4 operadores (um por estação das equipes de teste).
+- Populadas 3 equipes de teste (`EQ-DEMOA` MANHA, `EQ-DEMOB` TARDE, `EQ-DEMOC` NOITE) com 14 dias de heartbeat/incidente sintético nas câmeras **genéricas** (`CAM-01`–`04`, nunca as reais da fábrica, para não misturar dado fictício com histórico de produção futuro), exercitando os 3 estados do placar: conformidade melhorando semana a semana (rank 1º), piorando (rank 2º), e "dados insuficientes" (cobertura 0% no turno noturno, fora do ranking).
+
+**Achado — pedido de commitar o banco recusado:** o `.gitignore` do `cypher` já bloqueia `data/` de propósito (comentário explícito: "contém tokens de estação e api keys de câmera, nunca deve ser commitado") — commitar `data/cypherdb.mv.db` teria colocado 9 tokens de estação + 9 api-keys de câmera reais em texto puro, permanentemente, no histórico do git. Sinalizado antes de agir; substituído por `scripts/seed-empresa-demo.sh` + `scripts/seed_gamificacao_demo.py` (repo `cypher`, commitados em `feat/e5-backend-gamificacao`) — reproduz tudo via API + SQL local, tokens/hashes gerados a cada execução, senha via variável de ambiente sem default de produção — e `docs/empresa-demo-runbook.md` (repo `cypher-front`, commitado em `feat/e5-front-placar`) — referência de login sem nenhum segredo real gravado.
+
+**Confirmado funcionando ponta a ponta:** `POST /cameras/{id}/heartbeat` → `204` com a webcam real; incidentes chegando com `normaAplicavel` preenchido; `GET /placar` devolvendo os 3 estados esperados (`EQ-DEMOA` conformidade 0,999/delta +1,3pp; `EQ-DEMOB` conformidade 0,986/delta -1,3pp; `EQ-DEMOC` `dadosSuficientes:false`, fora do ranking).
+
+Os 3 PRs mergeados em 2026-09-08: `e5a` PR [#10](https://github.com/lucvs07/Cypher-Api/pull/10) → `main` do `cypher`; `e5b` PR [#11](https://github.com/lucvs07/cypher-capture/pull/11) → `main` do `cypher-capture`; `e5c` PR [#10](https://github.com/Ronaldovels/cypher-front/pull/10) → `dev` do `cypher-front`. Os três processos locais (backend, pipeline, front) encerrados ao final da sessão.
+
+#### O que não foi concluído / passa para o backlog
+- Setor de Tenda/Sala 4/SICK não veio na especificação da meta indústria — em branco, editável em `/config/estacoes` quando souberem.
+- Local físico da estação SICK Visionary-B não definido — renomear quando souberem onde o sensor vai.
+- Follow-ups já registrados na spec E5 §7 (recall frame-level do GTQ, afrouxar cues `person_fallen`) seguem não bloqueantes e fora do escopo desta entrega.
+
+#### Feedback recebido
+Nenhum registrado ainda (banca/mentoria).
+
+#### Próximos passos
+Cards `e5a`/`e5b`/`e5c` movidos para `Concluído` no Trello e neste documento. Spec de gamificação movida de `planejadas/` para `implementadas/`, roteiro de entregas atualizado. Resta só E6 (relatórios) na fila de planejadas — totalmente liberado agora que E5 está mergeada.

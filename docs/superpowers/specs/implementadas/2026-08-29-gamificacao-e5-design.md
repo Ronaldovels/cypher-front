@@ -1,7 +1,7 @@
 # Cypher E5 — Gamificação por Equipe
 
 **Data:** 2026-08-29
-**Status:** aprovado (design) — **implementação liberada** desde 2026-09-07 (o pré-requisito bloqueante de §7, o gating temporal de queda, foi resolvido com ressalva — ver §7)
+**Status:** implementado — PR [#10](https://github.com/lucvs07/Cypher-Api/pull/10) (`cypher`), PR [#11](https://github.com/lucvs07/cypher-capture/pull/11) (`cypher-capture`) e PR [#10](https://github.com/Ronaldovels/cypher-front/pull/10) (`cypher-front`) mergeados em 2026-09-08. Testado ponta a ponta com webcam real do notebook, CUDA, Gemini e Cloudinary configurados; dados de teste da empresa `demo` (câmeras reais da meta indústria, equipes/operadores, histórico sintético de gamificação) reproduzíveis via `scripts/seed-empresa-demo.sh` (`cypher`) — ver `docs/empresa-demo-runbook.md`.
 **Escopo:** **Entrega E5** do roteiro (`2026-08-10-notificacao-de-incidentes-design.md` §14): placar de conformidade ponderada por tempo, metas, sequências e camada educativa por equipe.
 
 **Depende de:** `2026-08-29-multi-tenant-design.md` implementado (`Equipe`/`Camera` já escopadas por `empresaId`). **E6** (relatórios) depende desta spec para o CSV de placar.
