@@ -71,13 +71,13 @@ Planning de `oqa` registrado em `docs/scrum/sprint-3/cerimonias.md` §1.2. Plann
 
 Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.4. Review registrada em `docs/scrum/sprint-3/cerimonias.md` §3.4 (`zrc`) e §3.5 (`zra`/`zrb`). Os três cards movidos de `Product Backlog` para `Em andamento` em 2026-09-04 (execução delegada a um agente por repositório, subagent-driven development, uma sessão separada para `zra`, `zrb` e `zrc`), para `Em revisão` no mesmo dia com os 3 PRs abertos, e para `Concluído` em 2026-09-05 depois do teste manual ponta a ponta com os três projetos rodando localmente (webcam real, Gemini e Cloudinary configurados) e o merge dos 3 PRs. O teste manual encontrou e corrigiu, antes do merge: gap de autenticação em `ZoneConfigClient`/`CameraConfigClient` (nunca enviavam `X-Cypher-Key`, mesmo achado que resolveu de brinde o gap de bootstrap de câmera nova no orquestrador, registrado no roteiro §5); UX de preview ao vivo e reabertura de polígono no editor; e hot-reload de zonas em segundo plano, trazido pra dentro do escopo por pedido explícito (estava registrado como fora de escopo na spec §7).
 
-### Gating temporal de queda (puxado em 2026-09-05, implementação via subagent-driven development, em andamento)
+### Gating temporal de queda (puxado em 2026-09-05, implementação via subagent-driven development, em revisão)
 
 | Card | Descrição | Checklist (tasks do plano) | Repositório | Responsável | Status |
 |---|---|---|---|---|---|
-| Gating temporal de queda (`gtq`) | Janela de confirmação no `PostureClassifier` antes de reportar `IMMEDIATE_RISK` via `fall_velocity` — elimina falso alarme em agachamentos rápidos, destrava a E5 | 5 tasks — `plans/gating-temporal-queda/2026-09-05-gtq-capture-gating-queda.md` | `cypher-capture` | Lucas Grecco | 🔄 Em andamento |
+| Gating temporal de queda (`gtq`) | Janela de confirmação no `PostureClassifier` antes de reportar `IMMEDIATE_RISK` via `fall_velocity` — elimina falso alarme em agachamentos rápidos, destrava a E5 | 5/5 tasks concluídas — `plans/gating-temporal-queda/2026-09-05-gtq-capture-gating-queda.md` | `cypher-capture` | Lucas Grecco | 🔎 Em revisão — PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) |
 
-Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.5. Card movido de `Product Backlog` para `Em andamento` em 2026-09-05 (sessão de implementação iniciada em `cypher-capture`, subagent-driven development, branch `feat/gtq-gating-queda`).
+Planning registrado em `docs/scrum/sprint-3/cerimonias.md` §1.5. Review registrada em §3.7. Card movido de `Product Backlog` para `Em andamento` em 2026-09-05 (implementação iniciada em `cypher-capture`, subagent-driven development, branch `feat/gtq-gating-queda`), e para `Em revisão` em 2026-09-07 quando a sessão anterior (corrompida no meio da Tarefa 5) foi retomada, o diagnóstico reconstruído a partir do git/ledger, as 5 tasks concluídas (suíte 290/290) e o PR #10 aberto. Validação empírica (Tarefas 4–5): precisão de `immediate_risk` 0,581 → 0,680; recall frame-level 0,986 → 0,915 (abaixo do piso 0,95 da spec §5, mas nenhuma queda inteira perdida). **Decisão do controlador (2026-09-07): bloqueio §7 da E5 resolvido com ressalva** — ver roteiro §3 e spec E5 §7.
 
 ### Próximas entregas (cards para o Product Backlog do Trello — desenvolvimento ainda não iniciado)
 
@@ -91,7 +91,7 @@ Um card por fatia de repositório de cada plano — o checklist do card é a lis
 |---|---|---|---|---|
 | 8 | Relatórios — backend, CSV de incidentes (`e6a`, tarefa 1) | `CsvReportBuilder`, `GET /reports/incidents.csv` | 1 task — `plans/e6-relatorios/2026-08-29-e6a-backend-relatorios.md` (tarefa 1) | multi-tenant |
 | 9 | Relatórios — front, CSV de incidentes (`e6b`, tarefa 1) | Link de exportação na timeline de incidentes | 1 task — `plans/e6-relatorios/2026-08-29-e6b-front-relatorios.md` (tarefa 1) | e6a tarefa 1 |
-| 10 | Gamificação — backend/capture/front (`e5a`/`e5b`/`e5c`) | Heartbeat, `PlacarService`, metas por equipe, tela de placar | 3+2+3 tasks — `plans/e5-gamificacao/` | ⛔ bloqueado — depende da Tarefa 5 do plano `gtq` confirmar precisão/recall aceitáveis. Não puxar antes disso. |
+| 10 | Gamificação — backend/capture/front (`e5a`/`e5b`/`e5c`) | Heartbeat, `PlacarService`, metas por equipe, tela de placar | 3+2+3 tasks — `plans/e5-gamificacao/` | 🔓 desbloqueado com ressalva (2026-09-07) — a Tarefa 5 do plano `gtq` confirmou melhora mensurável de precisão e ambas as quedas gerando alerta; bloqueio §7 resolvido. Puxar após o merge do PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) do `cypher-capture`. |
 | 10 | Relatórios — placar/PDF (`e6a`/`e6b`, tarefa 2) | CSV de placar + PDF de resumo executivo | tarefa 2 de cada arquivo — `plans/e6-relatorios/` | item 10 (E5) |
 
 ### Gestão ágil e protótipo (em andamento — objeto real desta Sprint)

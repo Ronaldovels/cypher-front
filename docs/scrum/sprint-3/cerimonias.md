@@ -190,6 +190,9 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 - Lucas Grecco — feito: a pedido do usuário, investigou o bloqueio §7 da E5 antes de revisar o design — confirmou que o gating temporal de queda segue pendente no `cypher-capture` (sem prazo); investigação técnica do classificador mostrou que é viável sem retreino de modelo; brainstorming completo (spec escrita, achado e corrigido um erro de evidência citada — "2 quedas → 3 incidentes" não era o bug real, a métrica certa é precisão 0,418 de `docs/metricas-dia2.md`); plano de implementação escrito (5 tasks, `plans/gating-temporal-queda/`); card `gtq` inserido no topo da fila (destrava E5) e movido para `Sprint Backlog`; roteiro de entregas e sprint-backlog atualizados; próximo: puxar `gtq` pra `Em andamento`. bloqueio: nenhum.
 - Lucas Grecco — feito: iniciou a sessão de implementação do plano `gtq` no repositório `cypher-capture` (branch `feat/gtq-gating-queda`, subagent-driven development) e moveu o card `gtq` para `Doing` no Trello; sprint-backlog atualizado (seção "Em andamento" dedicada, removido da tabela de próximas entregas); próximo: acompanhar a execução das 5 tasks do plano; bloqueio: nenhum.
 
+### 2026-09-07 (retomada da sessão corrompida do `gtq` + conclusão + PR + decisão de desbloqueio da E5)
+- Lucas Grecco — feito: retomou a implementação do `gtq` depois que a sessão anterior corrompeu no meio da Tarefa 5; diagnóstico reconstruído só a partir do git/ledger (não do estado relatado) — Tarefas 1–4 já commitadas e revisadas na branch `feat/gtq-gating-queda` (`b19f2ef..1f87c9c`), suíte 290/290, Tarefa 5 só briefada, sem relatório. Artefatos SDD preservados para fora do worktree travado. Tarefa 5 executada (subagente rodou `run_pipeline.py` ponta a ponta em `cenario2.mp4`): as 2 quedas reais geram alerta `FALL_RISK` com cobertura contínua, `fall_velocity` puro nunca aflora, 1 `FALL_RISK` espúrio pré-existente via `balance_loss_risk` (fora do escopo do GTQ). **Decisão do controlador: bloqueio §7 da E5 resolvido com ressalva** — precisão de `immediate_risk` 0,581 → 0,680 (objetivo primário atingido), zero falso novo em `cenario.mp4`; ressalva: recall frame-level 0,915 < piso 0,95 (latência de borda numa queda, não queda perdida), follow-up não bloqueante registrado. PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) aberto contra `main` do `cypher-capture`; card `gtq` movido para `Em revisão`. Roteiro de entregas, spec E5 §7, sprint-backlog e este documento (Review §3.7) atualizados. Próximo: revisão/merge do PR #10, depois puxar a E5. Bloqueio: nenhum.
+
 *(continuar registrando um bloco por dia de trabalho real.)*
 
 ---
@@ -404,3 +407,50 @@ Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
 Cards `zra`/`zrb`/`zrc` movidos para `Concluído` no Trello e neste documento. Spec de zonas de risco movida de `planejadas/` para `implementadas/`, roteiro de entregas atualizado (gaps de hot-reload e bootstrap do orquestrador marcados como resolvidos). Próximo: retomar E5 (gamificação, ainda bloqueada por gating externo) e E6 (relatórios, CSV de incidentes já liberado).
+
+---
+
+### 3.7 Review — Gating temporal de queda (`gtq`)
+
+**Data:** 2026-09-07
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto
+A sessão de implementação iniciada em 2026-09-05 corrompeu no meio da Tarefa 5. Esta sessão retomou o trabalho reconstruindo o diagnóstico **só a partir do git e do ledger SDD**, sem confiar em nenhum estado de progresso relatado: Tarefas 1–4 já estavam commitadas e revisadas na branch `feat/gtq-gating-queda` (`b19f2ef..1f87c9c`), suíte 290/290 verde; a Tarefa 5 tinha só o brief, sem relatório — esse era o ponto real de parada. Os artefatos SDD (ledger + relatórios das tasks + saídas instrumentadas) foram preservados para fora do worktree travado antes de qualquer coisa.
+
+#### Entregue
+Mecanismo de gating temporal de queda no `PostureClassifier` (`cypher-capture`), sem retreino de modelo:
+- **T1** — janela de confirmação em `_apply_hysteresis`: `fall_velocity` puro (sem `person_fallen` no mesmo frame) não vira `IMMEDIATE_RISK` público até `person_fallen` confirmar dentro de `fall_confirm_frames`; senão o episódio é descartado. `balance_loss_risk` / `CRITICAL_ZONE` / `person_fallen`-desde-o-primeiro-frame não mudam (fix pós-revisão garantiu que a janela não bloqueia esses caminhos). 5 testes novos.
+- **T2** — `fall_confirm_seconds` (default 1.0) fiado do `pose_config.yaml` até o classificador via `UnifiedPipeline` (`round(seconds × target_fps)`). `tests/test_pipeline_config.py` novo.
+- **T3** — fixture `cenario2_transitions.json` regravada: 15 → 8 transições, 4 falsos "fall" de agachamento removidos (todos fora das janelas de queda anotadas), ambas as quedas reais preservadas; 2 testes de replay obsoletos alinhados à nova realidade.
+- **T4/T5** (empíricas, sem commit) — validação de precisão/recall e ponta a ponta.
+
+Suíte final: **290/290** (283 baseline + 7 novos). PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) aberto contra `main`.
+
+#### Resultados da validação empírica
+
+| Métrica (`immediate_risk`, cenario2) | Baseline | Com gating |
+|---|---|---|
+| Precisão | 0,581 (oficial) / 0,418 (sweep) | **0,680** |
+| Recall frame-level | 0,986 | **0,915** |
+| Falso `immediate_risk` novo (cenario.mp4) | ~4 episódios | **0** |
+
+- Precisão melhorou de forma mensurável — objetivo primário da spec **atingido**.
+- Recall frame-level **abaixo** do piso literal de 0,95 (spec GTQ §5): os 24 FN são ~23 frames de borda de subida numa única queda + 1 de jitter — **nenhuma queda inteira perdida**. No caminho de produção (`run_pipeline.py`), as 2 quedas reais geram alerta `FALL_RISK` com cobertura contínua.
+- `fall_confirm_seconds` é inerte no frame-level (sweep 0,3–1,0 idêntico); a alavanca real do recall são os cues `person_fallen`, fora do escopo do plano.
+
+#### Decisão — bloqueio §7 da E5
+
+**Resolvido com ressalva (decisão do controlador, 2026-09-07).** O bloqueio §7 condiciona-se à credibilidade de um placar de conformidade frente à taxa de falso positivo — que melhorou claramente (precisão +0,10, zero falso novo). Ressalva registrada na spec E5 §7: recall frame-level 0,915 < 0,95, causado por latência de onset, não queda perdida. Follow-up **não bloqueante**: se o placar E5 pontuar tempo-até-alerta ou contar número de incidentes, revisitar (a) afrouxar cues `person_fallen` com validação própria e (b) fixar `merge_window_seconds`.
+
+#### O que não foi concluído / passa para o backlog
+- Follow-up dos cues `person_fallen` para fechar o gap de recall 0,915 → ≥0,95 — precisa de spec/plano próprios com validação anti-overfitting (os thresholds atuais foram calibrados contra falso-positivo em agachamento).
+- 1 `FALL_RISK` espúrio por clipe via `balance_loss_risk` em agachamento — pré-existente, fora do escopo do GTQ.
+- Latência E2E p95 ~294 ms (alvo 200 ms) no host CPU de validação — pré-existente, não é questão do GTQ.
+- Spec GTQ migra de `planejadas/` para `implementadas/` só no merge do PR #10.
+
+#### Feedback recebido
+Nenhum registrado ainda (banca/mentoria).
+
+#### Próximos passos
+Card `gtq` movido para `Em revisão` no Trello e neste documento. Roteiro de entregas (§3), spec E5 §7 e sprint-backlog atualizados. Próximo: revisão/merge do PR #10 do `cypher-capture`; após o merge, mover `gtq` para `Concluído`, migrar a spec GTQ para `implementadas/`, e puxar a E5 (`e5a`/`e5b`/`e5c`).
