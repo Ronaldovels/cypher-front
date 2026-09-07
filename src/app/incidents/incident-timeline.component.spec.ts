@@ -247,12 +247,14 @@ describe('IncidentTimelineComponent', () => {
     comp.camera.set('CAM-01');
     comp.severityMin.set(3);
     comp.status.set('PENDENTE');
+    comp.since.set('2026-09-01T08:00');
 
     const url = new URL(comp.urlExportacaoCsv(), 'http://localhost');
     expect(url.pathname).toBe('/api/v1/reports/incidents.csv');
     expect(url.searchParams.get('camera')).toBe('CAM-01');
     expect(url.searchParams.get('severityMin')).toBe('3');
     expect(url.searchParams.get('status')).toBe('PENDENTE');
+    expect(url.searchParams.get('since')).toBe(new Date('2026-09-01T08:00').toISOString());
   });
 
   it('urlExportacaoCsv omite parametros nao preenchidos', () => {
