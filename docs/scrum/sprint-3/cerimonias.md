@@ -148,6 +148,36 @@ Lucas Grecco — único repositório tocado (`cypher-capture`).
 
 ---
 
+### 1.6 Planning — Gamificação por equipe E5 (`e5a`/`e5b`/`e5c`)
+
+**Data:** 2026-09-07
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto de entrada
+Com o bloqueio §7 resolvido (GTQ mergeado, PR #10), o usuário pediu para revisar o design da E5 e os três planos de desenvolvimento (`plans/e5-gamificacao/`, escritos em 2026-08-29 e mantidos bloqueados desde então) antes de partir para a execução. A revisão comparou spec, planos e o estado real dos três repositórios.
+
+#### Achados da revisão que viraram decisão de design (registrados na spec E5 §3.2/§7)
+- **"Dados insuficientes" não estava implementado.** A spec §3.2 exige que equipe com cobertura baixa saia do ranking, mas os planos não tinham esse estado. Piso fixado em **cobertura `< 0,5`** → `conformidade`/`deltaConformidadeSemana` anuláveis no DTO, equipe fora da ordenação, seção separada no front. Resolve também o artefato de time novo (sem semana anterior) subindo espúrio no ranking-por-melhora.
+- **Denominador ignorava o turno.** `MonitoramentoDiario` é uma linha por `(câmera, dia, turno)`; somar os três turnos daria até 300% de cobertura para uma câmera 24h. Corrigido: query `...AndTurnoAndDiaBetween`, normalização por nº de câmeras, e numerador de conformidade filtrado pela janela do turno da equipe.
+- **Filtro de sequência por severidade não funciona.** O `cypher-capture` (`fusion/engine.py`) atribui severidade 4 a *todo* `IMMEDIATE_RISK`, sem discriminar o gatilho. Decisão: a sequência só é quebrada por `FALL_RISK` com **`duracaoSegundos ≥ 3`** (ou ainda aberto) — o espúrio residual de `balance_loss_risk` em agachamento é curto e auto-fechado; queda real dura ~4,5 s.
+- **Nota do `SummaryService` estava obsoleta** — o vazamento entre empresas já foi corrigido numa entrega posterior; nota do plano `e5a` marcada como resolvida.
+
+#### Sprint Goal
+Executar os três planos revisados: `e5a` (backend `cypher` — heartbeat, `MonitoramentoDiario`, `GET /api/v1/placar`, norma aplicável), `e5b` (`cypher-capture` — `HeartbeatSender` no laço do pipeline), `e5c` (`cypher-front` — `PlacarComponent`, campos de meta em `/config/equipe`, norma no card do kiosk). Subagent-driven development, uma sessão por repositório, branches locais (sem worktree).
+
+#### Itens puxados do Product Backlog
+Cards `e5a`/`e5b`/`e5c` de `sprint-backlog.md` — movidos de `Product Backlog`. `e5a` para `Em andamento` (execução iniciada); `e5b` e `e5c` para `Sprint Backlog` (partem após `e5a` rodar localmente).
+
+#### Capacidade e divisão de trabalho
+Lucas Grecco — os três repositórios, uma sessão dedicada por repositório. Ordem: `e5a` primeiro (fixa o contrato dos DTOs consumido por `e5b`/`e5c`), depois `e5b` e `e5c` em paralelo.
+
+#### Riscos identificados no planning
+- Os planos têm ~1 semana; várias entregas mergearam desde (multi-tenant, webhook, zonas). A sessão `e5a` precisa verificar contra a árvore atual: aridade do construtor de `Equipe` após os 3 campos de meta (afeta todas as chamadas `new Equipe(...)` e `EquipeService`), construtores de `Camera`/`Estacao` nos testes, nome do campo em `CameraApiKeyResponse`.
+- `e5b` depende do endpoint de heartbeat de `e5a` existir e rodar localmente para o teste ponta a ponta da Tarefa 2 (Tarefa 1 é isolada, sem rede, pode começar antes).
+- Ressalva do GTQ (recall frame-level 0,915 < piso 0,95) segue como follow-up **não bloqueante** — afrouxar cues `person_fallen` / fixar `merge_window_seconds` fica fora do escopo da E5; a conformidade ponderada por tempo é robusta a um evento curto isolado, só a sequência precisava do piso de duração.
+
+---
+
 ## 2. Dailies (registro resumido, assíncrono)
 
 Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**.
@@ -193,6 +223,7 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 ### 2026-09-07 (retomada da sessão corrompida do `gtq` + conclusão + PR + decisão de desbloqueio da E5)
 - Lucas Grecco — feito: retomou a implementação do `gtq` depois que a sessão anterior corrompeu no meio da Tarefa 5; diagnóstico reconstruído só a partir do git/ledger (não do estado relatado) — Tarefas 1–4 já commitadas e revisadas na branch `feat/gtq-gating-queda` (`b19f2ef..1f87c9c`), suíte 290/290, Tarefa 5 só briefada, sem relatório. Artefatos SDD preservados para fora do worktree travado. Tarefa 5 executada (subagente rodou `run_pipeline.py` ponta a ponta em `cenario2.mp4`): as 2 quedas reais geram alerta `FALL_RISK` com cobertura contínua, `fall_velocity` puro nunca aflora, 1 `FALL_RISK` espúrio pré-existente via `balance_loss_risk` (fora do escopo do GTQ). **Decisão do controlador: bloqueio §7 da E5 resolvido com ressalva** — precisão de `immediate_risk` 0,581 → 0,680 (objetivo primário atingido), zero falso novo em `cenario.mp4`; ressalva: recall frame-level 0,915 < piso 0,95 (latência de borda numa queda, não queda perdida), follow-up não bloqueante registrado. PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) aberto contra `main` do `cypher-capture`; card `gtq` movido para `Em revisão` no Trello e neste documento. Roteiro de entregas, spec E5 §7, sprint-backlog e este documento (Review §3.7) atualizados. Próximo: revisão/merge do PR #10, depois puxar a E5. Bloqueio: nenhum.
 - Lucas Grecco — feito: mergeou o PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) do `cypher-capture` (`gtq` → `main`) e moveu o card `gtq` para `Concluído` no Trello; spec GTQ movida de `planejadas/` para `implementadas/` (`git mv`), roteiro de entregas atualizado (GTQ na tabela de §2 implementadas, removido de §3; E5 sem bloqueio), spec E5 §7 e status atualizados ("implementação liberada"), sprint-backlog (`gtq` → `Concluído`, linha E5 → liberada) e este documento (Review §3.7) atualizados; próximo: puxar a E5 (`e5a`/`e5b`/`e5c`); bloqueio: nenhum.
+- Lucas Grecco — feito: revisão de design da E5 antes da execução (§1.6) — spec E5 e os três planos comparados com o estado real dos repositórios; quatro achados viraram decisão (piso de cobertura `0,5` para "dados insuficientes", filtro de turno no denominador, piso de duração `≥ 3 s` na sequência, nota obsoleta do `SummaryService`); spec E5 §3.2/§7, roteiro §3, os três planos, `sprint-backlog.md` e este documento atualizados. Card `e5a` movido para `Doing`/`Em andamento` no Trello e sessão de implementação iniciada no `cypher` (branch local `feat/e5-backend-gamificacao`, subagent-driven development); cards `e5b`/`e5c` movidos para `To Do`/`Sprint Backlog` (partem após `e5a` rodar localmente). Próximo: acompanhar `e5a`, liberar `e5b`/`e5c` em paralelo; bloqueio: nenhum.
 
 *(continuar registrando um bloco por dia de trabalho real.)*
 
@@ -214,7 +245,7 @@ Além do código de E4, esta janela também produziu o refinamento de backlog pa
 - [x] Multi-tenant (Empresa) — `docs/superpowers/specs/planejadas/2026-08-29-multi-tenant-design.md`
 - [x] Cadastro de webhook pela interface — `docs/superpowers/specs/planejadas/2026-08-29-cadastro-webhook-design.md`
 - [x] Zonas de risco pela interface — `docs/superpowers/specs/planejadas/2026-08-29-zonas-de-risco-design.md`
-- [x] Gamificação por equipe (E5) — `docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` (planos escritos, execução bloqueada por gating externo no `cypher-capture`)
+- [x] Gamificação por equipe (E5) — `docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` (planos escritos; bloqueio §7 resolvido e planos revisados em 2026-09-07, execução iniciada — ver §1.6)
 - [x] Relatórios e exportação (E6) — `docs/superpowers/specs/planejadas/2026-08-29-relatorios-e6-design.md`
 - [x] Análise de risco com LLM multimodal — `docs/superpowers/specs/planejadas/2026-09-01-analise-llm-multimodal-design.md`
 

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **⛔ BLOQUEADO — não iniciar a execução deste plano.** Mesmo bloqueio dos planos `e5a-backend`/`e5b-capture`: a spec (`2026-08-29-gamificacao-e5-design.md` §7) exige o "gating temporal de queda" resolvido no `cypher-capture` antes de qualquer linha desta entrega ser escrita.
+> **✅ EXECUÇÃO LIBERADA (2026-09-07).** Pré-requisito da spec §7 (GTQ) resolvido, PR #10 mergeado. **Parte depois que `e5a` estiver rodando localmente.** A revisão pré-execução mudou o contrato de `PlacarEquipeResponse`: campo novo `dadosSuficientes: boolean`, e `conformidade`/`deltaConformidadeSemana` passam a ser anuláveis (`number | null`) — a Tarefa 1 abaixo já reflete isso. **Commits sem `Co-Authored-By`.** Branch local `feat/e5-front-placar` a partir de `dev` — **não** usar worktrees.
 
 **Goal:** `PlacarComponent` (`/placar`), campos de meta em `/config/equipe`, e o card de incidente do kiosk exibindo a norma aplicável — consumindo o backend do plano `e5a`.
 
@@ -52,7 +52,8 @@ export interface PlacarEquipe {
   equipeId: string;
   nome: string;
   turno: Turno;
-  conformidade: number;
+  dadosSuficientes: boolean;              // false quando cobertura < 0,5 (spec §3.2)
+  conformidade: number | null;            // null quando !dadosSuficientes
   cobertura: number;
   sequenciaAtual: number;
   melhorSequencia: number;
@@ -61,7 +62,7 @@ export interface PlacarEquipe {
   metaZeroSeveridade4Ativa: boolean | null;
   metaZeroSeveridade4Atingida: boolean;
   metaTempoReconhecimentoSegundos: number | null;
-  deltaConformidadeSemana: number;
+  deltaConformidadeSemana: number | null; // null quando !dadosSuficientes
 }
 ```
 
@@ -158,10 +159,19 @@ import { environment } from '../../environments/environment';
 import { PlacarComponent } from './placar.component';
 
 const EQUIPE_A = {
-  equipeId: 'EQ-01', nome: 'Equipe A', turno: 'MANHA', conformidade: 0.97, cobertura: 0.9,
+  equipeId: 'EQ-01', nome: 'Equipe A', turno: 'MANHA', dadosSuficientes: true,
+  conformidade: 0.97, cobertura: 0.9,
   sequenciaAtual: 0, melhorSequencia: 14, metaConformidade: 0.98, metaConformidadeAtingida: false,
   metaZeroSeveridade4Ativa: true, metaZeroSeveridade4Atingida: true,
   metaTempoReconhecimentoSegundos: null, deltaConformidadeSemana: 0.03,
+};
+
+const EQUIPE_SEM_DADOS = {
+  equipeId: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', dadosSuficientes: false,
+  conformidade: null, cobertura: 0.2, sequenciaAtual: 3, melhorSequencia: 3,
+  metaConformidade: null, metaConformidadeAtingida: false, metaZeroSeveridade4Ativa: null,
+  metaZeroSeveridade4Atingida: false, metaTempoReconhecimentoSegundos: null,
+  deltaConformidadeSemana: null,
 };
 
 describe('PlacarComponent', () => {
@@ -194,6 +204,16 @@ describe('PlacarComponent', () => {
     expect(badge?.textContent).toContain('melhor sequência: 14');
     expect(badge?.textContent).toContain('atual: 0');
   });
+
+  it('equipe com dadosSuficientes=false fica fora do ranking, em seção própria', () => {
+    fixture.detectChanges();
+    http.expectOne(r => r.url === `${environment.apiUrl}/placar`).flush([EQUIPE_A, EQUIPE_SEM_DADOS]);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.ranqueadas()).toEqual([EQUIPE_A]);
+    expect(fixture.componentInstance.semDados()).toEqual([EQUIPE_SEM_DADOS]);
+    expect(fixture.nativeElement.textContent).toContain('Dados insuficientes');
+  });
 });
 ```
 
@@ -207,7 +227,7 @@ Expected: FAIL na compilação — `PlacarComponent` não existe.
 Criar `src/app/placar/placar.component.ts`:
 
 ```typescript
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { PlacarEquipe } from '../shared/placar.models';
 import { PlacarService } from '../shared/placar.service';
@@ -238,12 +258,15 @@ export class PlacarComponent implements OnInit {
   }
 
   progressoConformidade(equipe: PlacarEquipe): number {
-    return Math.round(equipe.conformidade * 100);
+    return Math.round((equipe.conformidade ?? 0) * 100);
   }
 
   progressoCobertura(equipe: PlacarEquipe): number {
     return Math.round(equipe.cobertura * 100);
   }
+
+  readonly ranqueadas = computed(() => this.equipes().filter(e => e.dadosSuficientes));
+  readonly semDados = computed(() => this.equipes().filter(e => !e.dadosSuficientes));
 }
 ```
 
@@ -257,9 +280,9 @@ Criar `src/app/placar/placar.component.html`:
     @if (carregando()) {
       <p class="vazio">carregando…</p>
     } @else if (equipes().length === 0) {
-      <p class="vazio">nenhuma equipe ativa com dados suficientes ainda</p>
+      <p class="vazio">nenhuma equipe ativa ainda</p>
     } @else {
-      @for (eq of equipes(); track eq.equipeId) {
+      @for (eq of ranqueadas(); track eq.equipeId) {
         <div class="list-row" style="flex-direction:column;align-items:stretch;gap:8px">
           <div style="display:flex;gap:12px;align-items:center">
             <span class="a-station">{{ eq.equipeId }}</span>
@@ -290,6 +313,19 @@ Criar `src/app/placar/placar.component.html`:
             }
           </div>
         </div>
+      }
+      @if (semDados().length > 0) {
+        <div class="list-row" style="opacity:.6;margin-top:16px">
+          <span class="ph-meta">Dados insuficientes (cobertura &lt; 50% do turno) — fora do ranking:</span>
+        </div>
+        @for (eq of semDados(); track eq.equipeId) {
+          <div class="list-row">
+            <span class="a-station">{{ eq.equipeId }}</span>
+            <span>{{ eq.nome }}</span>
+            <span class="chip">{{ eq.turno }}</span>
+            <span class="ph-meta">cobertura {{ progressoCobertura(eq) }}%</span>
+          </div>
+        }
       }
     }
   </div>
@@ -567,9 +603,9 @@ git commit -m "feat: exibe norma aplicavel e dica estatica no card de evento do 
 
 **Placeholder scan:** nenhum "TBD"/"implementar depois".
 
-**Consistência de tipos:** `PlacarEquipe` (Tarefa 1) espelha exatamente `PlacarEquipeResponse` do plano `e5a`, campo a campo; `Equipe`/`EquipePayload` (Tarefa 2) ganham os três campos sem renomear nenhum já existente.
+**Consistência de tipos:** `PlacarEquipe` (Tarefa 1) espelha exatamente `PlacarEquipeResponse` do plano `e5a` pós-revisão, campo a campo — incluindo `dadosSuficientes` e os anuláveis `conformidade`/`deltaConformidadeSemana`; `Equipe`/`EquipePayload` (Tarefa 2) ganham os três campos sem renomear nenhum já existente.
 
-**Bloqueio confirmado:** o cabeçalho deste documento repete o bloqueio da spec §7.
+**Revisão pré-execução (2026-09-07) incorporada:** ranking só lista `dadosSuficientes === true` (`ranqueadas()`); equipes sem dados vão pra seção separada (`semDados()`), nunca no ranking (spec §3.2). `progressoConformidade` tolera `conformidade` `null`.
 
 ---
 

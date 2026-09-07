@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **⛔ BLOQUEADO — não iniciar a execução deste plano.** Mesmo bloqueio do plano `e5a-backend`: a spec (`2026-08-29-gamificacao-e5-design.md` §7) exige o "gating temporal de queda" resolvido no `cypher-capture` antes de qualquer linha desta entrega ser escrita. Este plano existe pronto para o dia em que o pré-requisito for resolvido.
+> **✅ EXECUÇÃO LIBERADA (2026-09-07).** Pré-requisito da spec §7 (GTQ) resolvido, PR #10 mergeado. **Parte depois que `e5a` estiver rodando localmente** (o endpoint `POST /cameras/{codigo}/heartbeat` precisa existir). Verificado em 2026-09-07: `chave_provisionada` está viva em `src/run_pipeline.py:159` e o ponto de inserção após o `try/except MissingApiKeyError` (linha ~224) confere — o plano está alinhado com a árvore atual, incluindo a fusão com o fluxo de zonas (`zrb` mergeado no PR #9). **Commits sem `Co-Authored-By`.** Branch local `feat/e5-capture-heartbeat` a partir de `main` — **não** usar worktrees.
 
 **Goal:** `cypher-capture` passa a enviar `POST /cameras/{id}/heartbeat` no intervalo configurado, sem travar o pipeline se a API estiver fora do ar (spec §9 "Python").
 

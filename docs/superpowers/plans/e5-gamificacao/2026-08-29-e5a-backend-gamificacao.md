@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **⛔ BLOQUEADO — não iniciar a execução deste plano.** A spec (`2026-08-29-gamificacao-e5-design.md` §7) registra um pré-requisito externo sem data definida: o "gating temporal de queda" no `cypher-capture` precisa ser resolvido antes de qualquer linha de código desta entrega ser escrita — hoje, 2 quedas reais produzem 3 incidentes, e um placar de conformidade construído sobre essa taxa de falso positivo nasceria com credibilidade baixa (spec §7). Este plano existe para que a implementação comece **imediatamente** assim que o pré-requisito for resolvido, sem precisar redesenhar nada — não para ser executado agora.
+> **✅ EXECUÇÃO LIBERADA (2026-09-07).** O pré-requisito da spec §7 (gating temporal de queda no `cypher-capture`) foi resolvido com ressalva — PR #10 mergeado. A revisão de design pré-execução (2026-09-07) fechou três decisões que este plano já incorpora: piso de cobertura `0,5` para "dados insuficientes" (spec §3.2), sequência quebrada só por `FALL_RISK` severidade ≥ 3 (spec §3.2/§7), e `cobertura` normalizada pelo nº de câmeras. **Ordem entre repositórios: `e5a` primeiro** (fixa o contrato dos DTOs) — `e5b`/`e5c` partem em paralelo contra o contrato depois que `e5a` estiver rodando localmente. **Commits sem `Co-Authored-By`** (autoria só do Lucas, padrão do projeto).
 
 **Goal:** Dar ao backend `cypher` o denominador que falta para conformidade ponderada por tempo — heartbeat de câmera, agregação diária por turno — e a agregação de placar por equipe (conformidade, cobertura, sequências, metas, ranking por melhora).
 
@@ -17,7 +17,8 @@
 ## Global Constraints
 
 - Repositório: `/home/asaas/projects/cypher`. **Depende do plano `2026-08-29-mta-backend-empresa.md` já mergeado.** Branch, quando a execução for liberada: `feat/e5-backend-gamificacao`, a partir de `main`.
-- **⚠️ Achado durante a redação deste plano, fora do escopo dele:** `SummaryService` (`GET /api/v1/summary`) hoje agrega via `repository.findAll()` **sem filtrar por `empresaId`** — o plano de multi-tenant (`2026-08-29-mta-backend-empresa.md`) não cobriu esse serviço. Após multi-tenant mergeado, `/summary` vaza incidentes entre empresas. Este plano **não corrige isso** (fora do escopo de E5); registrar como item a resolver separadamente antes de considerar o multi-tenant "completo" em produção. `PlacarService` (Tarefa 2) é escrito do zero já escopado corretamente, para não repetir o mesmo gap.
+- **Nota (verificado 2026-09-07):** o achado original deste plano — `SummaryService` agregando via `repository.findAll()` sem filtrar por `empresaId` — **já foi corrigido** numa entrega posterior (`SummaryService.java` hoje usa `repository.findByEmpresaId(TenantContext.currentEmpresaId())`, com comentário registrando que era `findAll()` antes). Não há mais gap; `PlacarService` (Tarefa 2) segue o mesmo padrão já escopado.
+- **Verificar contra a árvore atual antes de editar** (planos escritos em 2026-08-29, várias entregas mergeadas desde): (a) o construtor de `Equipe` ganha 3 campos — ajustar **todas** as chamadas `new Equipe(...)` e `EquipeService.criar`/`.atualizar`/`.toResponse` para a nova aridade, não só o snippet mostrado; (b) construtores de `Camera`/`Estacao` usados em `PlacarServiceTest` — conferir aridade/ordem reais; (c) o nome do campo em `CameraApiKeyResponse` lido como `$.apiKey` no teste de heartbeat. Helpers `AuthTestSupport.loginGestorBootstrap`, endpoint `POST /cameras/{id}/apikey/regenerate` e `GestorAuthentication(username, empresaId)` **confirmados existentes** em 2026-09-07.
 - **O intervalo de heartbeat do pipeline (`heartbeat_interval_seconds`, configurado em `pose_config.yaml` no lado Python) e o teto de tolerância do backend são parâmetros independentes** — o backend nunca vê a config do pipeline. O teto (`cypher.heartbeat.max-gap-seconds`, default `60`) é a própria decisão de risco do backend sobre "quanto tempo sem heartbeat ainda conta como monitorado", não uma cópia do valor do pipeline.
 - **Janela de turno é constante de aplicação, não configurável por empresa** (spec §2.3): `MANHA` 06:00–14:00, `TARDE` 14:00–22:00, `NOITE` 22:00–06:00, duração nominal 8h. `TurnoWindow` é uma classe utilitária pura (sem estado, sem `@ConfigurationProperties`).
 - **Ranking é sempre por delta de conformidade semana-vs-semana-anterior, nunca por conformidade absoluta** (spec §3.2, decisão já fechada em E1 §16.3) — nenhum teste deve ordenar por conformidade absoluta.
@@ -39,7 +40,7 @@
 - Test: `src/test/java/com/dev4/cypher/service/TurnoWindowTest.java`
 
 **Interfaces:**
-- Produces: `MonitoramentoDiarioRepository.findByCameraIdAndDiaAndTurno`, `.findByEmpresaIdAndCameraIdInAndDiaBetween` — consumidos pela Tarefa 2. `TurnoWindow.turnoDe(OffsetDateTime)`, `.DURACAO_NOMINAL_SEGUNDOS` — consumidos pela Tarefa 2.
+- Produces: `MonitoramentoDiarioRepository.findByCameraIdAndDiaAndTurno`, `.findByEmpresaIdAndCameraIdInAndTurnoAndDiaBetween` — consumidos pela Tarefa 2. `TurnoWindow.turnoDe(OffsetDateTime)`, `.DURACAO_NOMINAL_SEGUNDOS` — consumidos pela Tarefa 2.
 
 - [ ] **Step 1: Escrever o teste de `TurnoWindow`**
 
@@ -202,7 +203,7 @@ class HeartbeatApiTest {
 }
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [ ] **Step 5b: Rodar e confirmar que falha (heartbeat)**
 
 Run: `cd /home/asaas/projects/cypher && ./mvnw -o test -Dtest=HeartbeatApiTest`
 Expected: FAIL na compilação — nenhuma das classes novas existe.
@@ -280,8 +281,10 @@ public interface MonitoramentoDiarioRepository extends JpaRepository<Monitoramen
 
     Optional<MonitoramentoDiario> findByCameraIdAndDiaAndTurno(String cameraId, LocalDate dia, Turno turno);
 
-    List<MonitoramentoDiario> findByEmpresaIdAndCameraIdInAndDiaBetween(
-            String empresaId, List<String> cameraIds, LocalDate inicio, LocalDate fim);
+    // Restrito ao turno da equipe (spec §2.3) — MonitoramentoDiario é uma linha
+    // por (camera, dia, turno); somar os três turnos daria até 300% de cobertura.
+    List<MonitoramentoDiario> findByEmpresaIdAndCameraIdInAndTurnoAndDiaBetween(
+            String empresaId, List<String> cameraIds, Turno turno, LocalDate inicio, LocalDate fim);
 }
 ```
 
@@ -617,6 +620,32 @@ class PlacarServiceTest {
 
 (`TeamRequest` exige `estacaoIds` não vazio — o teste `equipeSemCameraAtivaAindaAparecePlacarComZeros` ajusta a chamada para uma lista com uma estação real, sem câmera, em vez de lista vazia; corrigir a chamada de `equipeService.criar` no Step 1 para `List.of("EST-PL2")` alinhado com a estação criada logo abaixo, na ordem certa — criar a estação **antes** de chamar `criar`.)
 
+**Ajustes de fixture para o piso de cobertura (`PISO_COBERTURA = 0.5`) e o filtro de turno:** os testes acima são esboço — ao escrevê-los: (1) dimensionar `segundosMonitorados` de `MonitoramentoDiario` para que a cobertura fique **≥ 0,5** quando o teste valida conformidade computada (cobertura = `segundosMonitorados ÷ (28800 × diasDaJanela × nºCâmeras)`; para 1 câmera / 7 dias, ~100.800 s); (2) a linha de `MonitoramentoDiario` e o `turno` da equipe têm que bater (`Turno.MANHA` nos dois); (3) o `dataHora` de qualquer `Alerta` de fixture tem que cair na janela do turno da equipe (`MANHA` = 06:00–14:00 UTC) para ser contado — `incidentesDoTurno` filtra por `TurnoWindow.turnoDe(dataHora)`. E adicionar um teste dedicado:
+
+```java
+    @Test
+    void coberturaAbaixoDoPisoMarcaDadosInsuficientesEFicaForaDoRanking() {
+        autenticarComo("demo");
+        estacoes.saveAndFlush(new com.dev4.cypher.model.Estacao("demo:EST-DI", "E", "s", true, "tokdi", "demo"));
+        cameras.saveAndFlush(new com.dev4.cypher.model.Camera("demo:CAM-DI", "C", "demo:EST-DI",
+                "http://x/stream", null, true, "keydi", "demo"));
+        equipeService.criar(new TeamRequest("EQ-DI", "Equipe pouco monitorada", Turno.MANHA, List.of("EST-DI"),
+                true, null, null, null));
+        // 1h monitorada numa janela de 7 dias => cobertura ~0,005, bem abaixo de 0,5
+        registros.saveAndFlush(new MonitoramentoDiario(null, "demo:CAM-DI", "demo", LocalDate.now(), Turno.MANHA,
+                3600, OffsetDateTime.now()));
+
+        var eq = service.placar(OffsetDateTime.now().minusDays(7), OffsetDateTime.now())
+                .stream().filter(p -> p.equipeId().equals("EQ-DI")).findFirst().orElseThrow();
+
+        assertThat(eq.dadosSuficientes()).isFalse();
+        assertThat(eq.conformidade()).isNull();
+        assertThat(eq.deltaConformidadeSemana()).isNull();
+    }
+```
+
+O teste `rankingOrdenaPorDeltaDeConformidadeNaoPorConformidadeAbsoluta` passa a ordenar por `dadosSuficientes` desc, depois `deltaConformidadeSemana` desc tratando `null` como o menor — ajustar o comparador do `isSortedAccordingTo` para refletir isso, ou trocar por uma asserção de que as equipes com dados suficientes vêm antes das sem.
+
 - [ ] **Step 2: Rodar e confirmar que falha**
 
 Run: `cd /home/asaas/projects/cypher && ./mvnw -o test -Dtest=PlacarServiceTest`
@@ -708,7 +737,8 @@ public record PlacarEquipeResponse(
         String equipeId,
         String nome,
         Turno turno,
-        double conformidade,
+        boolean dadosSuficientes,           // false quando cobertura < PISO_COBERTURA (spec §3.2)
+        Double conformidade,                 // null quando !dadosSuficientes
         double cobertura,
         int sequenciaAtual,
         int melhorSequencia,
@@ -717,7 +747,7 @@ public record PlacarEquipeResponse(
         Boolean metaZeroSeveridade4Ativa,
         boolean metaZeroSeveridade4Atingida,
         Integer metaTempoReconhecimentoSegundos,
-        double deltaConformidadeSemana
+        Double deltaConformidadeSemana       // null quando !dadosSuficientes
 ) {
 }
 ```
@@ -752,6 +782,8 @@ import java.util.*;
 public class PlacarService {
 
     private static final int JANELA_SEQUENCIA_DIAS = 90;
+    private static final double PISO_COBERTURA = 0.5;                    // spec §3.2 — abaixo disso: "dados insuficientes"
+    private static final double DURACAO_MINIMA_QUEBRA_SEGUNDOS = 3.0;    // spec §3.2/§7 — FALL_RISK mais curto (ou aberto) não quebra a sequência
 
     private final EquipeRepository equipes;
     private final CameraRepository cameras;
@@ -775,26 +807,44 @@ public class PlacarService {
         for (Equipe equipe : equipes.findByEmpresaIdAndAtivaTrue(empresaId)) {
             List<String> cameraIds = camerasDaEquipe(equipe, empresaId);
 
-            double conformidadeAtual = conformidade(empresaId, cameraIds, since, until);
-            double conformidadeAnterior = conformidade(empresaId, cameraIds, semanaAnteriorInicio, since);
-            double cobertura = cobertura(empresaId, cameraIds, since, until);
+            Turno turno = equipe.getTurno();
+            double cobertura = cobertura(empresaId, cameraIds, turno, since, until);
             int[] sequencias = sequencias(empresaId, cameraIds, until.toLocalDate());
+            boolean dadosSuficientes = cobertura >= PISO_COBERTURA;
 
-            boolean metaConformidadeAtingida = equipe.getMetaConformidade() != null
-                    && conformidadeAtual >= equipe.getMetaConformidade();
-            boolean metaZeroSeveridade4Atingida = Boolean.TRUE.equals(equipe.getMetaZeroSeveridade4Ativa())
-                    && semSeveridade4(empresaId, cameraIds, since, until);
+            Double conformidadeAtual = null;
+            Double delta = null;
+            boolean metaConformidadeAtingida = false;
+            if (dadosSuficientes) {
+                double atual = conformidade(empresaId, cameraIds, turno, since, until);
+                double anterior = conformidade(empresaId, cameraIds, turno, semanaAnteriorInicio, since);
+                conformidadeAtual = atual;
+                delta = atual - anterior;
+                metaConformidadeAtingida = equipe.getMetaConformidade() != null
+                        && atual >= equipe.getMetaConformidade();
+            }
+
+            // Só afirma "meta atingida" com dados suficientes — senão uma equipe
+            // sem monitoramento reportaria zero-severidade-4 como conquista.
+            boolean metaZeroSeveridade4Atingida = dadosSuficientes
+                    && Boolean.TRUE.equals(equipe.getMetaZeroSeveridade4Ativa())
+                    && semSeveridade4(empresaId, cameraIds, turno, since, until);
 
             resultado.add(new PlacarEquipeResponse(
                     TenantContext.codigo(equipe.getId()), equipe.getNome(), equipe.getTurno(),
-                    conformidadeAtual, cobertura, sequencias[0], sequencias[1],
+                    dadosSuficientes, conformidadeAtual, cobertura, sequencias[0], sequencias[1],
                     equipe.getMetaConformidade(), metaConformidadeAtingida,
                     equipe.getMetaZeroSeveridade4Ativa(), metaZeroSeveridade4Atingida,
-                    equipe.getMetaTempoReconhecimentoSegundos(),
-                    conformidadeAtual - conformidadeAnterior));
+                    equipe.getMetaTempoReconhecimentoSegundos(), delta));
         }
 
-        resultado.sort(Comparator.comparingDouble(PlacarEquipeResponse::deltaConformidadeSemana).reversed());
+        // Ranking por delta decrescente entre as equipes com dados suficientes;
+        // "dados insuficientes" nunca sobem no ranking (spec §3.2) — vão pro fim,
+        // ordem estável.
+        resultado.sort(Comparator
+                .comparing(PlacarEquipeResponse::dadosSuficientes).reversed()
+                .thenComparing(p -> p.deltaConformidadeSemana() == null ? Double.NEGATIVE_INFINITY
+                        : p.deltaConformidadeSemana(), Comparator.reverseOrder()));
         return resultado;
     }
 
@@ -806,42 +856,58 @@ public class PlacarService {
         return resultado;
     }
 
-    private double conformidade(String empresaId, List<String> cameraIds, OffsetDateTime inicio, OffsetDateTime fim) {
+    /** Incidentes das câmeras da equipe cujo detectedAt cai na janela do turno da equipe (spec §3.2). */
+    private List<Alerta> incidentesDoTurno(String empresaId, List<String> cameraIds, Turno turno,
+                                           OffsetDateTime inicio, OffsetDateTime fim) {
+        if (cameraIds.isEmpty()) {
+            return List.of();
+        }
+        return alertas.findByEmpresaIdAndCameraIdInAndDataHoraBetween(empresaId, cameraIds, inicio, fim)
+                .stream().filter(a -> TurnoWindow.turnoDe(a.getDataHora()) == turno).toList();
+    }
+
+    private double conformidade(String empresaId, List<String> cameraIds, Turno turno,
+                                OffsetDateTime inicio, OffsetDateTime fim) {
         if (cameraIds.isEmpty()) {
             return 0.0;
         }
-        double segundosIncidente = alertas.findByEmpresaIdAndCameraIdInAndDataHoraBetween(empresaId, cameraIds, inicio, fim)
+        double segundosIncidente = incidentesDoTurno(empresaId, cameraIds, turno, inicio, fim)
                 .stream().mapToDouble(a -> a.getDuracaoSegundos() == null ? 0.0 : a.getDuracaoSegundos()).sum();
-        double segundosMonitorados = somaMonitorado(empresaId, cameraIds, inicio, fim);
+        double segundosMonitorados = somaMonitorado(empresaId, cameraIds, turno, inicio, fim);
         if (segundosMonitorados <= 0) {
             return 0.0;
         }
         return Math.max(0.0, 1.0 - (segundosIncidente / segundosMonitorados));
     }
 
-    private double cobertura(String empresaId, List<String> cameraIds, OffsetDateTime inicio, OffsetDateTime fim) {
+    private double cobertura(String empresaId, List<String> cameraIds, Turno turno,
+                             OffsetDateTime inicio, OffsetDateTime fim) {
         if (cameraIds.isEmpty()) {
             return 0.0;
         }
         long dias = Math.max(1, java.time.temporal.ChronoUnit.DAYS.between(inicio.toLocalDate(), fim.toLocalDate()));
-        double segundosMonitorados = somaMonitorado(empresaId, cameraIds, inicio, fim);
-        return segundosMonitorados / (TurnoWindow.DURACAO_NOMINAL_SEGUNDOS * dias);
+        double segundosMonitorados = somaMonitorado(empresaId, cameraIds, turno, inicio, fim);
+        // Normalizado pelo nº de câmeras e restrito ao turno da equipe: sem isso,
+        // equipe de N câmeras 24h marcaria até N×300% (spec §3.2/§2.3).
+        return segundosMonitorados / (TurnoWindow.DURACAO_NOMINAL_SEGUNDOS * dias * cameraIds.size());
     }
 
-    private double somaMonitorado(String empresaId, List<String> cameraIds, OffsetDateTime inicio, OffsetDateTime fim) {
+    private double somaMonitorado(String empresaId, List<String> cameraIds, Turno turno,
+                                  OffsetDateTime inicio, OffsetDateTime fim) {
         if (cameraIds.isEmpty()) {
             return 0.0;
         }
-        return monitoramentos.findByEmpresaIdAndCameraIdInAndDiaBetween(
-                        empresaId, cameraIds, inicio.toLocalDate(), fim.toLocalDate())
+        return monitoramentos.findByEmpresaIdAndCameraIdInAndTurnoAndDiaBetween(
+                        empresaId, cameraIds, turno, inicio.toLocalDate(), fim.toLocalDate())
                 .stream().mapToLong(MonitoramentoDiario::getSegundosMonitorados).sum();
     }
 
-    private boolean semSeveridade4(String empresaId, List<String> cameraIds, OffsetDateTime inicio, OffsetDateTime fim) {
+    private boolean semSeveridade4(String empresaId, List<String> cameraIds, Turno turno,
+                                   OffsetDateTime inicio, OffsetDateTime fim) {
         if (cameraIds.isEmpty()) {
             return true;
         }
-        return alertas.findByEmpresaIdAndCameraIdInAndDataHoraBetween(empresaId, cameraIds, inicio, fim)
+        return incidentesDoTurno(empresaId, cameraIds, turno, inicio, fim)
                 .stream().noneMatch(a -> a.getSeveridade() != null && a.getSeveridade() == 4);
     }
 
@@ -855,6 +921,13 @@ public class PlacarService {
 
         Set<LocalDate> diasComQueda = new HashSet<>();
         alertas.findByEmpresaIdAndTipoAndCameraIdInAndDataHoraAfter(empresaId, AlertaTipo.FALL_RISK, cameraIds, limiteInstante)
+                .stream()
+                // Só FALL_RISK com duracaoSegundos >= 3 (ou ainda aberto) quebra a
+                // sequência (spec §3.2/§7) — filtra o FALL_RISK espúrio residual de
+                // balance_loss_risk em agachamento (curto e auto-fechado). A
+                // severidade não serve de filtro: fusion/engine.py do cypher-capture
+                // atribui sev 4 a todo IMMEDIATE_RISK, sem discriminar o gatilho.
+                .filter(a -> a.getDuracaoSegundos() == null || a.getDuracaoSegundos() >= DURACAO_MINIMA_QUEBRA_SEGUNDOS)
                 .forEach(a -> diasComQueda.add(a.getDataHora().toLocalDate()));
 
         int atual = 0;
@@ -1038,7 +1111,9 @@ git commit -m "feat: adiciona mapeamento de norma aplicavel ao IncidentResponse"
 
 **Consistência de tipos:** `PlacarEquipeResponse` (Tarefa 2) é consumido sem variação pelo plano de front (`e5c`); `NormaAplicavel.de` (Tarefa 3) usado só em `IncidentMapper`.
 
-**Bloqueio confirmado:** o cabeçalho deste documento repete o bloqueio da spec §7 — nenhuma tarefa deve ser executada antes do pré-requisito ser resolvido.
+**Decisões da revisão pré-execução (2026-09-07) incorporadas:** (1) `PlacarEquipeResponse` ganhou `dadosSuficientes` + `conformidade`/`deltaConformidadeSemana` anuláveis; equipe com cobertura `< 0,5` sai do ranking (spec §3.2) — resolve também o time novo sem semana anterior subindo espuriamente ao topo do ranking-por-melhora; `metaZeroSeveridade4Atingida` também é `false` sem dados suficientes. (2) `cobertura()` e o denominador de `conformidade()` normalizados por `cameraIds.size()` **e restritos ao turno da equipe** (`MonitoramentoDiario` é uma linha por `(camera, dia, turno)`; nova query `...AndTurnoAndDiaBetween`); incidentes do numerador filtrados por `TurnoWindow.turnoDe(dataHora) == turno`. (3) `sequencias()` só quebra a sequência com `FALL_RISK` de `duracaoSegundos ≥ 3` ou ainda aberto (spec §3.2/§7) — severidade não discrimina o gatilho (`fusion/engine.py` dá sev 4 a todo `IMMEDIATE_RISK`). (4) Nota do `SummaryService` marcada resolvida (já corrigido em entrega posterior). (5) Passo duplicado da Tarefa 1 renumerado (`Step 5b`).
+
+**Contrato para `e5b`/`e5c`:** `POST /api/v1/cameras/{codigo}/heartbeat` (X-Cypher-Key, 204/404), `GET /api/v1/placar?since&until` → `List<PlacarEquipeResponse>` na forma acima, `IncidentResponse.normaAplicavel` (`String` nullable). `e5b`/`e5c` partem depois que este plano estiver rodando localmente.
 
 ---
 
