@@ -1,7 +1,7 @@
 # Cypher — Gating Temporal de Queda
 
 **Data:** 2026-09-05
-**Status:** aprovado (design)
+**Status:** implementado — PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) mergeado em 2026-09-07 (`cypher-capture`). Validação empírica (Tarefas 4–5): precisão de `immediate_risk` 0,581 → 0,680; recall frame-level 0,915 (abaixo do piso §5 de 0,95, mas nenhuma queda inteira perdida — ver spec E5 §7 para a decisão de desbloqueio com ressalva).
 **Escopo:** melhorar a precisão de `IMMEDIATE_RISK` (queda) no `PostureClassifier` do `cypher-capture`, eliminando o resíduo de falsos alarmes de `fall_velocity` durante agachamentos/flexões rápidos — item já identificado em `docs/metricas-dia2.md` §5.2 como "próximo nível de precisão (não feito)" e citado como bloqueio explícito da E5 (`docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` §7).
 
 **Repositório:** `cypher-capture` (nenhuma mudança em `cypher`/`cypher-front`).

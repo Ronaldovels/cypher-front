@@ -192,6 +192,7 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 
 ### 2026-09-07 (retomada da sessão corrompida do `gtq` + conclusão + PR + decisão de desbloqueio da E5)
 - Lucas Grecco — feito: retomou a implementação do `gtq` depois que a sessão anterior corrompeu no meio da Tarefa 5; diagnóstico reconstruído só a partir do git/ledger (não do estado relatado) — Tarefas 1–4 já commitadas e revisadas na branch `feat/gtq-gating-queda` (`b19f2ef..1f87c9c`), suíte 290/290, Tarefa 5 só briefada, sem relatório. Artefatos SDD preservados para fora do worktree travado. Tarefa 5 executada (subagente rodou `run_pipeline.py` ponta a ponta em `cenario2.mp4`): as 2 quedas reais geram alerta `FALL_RISK` com cobertura contínua, `fall_velocity` puro nunca aflora, 1 `FALL_RISK` espúrio pré-existente via `balance_loss_risk` (fora do escopo do GTQ). **Decisão do controlador: bloqueio §7 da E5 resolvido com ressalva** — precisão de `immediate_risk` 0,581 → 0,680 (objetivo primário atingido), zero falso novo em `cenario.mp4`; ressalva: recall frame-level 0,915 < piso 0,95 (latência de borda numa queda, não queda perdida), follow-up não bloqueante registrado. PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) aberto contra `main` do `cypher-capture`; card `gtq` movido para `Em revisão` no Trello e neste documento. Roteiro de entregas, spec E5 §7, sprint-backlog e este documento (Review §3.7) atualizados. Próximo: revisão/merge do PR #10, depois puxar a E5. Bloqueio: nenhum.
+- Lucas Grecco — feito: mergeou o PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) do `cypher-capture` (`gtq` → `main`) e moveu o card `gtq` para `Concluído` no Trello; spec GTQ movida de `planejadas/` para `implementadas/` (`git mv`), roteiro de entregas atualizado (GTQ na tabela de §2 implementadas, removido de §3; E5 sem bloqueio), spec E5 §7 e status atualizados ("implementação liberada"), sprint-backlog (`gtq` → `Concluído`, linha E5 → liberada) e este documento (Review §3.7) atualizados; próximo: puxar a E5 (`e5a`/`e5b`/`e5c`); bloqueio: nenhum.
 
 *(continuar registrando um bloco por dia de trabalho real.)*
 
@@ -447,10 +448,9 @@ Suíte final: **290/290** (283 baseline + 7 novos). PR [#10](https://github.com/
 - Follow-up dos cues `person_fallen` para fechar o gap de recall 0,915 → ≥0,95 — precisa de spec/plano próprios com validação anti-overfitting (os thresholds atuais foram calibrados contra falso-positivo em agachamento).
 - 1 `FALL_RISK` espúrio por clipe via `balance_loss_risk` em agachamento — pré-existente, fora do escopo do GTQ.
 - Latência E2E p95 ~294 ms (alvo 200 ms) no host CPU de validação — pré-existente, não é questão do GTQ.
-- Spec GTQ migra de `planejadas/` para `implementadas/` só no merge do PR #10.
 
 #### Feedback recebido
 Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
-Card `gtq` movido para `Em revisão` no Trello e neste documento (2026-09-07). Roteiro de entregas (§3), spec E5 §7 e sprint-backlog atualizados. Próximo: revisão/merge do PR #10 do `cypher-capture`; após o merge, mover `gtq` para `Concluído`, migrar a spec GTQ para `implementadas/`, e puxar a E5 (`e5a`/`e5b`/`e5c`).
+PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) mergeado em 2026-09-07 (`gtq` → `main` do `cypher-capture`). Card `gtq` movido para `Concluído` no Trello e neste documento. Spec GTQ migrada de `planejadas/` para `implementadas/`; roteiro de entregas atualizado (GTQ em §2, removido de §3; E5 sem bloqueio); spec E5 §7 e status atualizados; sprint-backlog atualizado (`gtq` → `Concluído`, E5 → liberada). Próximo: puxar a E5 (`e5a`/`e5b`/`e5c`). Follow-up não bloqueante registrado na spec E5 §7 (cues `person_fallen` para recuperar recall frame-level; `merge_window_seconds` fixo se o placar contar nº de incidentes).
