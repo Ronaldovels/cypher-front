@@ -32,10 +32,10 @@
     </div>
     <div class="spacer"></div>
     <app-connection-badge/>
-    <button class="fb-export">
+    <a class="fb-export" [href]="urlResumoPdf()" target="_blank" rel="noopener">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 12l5 5 5-5M5 20h14"/></svg>
       Exportar PDF
-    </button>
+    </a>
   </div>
 
   <main class="hp-content">

@@ -8,11 +8,30 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from '../shared/event-source.factory';
 import { USE_MOCK_DATA } from '../shared/mock/use-mock-data.token';
-import { HeatmapComponent } from './heatmap.component';
+import { HeatmapComponent, inicioDoPeriodo } from './heatmap.component';
 
 const SSE_INERTE: EventSourceLike = {
   addEventListener: () => { }, close: () => { }, onopen: null, onerror: null,
 };
+
+describe('inicioDoPeriodo', () => {
+  const agora = new Date('2026-09-08T15:00:00.000Z');
+
+  it('hoje volta para 00:00 do dia corrente', () => {
+    const inicio = inicioDoPeriodo('hoje', agora);
+    expect(inicio?.toISOString().slice(0, 10)).toBe('2026-09-08');
+  });
+
+  it('7d/30d/90d voltam N dias a partir de agora', () => {
+    expect(inicioDoPeriodo('7d', agora)?.getTime()).toBe(agora.getTime() - 7 * 86400000);
+    expect(inicioDoPeriodo('30d', agora)?.getTime()).toBe(agora.getTime() - 30 * 86400000);
+    expect(inicioDoPeriodo('90d', agora)?.getTime()).toBe(agora.getTime() - 90 * 86400000);
+  });
+
+  it('custom nao tem intervalo por tras — retorna null (cai no default do backend)', () => {
+    expect(inicioDoPeriodo('custom', agora)).toBeNull();
+  });
+});
 
 describe('HeatmapComponent', () => {
   let http: HttpTestingController;
@@ -151,5 +170,24 @@ describe('HeatmapComponent', () => {
       .flush({ papel: 'GESTOR', username: 'g1' });
     gestor.detectChanges();
     expect(gestor.nativeElement.querySelector('app-dock')).not.toBeNull();
+  });
+
+  it('urlResumoPdf usa o periodo selecionado', () => {
+    const fixture = montarCom([]);
+    const comp = fixture.componentInstance;
+
+    comp.setPeriod('30d');
+    const url = new URL(comp.urlResumoPdf(), 'http://localhost');
+    expect(url.pathname).toBe('/api/v1/reports/summary.pdf');
+    expect(url.searchParams.has('since')).toBe(true);
+  });
+
+  it('urlResumoPdf omite since quando o periodo e custom', () => {
+    const fixture = montarCom([]);
+    const comp = fixture.componentInstance;
+
+    comp.setPeriod('custom');
+    const url = new URL(comp.urlResumoPdf(), 'http://localhost');
+    expect(url.searchParams.has('since')).toBe(false);
   });
 });
