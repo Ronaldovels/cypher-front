@@ -4,7 +4,7 @@
 
 **Goal:** Três projeções de dados já existentes, sem estado novo: CSV de incidentes, CSV de placar e PDF de resumo executivo.
 
-**Architecture:** Duas fatias com dependências diferentes. **Tarefa 1 (CSV de incidentes) é independente e pode ser executada agora** — reaproveita `IncidentService.search` já existente, só troca a serialização JSON-paginado por CSV completo do período (Apache Commons CSV). **Tarefa 2 (CSV de placar + PDF de resumo) depende do plano `2026-08-29-e5a-backend-gamificacao.md` estar implementado** (`PlacarService`/`PlacarEquipeResponse` precisam existir) — não iniciar a Tarefa 2 antes disso, mesmo que a Tarefa 1 já esteja em produção.
+**Architecture:** Duas fatias. `2026-08-29-e5a-backend-gamificacao.md` está mergeada em `main` (2026-09-08) — **as duas tarefas estão liberadas** e podem ser executadas em sequência na mesma sessão. Tarefa 1 (CSV de incidentes) reaproveita `IncidentService.search` já existente, só troca a serialização JSON-paginado por CSV completo do período (Apache Commons CSV). Tarefa 2 (CSV de placar + PDF de resumo) consome `PlacarService`/`PlacarEquipeResponse`, já existentes em `main`.
 
 **Tech Stack:** Spring Boot 4.0.6, Apache Commons CSV (novo), `openhtmltopdf-pdfbox` (novo), JUnit 5, AssertJ, MockMvc.
 
@@ -19,7 +19,7 @@
 - **`GET /api/v1/reports/*` é GESTOR-only**, sem escopo de `estacaoId` de OPERADOR — relatório é ação de gestão, não de operação de estação. Nenhuma linha explícita em `SecurityConfig`; cai no catch-all `hasRole("GESTOR")`, mesmo padrão de `/teams`/`/users`/`/webhooks`/CRUD de zonas/`/placar`.
 - **CSV usa `Pageable.unpaged()`** sobre os métodos de repositório já existentes (`AlertaRepository.buscar`) — spring Data JPA executa a `@Query` sem `LIMIT`/`OFFSET` quando o `Pageable` é `unpaged()`; nenhum método de repositório novo é necessário para o CSV de incidentes.
 - **PDF é `openhtmltopdf` sobre um template HTML/CSS próprio do backend** — não reaproveita nenhum componente Angular (spec §1.3, rejeitando JasperReports/PDFBox manual).
-- **A Tarefa 2 não deve ser iniciada antes do plano `e5a-backend-gamificacao.md` estar implementado** (`PlacarService`/`PlacarEquipeResponse` são pré-requisito direto) — a Tarefa 1 não tem essa dependência e pode seguir isoladamente (spec §7).
+- **Pré-requisito da Tarefa 2 satisfeito:** `e5a-backend-gamificacao.md` mergeado em `main` em 2026-09-08 — `PlacarService`/`PlacarEquipeResponse` existem e compilam. `PlacarEquipeResponse` tem 14 campos (não os 7 do desenho original desta spec) — ver Tarefa 2, Step 4/5 abaixo, que reflete o tipo real.
 - Run: `cd /home/asaas/projects/cypher && ./mvnw -o test -Dtest=NomeDaClasse` para uma classe; `./mvnw -o test` para a suíte inteira.
 
 ---
@@ -265,7 +265,7 @@ git commit -m "feat: adiciona exportacao de incidentes em CSV"
 
 ### Task 2: CSV de placar e PDF de resumo executivo
 
-> **Pré-requisito:** `2026-08-29-e5a-backend-gamificacao.md` implementado (`PlacarService`/`PlacarEquipeResponse` precisam existir e estar compilando em `main`). Não iniciar esta tarefa antes disso — ela depende diretamente desses tipos.
+> **Pré-requisito satisfeito:** `2026-08-29-e5a-backend-gamificacao.md` mergeado em `main` (2026-09-08) — `PlacarService`/`PlacarEquipeResponse` existem e compilam.
 
 **Files:**
 - Modify: `pom.xml`
@@ -307,13 +307,49 @@ Adicionar em `ReportControllerApiTest.java`:
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(csv).startsWith("equipeId,nome,turno,conformidade,cobertura,sequenciaAtual,melhorSequencia");
+        assertThat(csv).startsWith(
+                "equipeId,nome,turno,dadosSuficientes,conformidade,cobertura,sequenciaAtual,melhorSequencia,deltaConformidadeSemana");
         assertThat(csv).contains("Equipe Rpt");
+    }
+
+    @Test
+    void csvDePlacarNaoQuebraQuandoEquipeTemDadosInsuficientes() throws Exception {
+        // Equipe recem-criada, sem MonitoramentoDiario: cobertura 0 < piso 0,5 (E5 spec SS3.2)
+        // -> dadosSuficientes=false, conformidade/deltaConformidadeSemana nulos. So confirma
+        // que o CSV nao quebra e imprime a celula vazia, sem exigir dado real de heartbeat.
+        MockHttpSession session = AuthTestSupport.loginGestorBootstrap(mvc);
+        mvc.perform(post("/api/v1/teams").session(session)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"id\": \"EQ-RPT2\", \"nome\": \"Equipe Sem Dado\", \"turno\": \"MANHA\", "
+                        + "\"estacaoIds\": [], \"ativa\": true}"));
+
+        String csv = mvc.perform(get("/api/v1/reports/placar.csv").session(session))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(csv).contains("EQ-RPT2,Equipe Sem Dado,MANHA,false,,");
     }
 
     @Test
     void pdfDeResumoComecaComAAssinaturaDeBytesPdf() throws Exception {
         MockHttpSession session = AuthTestSupport.loginGestorBootstrap(mvc);
+
+        byte[] pdf = mvc.perform(get("/api/v1/reports/summary.pdf").session(session))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+
+        assertThat(new String(pdf, 0, 5, java.nio.charset.StandardCharsets.US_ASCII)).isEqualTo("%PDF-");
+    }
+
+    @Test
+    void pdfDeResumoNaoQuebraComEquipeDeDadosInsuficientes() throws Exception {
+        // Regressao do achado da revisao de design (2026-09-08): conformidade() nula
+        // (equipe sem cobertura suficiente) desempacotava e quebrava a geracao do PDF.
+        MockHttpSession session = AuthTestSupport.loginGestorBootstrap(mvc);
+        mvc.perform(post("/api/v1/teams").session(session)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"id\": \"EQ-RPT3\", \"nome\": \"Equipe Sem Dado Pdf\", \"turno\": \"MANHA\", "
+                        + "\"estacaoIds\": [], \"ativa\": true}"));
 
         byte[] pdf = mvc.perform(get("/api/v1/reports/summary.pdf").session(session))
                 .andExpect(status().isOk())
@@ -334,16 +370,23 @@ Expected: FAIL — `.../placar.csv`/`.../summary.pdf` não existem.
 
 ```java
     private static final String[] CABECALHO_PLACAR = {
-            "equipeId", "nome", "turno", "conformidade", "cobertura", "sequenciaAtual", "melhorSequencia",
+            "equipeId", "nome", "turno", "dadosSuficientes", "conformidade", "cobertura",
+            "sequenciaAtual", "melhorSequencia", "deltaConformidadeSemana",
     };
 
+    /**
+     * Metas ({@code metaConformidade} etc.) ficam de fora — são configuração da
+     * equipe (já visível em `/config/equipe`), não resultado do período exportado
+     * (spec E6 §1.2). {@code conformidade}/{@code deltaConformidadeSemana} nulos
+     * (equipe com {@code dadosSuficientes = false}) imprimem célula vazia.
+     */
     public static String placarParaCsv(List<PlacarEquipeResponse> placar) throws IOException {
         StringWriter writer = new StringWriter();
         CSVFormat format = CSVFormat.DEFAULT.builder().setHeader(CABECALHO_PLACAR).build();
         try (CSVPrinter printer = new CSVPrinter(writer, format)) {
             for (PlacarEquipeResponse p : placar) {
-                printer.printRecord(p.equipeId(), p.nome(), p.turno(), p.conformidade(), p.cobertura(),
-                        p.sequenciaAtual(), p.melhorSequencia());
+                printer.printRecord(p.equipeId(), p.nome(), p.turno(), p.dadosSuficientes(), p.conformidade(),
+                        p.cobertura(), p.sequenciaAtual(), p.melhorSequencia(), p.deltaConformidadeSemana());
             }
         }
         return writer.toString();
@@ -401,7 +444,10 @@ public final class PdfReportBuilder {
             .append("</style></head><body>");
 
         html.append("<h1>Resumo executivo — Cypher</h1>");
-        html.append("<h2>Indicadores</h2><ul>")
+        // SummaryService.build() nao recebe periodo (spec E6 SS1.3) -- os KPIs
+        // sao ponto-no-tempo, o rotulo deixa isso explicito para nao sugerir
+        // que respeitam o since/until do placar abaixo.
+        html.append("<h2>Indicadores (hoje)</h2><ul>")
             .append("<li>Incidentes hoje: ").append(s.incidentesHoje()).append("</li>")
             .append("<li>Incidentes ontem: ").append(s.incidentesOntem()).append("</li>")
             .append("<li>Críticos hoje: ").append(s.criticosHoje()).append("</li>")
@@ -414,10 +460,26 @@ public final class PdfReportBuilder {
         }
         html.append("</table>");
 
+        // Restaurado na revisao de design de 2026-09-08 (spec E6 SS1.3/SS9) --
+        // tinha caido de uma edicao anterior da spec por descuido. Dado ja
+        // existe em SummaryResponse, sem agregacao nova.
+        html.append("<h2>Últimos 7 dias</h2><table><tr><th>Dia</th><th>Incidentes</th></tr>");
+        for (SummaryResponse.DayCount dia : s.ultimosSeteDias()) {
+            html.append("<tr><td>").append(dia.dia()).append("</td><td>")
+                .append(dia.incidentes()).append("</td></tr>");
+        }
+        html.append("</table>");
+
         html.append("<h2>Placar de conformidade</h2><table><tr><th>Equipe</th><th>Conformidade</th><th>Cobertura</th></tr>");
         for (PlacarEquipeResponse p : placar) {
+            // conformidade() eh nula quando p.dadosSuficientes() == false (E5 SS3.2) --
+            // desempacotar direto (p.conformidade() * 100) lanca NPE (achado da
+            // revisao de design, 2026-09-08). Mostra "dados insuficientes" em vez de numero.
+            String conformidadeTexto = p.dadosSuficientes()
+                    ? String.format("%.0f%%", p.conformidade() * 100)
+                    : "dados insuficientes";
             html.append("<tr><td>").append(p.nome()).append("</td><td>")
-                .append(String.format("%.0f%%", p.conformidade() * 100)).append("</td><td>")
+                .append(conformidadeTexto).append("</td><td>")
                 .append(String.format("%.0f%%", p.cobertura() * 100)).append("</td></tr>");
         }
         html.append("</table></body></html>");
@@ -489,11 +551,13 @@ git commit -m "feat: adiciona exportacao de placar em CSV e resumo executivo em 
 
 ## Self-Review
 
-**Cobertura da spec:** §1.1 (CSV de incidentes) → Tarefa 1. §1.2 (CSV de placar) → Tarefa 2. §1.3 (PDF de resumo, bibliotecas escolhidas/rejeitadas) → Tarefa 2, `PdfReportBuilder`. §3 (comportamento sob falha: período sem incidentes → só cabeçalho) → testado explicitamente na Tarefa 1. §7 ("passo 1 pode ser entregue isoladamente mesmo que E5 ainda não exista") → refletido na estrutura de duas tarefas com o pré-requisito só na segunda.
+**Cobertura da spec:** §1.1 (CSV de incidentes) → Tarefa 1. §1.2 (CSV de placar, colunas incluindo `dadosSuficientes`/`deltaConformidadeSemana`, metas fora) → Tarefa 2. §1.3 (PDF de resumo — KPIs rotulados "hoje", série de 7 dias restaurada, equipe sem dado mostra texto em vez de quebrar) → Tarefa 2, `PdfReportBuilder`. §3 (comportamento sob falha: período sem incidentes → só cabeçalho) → testado explicitamente na Tarefa 1. §7/§8/§9 (E5 mergeada, as duas tarefas liberadas, série de 7 dias restaurada) → refletido em Architecture/Global Constraints e no `PdfReportBuilder`.
 
 **Placeholder scan:** nenhum "TBD"/"implementar depois".
 
-**Consistência de tipos:** `CsvReportBuilder`/`PdfReportBuilder` são classes utilitárias sem estado, consumidas só pelo `ReportController`; `PlacarEquipeResponse`/`SummaryResponse` são os tipos exatos já definidos em `e5a-backend-gamificacao.md` e `SummaryService` (existente), sem duplicação.
+**Consistência de tipos:** `CsvReportBuilder`/`PdfReportBuilder` são classes utilitárias sem estado, consumidas só pelo `ReportController`; `PlacarEquipeResponse` (14 campos, com `dadosSuficientes` boolean e `conformidade`/`deltaConformidadeSemana` nuláveis) e `SummaryResponse` são os tipos reais já existentes em `main` — plano atualizado em 2026-09-08 (revisão de design pré-execução) para refletir o tipo real em vez do desenho original de 7 campos.
+
+**Revisão de design (2026-09-08):** comparado com o estado real do repositório (`PlacarEquipeResponse`, `SummaryService.build()`, `AlertaRepository.buscar`) antes da execução — achados e decisões em `specs/planejadas/2026-08-29-relatorios-e6-design.md` §8.
 
 ---
 

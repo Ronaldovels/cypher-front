@@ -178,6 +178,66 @@ Lucas Grecco — os três repositórios, uma sessão dedicada por repositório. 
 
 ---
 
+### 1.7 Planning — Relatórios e exportação E6 (`e6a`/`e6b`)
+
+**Data:** 2026-09-08
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto de entrada
+Com a E5 mergeada (§3.11), o usuário pediu para mover os cards de Relatórios (backend e front) para `Em andamento` e revisar a spec E6 (`planejadas/2026-08-29-relatorios-e6-design.md`) e os dois planos de implementação (`plans/e6-relatorios/e6a`/`e6b`) antes de partir para a execução — mesmo padrão da revisão de design da E5 (§1.6): comparar spec/planos com o estado real dos repositórios em vez de assumir que o desenho de 2026-08-29 ainda bate com o código.
+
+#### Achados da revisão que viraram decisão de design (registrados na spec E6 §8)
+- **NPE no PDF de resumo.** `PlacarEquipeResponse.conformidade()` é `Double` nulável desde a E5 (§3.2, "dados insuficientes") — o plano `e6a` desempacotava direto (`p.conformidade() * 100`), quebrando a geração do PDF assim que uma equipe está nesse estado (os dados de demo da E5 já povoam esse cenário). Corrigido: linha do placar no PDF mostra "dados insuficientes" em vez do percentual.
+- **CSV de placar com 7 de 14 colunas, faltando `dadosSuficientes`.** O desenho original da spec (escrito antes da E5 existir) não previa esse campo. Perderia a informação central da E5 §3.2. Corrigido: coluna incluída, junto com `deltaConformidadeSemana`; os quatro campos de meta ficam de fora por decisão (configuração da equipe, não resultado do período).
+- **`summary.pdf?since&until` não escopava os KPIs.** `SummaryService.build()` não aceita período — só a metade de placar do documento respeitava `since`/`until`. Fechado como decisão de spec, não bug: KPIs continuam ponto-no-tempo, documento rotula a seção "Indicadores (hoje)".
+- **`new URL()` sem base nos testes do front lança `Invalid URL`.** `environment.apiUrl` é `/api/v1` (relativo) — funciona num `<a href>` real, mas o construtor `URL` do WHATWG exige URL absoluta sem um segundo argumento de base. Confirmado empiricamente (`node -e "new URL('/api/v1/x')"` → `Invalid URL`) antes de aceitar o achado. Corrigido nos 5 asserts do plano `e6b`, sem mudar o componente.
+- **Rota `/relatorios` sem entrada de navegação.** `DockComponent` não tinha nenhum item apontando pra essa rota — ficaria alcançável só digitando a URL. Corrigido: novo Step no plano `e6b` Tarefa 2, adiciona o `DockItem`.
+- Dois pontos verificados sem gap: `AlertaRepository.buscar` + `Pageable.unpaged()` (Global Constraints do `e6a`) e a assimetria `since`-only em `incidents.csv` (é a spec como escrita, não um mismatch).
+
+#### Sprint Goal
+Executar os dois planos revisados: `e6a` (backend `cypher` — CSV de incidentes, CSV de placar, PDF de resumo) e `e6b` (front `cypher-front` — link na timeline, `RelatoriosComponent`). Ambas as tarefas de cada plano já liberadas (E5 mergeada); sem ordem de dependência entre os dois repositórios, podem ser puxados em paralelo.
+
+#### Itens puxados do Product Backlog
+Cards `e6a`/`e6b` de `sprint-backlog.md` — movidos de `Product Backlog` para `Em andamento`.
+
+#### Capacidade e divisão de trabalho
+Lucas Grecco — os dois repositórios, sessão dedicada por repositório (subagent-driven development), sem ordem obrigatória entre eles.
+
+#### Riscos identificados no planning
+- Nenhuma entrega nova mergeou entre a E5 (2026-09-08) e agora, então o risco de "plano desatualizado contra a árvore" já foi endereçado nesta própria revisão — não deve reaparecer no meio da execução como aconteceu com a E5.
+- Teste manual ponta a ponta da Tarefa 2 de `e6b` (baixar o PDF/CSV de verdade) precisa do backend `e6a` Tarefa 2 rodando localmente — mesma dependência de sempre entre front e backend num teste real, sem impacto nos specs automatizados.
+
+### 1.8 Planning — Reconciliação de UI e escopo do PDF (E6, segunda rodada)
+
+**Data:** 2026-09-08 (mesmo dia de §1.7)
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto de entrada
+Depois de §1.7, o usuário perguntou sobre a tela de Heatmap, que já tem botões de exportar PDF de relatório na interface — pediu para reconciliar isso com a spec (juntar/refinar/ajustar fluxos), usar a skill `frontend-design` para pensar a arquitetura de informação dentro do style guide já implementado, e checar se as tasks dos planos mudaram para atualizar o Trello.
+
+#### Achados que viraram decisão de design (spec E6 §9)
+- **Heatmap já tem um botão "Exportar PDF"** na barra de filtros (`.fb-export`), ao lado de um seletor de período (`hoje`/`7d`/`30d`/`90d`/`custom`) — os dois decorativos, sobra de uma passada de UI anterior à E6 (a barra inteira do Heatmap, incluindo Setor/EPI/Turno, não filtra nada; só `celulas()`/`top5()` são ligados a dado real). `.filterbar`/`.fb-export` não são reaproveitados em nenhuma outra tela.
+- **Decisão (após confirmação com o usuário, 3 opções avaliadas):** descartar a rota `/relatorios` da spec original por inteiro. PDF de resumo → liga o botão que já existe no Heatmap, reaproveitando `period()` pra montar `since`. CSV de placar → link simples no cabeçalho do painel de `/placar`, sem seletor de período (reaproveita a janela padrão de 7 dias do backend). CSV de incidentes → inalterado, já estava na timeline.
+- **Pergunta do usuário sobre escopo do PDF** ("cobre só gamificação ou algo mais geral?") — resposta registrada na spec §1.3: o PDF já combina KPIs de incidentes + heatmap (geral) com o placar (E5); não é um relatório de gamificação. Ao checar isso, achado um descuido da revisão anterior (§1.7): a "série de 7 dias" que a spec original de 2026-08-29 previa tinha caído do texto numa reescrita sem virar decisão registrada — **restaurada** no PDF (`SummaryResponse.ultimosSeteDias`, dado já existente, zero agregação nova).
+- **Expansão de escopo do PDF (saúde de webhooks, cobertura de análise por IA)** — considerada a pedido do usuário, mas **adiada** para esta rodada: cada uma pediria um método de agregação novo nos respectivos services; registradas em spec §5 como candidatas futuras.
+- Consultada a skill `frontend-design` para calibrar a decisão de IA — como o app já tem um style guide implementado (`.btn`/`.panel`/`.field`/`.fb-export`) e a pergunta era de arquitetura de informação (onde cada ação vive), não de identidade visual nova, a aplicação prática foi o princípio de "reaproveitar em vez de duplicar" já usado no resto da E6, levado ao limite: nenhuma UI nova de verdade, só ligar o que já existe.
+
+#### Sprint Goal
+Sem mudança de goal — mesmo objetivo de §1.7 (executar `e6a`/`e6b`), com os planos atualizados antes de puxar a execução de verdade.
+
+#### Itens puxados do Product Backlog
+Nenhum novo — `e6a`/`e6b` já estavam em `Em andamento` desde §1.7. Esta rodada só revisou os planos antes da execução começar.
+
+#### Capacidade e divisão de trabalho
+Sem mudança de §1.7.
+
+#### Riscos identificados no planning
+- **Checklist do card `e6b` no Trello mudou** — de 2 para 3 tarefas (a T2 antiga, `RelatoriosComponent`/rota/dock, foi removida; T2 nova e T3 são diferentes da versão anterior). Usuário avisado explicitamente para atualizar o card manualmente — `sprint-backlog.md` já reflete a mudança.
+- `e6a` ganhou um passo a mais na Tarefa 2 (seção de série de 7 dias no `PdfReportBuilder`), mas a contagem de tarefas do card não mudou (continua 2).
+- O botão "Exportar PDF" do Heatmap, uma vez ligado, ainda vai conviver com um seletor de período (`period()`) e um `shift()` que continuam decorativos para o resto da tela — risco de confusão de UX (usuário pode esperar que mudar o período também filtre o heatmap em tela). Não é um problema introduzido por esta entrega, mas fica mais visível depois que o botão passa a funcionar; registrado como observação, não bloqueia.
+
+---
+
 ## 2. Dailies (registro resumido, assíncrono)
 
 Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**.
@@ -233,6 +293,8 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 
 ### 2026-09-08 (teste manual ponta a ponta e merge da E5)
 - Lucas Grecco — feito: subiu os três projetos localmente a partir das branches em revisão da E5 (Gemini + Cloudinary configurados, pipeline com webcam real do notebook em CUDA); corrigiu no caminho um cache de api-key stale que causava 401 em cascata (resíduo de sessão anterior, não bug da E5). Configurou dados de teste na empresa `demo`: GESTOR, as 5 câmeras reais da meta indústria (Fresa 1/2, Tenda, Sala 4, SICK) com `fonte` em placeholder, a webcam do notebook, 4 operadores e 3 equipes de teste populadas com 14 dias de histórico sintético nas câmeras genéricas, exercitando os 3 estados do placar. Recusou um pedido de commitar `data/cypherdb.mv.db` (o `.gitignore` do `cypher` já bloqueia isso de propósito — tokens/api-keys reais em texto puro) e substituiu por `scripts/seed-empresa-demo.sh`/`seed_gamificacao_demo.py` (commitado em `feat/e5-backend-gamificacao`) e `docs/empresa-demo-runbook.md` (commitado em `feat/e5-front-placar`), ambos sem segredo real gravado. Confirmou `POST /heartbeat` → 204 e `GET /placar` com os 3 estados esperados. Mergeou os 3 PRs (`e5a`→`main` do `cypher`, `e5b`→`main` do `cypher-capture`, `e5c`→`dev` do `cypher-front`) e encerrou os três processos locais. Cards `e5a`/`e5b`/`e5c` movidos para `Concluído` no Trello e neste documento; spec de gamificação movida de `planejadas/` para `implementadas/`; roteiro de entregas, sprint-backlog e este documento (Review §3.11) atualizados. Próximo: puxar E6 (relatórios), totalmente liberado. Bloqueio: nenhum.
+- Lucas Grecco — feito: puxou os cards de Relatórios E6 (`e6a` backend, `e6b` front) de `Product Backlog` para `Em andamento` no Trello e neste documento; revisão de design pré-execução da spec E6 e dos dois planos (§1.7) — comparação com o estado real de `PlacarEquipeResponse`, `SummaryService`, `AlertaRepository` (`cypher`) e `environment.apiUrl`/`DockComponent` (`cypher-front`) encontrou e corrigiu cinco achados: NPE no PDF para equipe com dados insuficientes, CSV de placar com 7 de 14 colunas (faltava `dadosSuficientes`), `summary.pdf` não escopando os KPIs por período (fechado como decisão de spec), `new URL()` sem base quebrando os testes do front (confirmado com `node -e`), e rota `/relatorios` sem entrada de dock. Spec E6 §8 e os dois planos atualizados com as correções; sprint-backlog reestruturado (seção dedicada de Relatórios, tabela "Próximas entregas" esvaziada — E1–E6 completo). Próximo: executar `e6a`/`e6b` via subagent-driven development, sem ordem obrigatória entre os dois repositórios. Bloqueio: nenhum.
+- Lucas Grecco — feito: segunda revisão de design de E6 no mesmo dia (§1.8), a pedido do usuário — achou que o Heatmap já tem um botão "Exportar PDF" decorativo (com seletor de período do lado) que a spec original não tinha mapeado; consultada a skill `frontend-design` pra calibrar a decisão de arquitetura de informação dentro do style guide já implementado. Decisão (3 opções avaliadas com o usuário): descartar a rota `/relatorios` da spec original — PDF de resumo liga o botão já existente no Heatmap, CSV de placar vira um link simples em `/placar`, CSV de incidentes continua na timeline. Respondida a pergunta do usuário sobre escopo do PDF (já é geral, não só gamificação) e, checando isso, achado e corrigido um descuido da revisão anterior: a "série de 7 dias" da spec original tinha caído do texto sem virar decisão — restaurada no `PdfReportBuilder` (`e6a`). Expansão pra webhooks/análise por IA no PDF considerada e adiada (spec §5). Spec E6 §9 escrita; plano `e6b` reescrito por inteiro — Tarefa 2 antiga (`RelatoriosComponent`/rota/dock) removida, viraram Tarefa 2 (liga botão do Heatmap) e Tarefa 3 nova (CSV em `/placar`); plano `e6a` ganhou a seção de 7 dias na Tarefa 2. Sprint-backlog atualizado com aviso explícito de checklist mudada (2→3 tarefas) para o usuário replicar no card do Trello. Próximo: executar os planos revisados de `e6a`/`e6b`. Bloqueio: nenhum.
 
 ---
 
