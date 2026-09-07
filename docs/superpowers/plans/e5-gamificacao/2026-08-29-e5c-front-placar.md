@@ -21,6 +21,8 @@
 - **Nota de design:** toda peça nova reaproveita 100% os primitivos globais já existentes em `src/styles.scss` (`.panel`, `.chip`, `.list-row`, `.field`, `.input`, `.btn`, `.vazio`) — mesmo princípio de todas as specs anteriores desta rodada. Nenhum componente de gráfico é introduzido; barra de progresso é um `div` com `[style.width.%]` proporcional.
 - **Sequência interrompida nunca vira alerta vermelho** (spec §5, E1 §16.3) — o badge sempre mostra "melhor sequência: N · atual: M", nunca uma cor de erro quando `atual` cai a zero.
 - **Ranking é a ordem que o backend já devolve** (`GET /placar` já ordena por delta, spec E5-A) — o front nunca reordena por conta própria.
+- **`deltaConformidadeSemana` pode ser `null` mesmo com `dadosSuficientes === true`** — a revisão do `e5a` (cerimonias §3.8) travou o delta quando a semana anterior não tem `MonitoramentoDiario` suficiente, o que é o caso normal nas 2 primeiras semanas de operação. Renderizar isso como "sem histórico suficiente para ranquear" ao lado da conformidade, **não** como 0% ou seta neutra. O mesmo vale para `conformidade === null` (aí a linha já cai na seção "dados insuficientes").
+- **`metaTempoReconhecimentoSegundos` não tem par `...Atingida`** no DTO (as outras duas metas têm) — exibir só como valor informativo, sem badge de atingida/não-atingida, até E6.
 - Run: `npx vitest run <arquivo>` para um arquivo; `npx vitest run` para a suíte inteira.
 
 ---
