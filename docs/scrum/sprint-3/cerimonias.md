@@ -521,3 +521,36 @@ Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
 Revisão/merge do PR [#10](https://github.com/lucvs07/Cypher-Api/pull/10) do `cypher`. Com `e5a` rodando localmente e o contrato dos DTOs fixado (`POST /api/v1/cameras/{codigo}/heartbeat`, `GET /api/v1/placar?since&until` → `List<PlacarEquipeResponse>`, `IncidentResponse.normaAplicavel`), executar `e5b` (`cypher-capture` — `HeartbeatSender`) e `e5c` (`cypher-front` — `PlacarComponent`, metas em `/config/equipe`, norma no card do kiosk) em paralelo. `e5c` deve tratar o estado "ranking sem histórico suficiente".
+
+---
+
+### 3.9 Review — Gamificação por equipe, capture (`e5b`)
+
+**Data:** 2026-09-07
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto
+Segunda das três fatias da E5. Execução via subagent-driven development no `cypher-capture` (branch local `feat/e5-capture-heartbeat`, a partir de `main`, sem worktree), um subagente implementador por tarefa + revisão de tarefa (spec + qualidade) após cada uma + revisão da branch inteira ao final. Scan pré-execução (2 tarefas, ambas tocam `src/notify/`): verificado que `notify.api_url` já carrega o prefixo `/api/v1` (o `HttpIncidentSink` compõe `f"{api_url}/incidents"`), então `HeartbeatSender` compondo `f"{api_url}/cameras/{id}/heartbeat"` bate com o contrato sem bug de prefixo; ponto de inserção em `run_pipeline.py` (após o `try/except MissingApiKeyError`, `chave_provisionada` viva) confere com a árvore pós-zonas/orquestrador.
+
+#### Entregue
+- **Tarefa 1 — `HeartbeatSender`** (`src/notify/heartbeat.py`). Throttle de intervalo (no máx. 1 POST por `interval_seconds`; `_ultimo_envio` avança mesmo quando o POST falha — sem retry a cada frame) e tolerância a falha (`enviar_se_necessario()` nunca lança — API fora do ar loga e segue). Resolução de chave reaproveitada de `resolve_api_key` (`src/notify/sink.py`), nunca duplicada; `api_key` explícito vence `api_key_env`; `MissingApiKeyError` alto no boot se `api_key_env` aponta para var ausente; sem nenhuma chave → não envia, não lança. Transporte injetado nos testes (sem rede); `requests` importado preguiçosamente só no transporte real.
+- **Tarefa 2 — Ligação em `run_pipeline.py`.** Campo `heartbeat_interval_seconds: float = 30.0` em `NotifyConfig` (configurável em `pose_config.yaml`, mesmo padrão de `merge_window_seconds`). Construção do `heartbeat_sender` no bloco `if notify_config.enabled:` (reaproveitando `chave_provisionada`), `None` no ramo sem `api_url`, chamada `enviar_se_necessario()` uma vez por frame logo após `tracker.process(...)` — barata porque o throttle interno decide sozinho quando há I/O.
+
+Suíte final: **298/298** (era 295 no início da entrega). PR [#11](https://github.com/lucvs07/cypher-capture/pull/11) aberto contra `main` do `cypher-capture`.
+
+#### Achados de revisão corrigidos antes do PR
+- **Revisão final de branch (2 Important + polimento):** (a) sem nenhuma chave resolvida o heartbeat virava no-op silencioso para sempre, sem nenhum log — a métrica de cobertura E5 da câmera ficaria zerada sem sinal; adicionado `log.warning` único no boot. (b) `heartbeat_interval_seconds` chegava sem validação e a aritmética do throttle ficava fora do `try` — um valor não-numérico do YAML lançaria `TypeError` no 2º frame, para fora do laço (contra o contrato "nunca lança"); corrigido com `float(interval_seconds)` na construção (erro de boot, não de laço) e `<= 0` → desativa com log. (c) Construção do `HeartbeatSender` movida para dentro do `try/except MissingApiKeyError` que já embrulha o `HttpIncidentSink` (inalcançável hoje, mas frágil a reordenação). (d) `heartbeat_interval_seconds` documentado em `config/pose_config.yaml` e no campo do dataclass, com nota do acoplamento cross-repo (spec §2.2 do backend usa o valor como teto do incremento `× 2`). (e) +3 testes cobrindo os constraints nomeados no brief que não tinham cobertura: fluxo por `resolve_api_key` com `env` injetado, precedência de `api_key` sobre `api_key_env`, `MissingApiKeyError` propagando do construtor.
+
+#### Verificação ponta a ponta
+Backend rodando a partir de `feat/e5-backend-gamificacao` (PR [#10](https://github.com/lucvs07/Cypher-Api/pull/10) do `cypher`, ainda em revisão): `POST /api/v1/cameras/CAM-HB1/heartbeat` com `X-Cypher-Key` → **204**; sem header → **401**; câmera inexistente → **404**. `HeartbeatSender` real (transporte `requests`) contra o backend → 204 sem exceção; segundo envio dentro do intervalo é throttled; chave inválida → 401 logado e engolido, sem propagar. Contrato e tolerância a falha confirmados.
+
+#### O que não foi concluído / passa para o backlog (follow-ups não bloqueantes)
+- POST síncrono no laço de frames (`RequestsHeartbeatTransport.post`) — desenho do plano (1×/30s, throttle interno), mas o timeout default do `requests` é 5s e cobre connect e read separadamente; se a cauda de latência incomodar numa fonte RTSP ao vivo, mover o POST para uma thread daemon curta com timeout ~1s.
+- `camera_id` interpolado na URL sem `urllib.parse.quote` — mesmo padrão pré-existente de `incident_key` em `sink.py`; escapar quando o padrão for revisitado no repo todo.
+- O ramo `interval <= 0` reaproveita `_headers = None` como sinal de "desativado", então `enviar_se_necessario()` ainda avança `_ultimo_envio` a cada chamada antes de retornar — inócuo (sem I/O, sem exceção).
+
+#### Feedback recebido
+Nenhum registrado ainda (banca/mentoria).
+
+#### Próximos passos
+Revisão/merge dos PRs [#11](https://github.com/lucvs07/cypher-capture/pull/11) (`cypher-capture`) e [#10](https://github.com/lucvs07/Cypher-Api/pull/10) (`cypher`). Concluir `e5c` (`cypher-front` — `PlacarComponent`, metas em `/config/equipe`, norma no card do kiosk). Com as três fatias mergeadas, teste manual ponta a ponta com o placar refletindo conformidade e cobertura reais e a validação da propriedade central (desligar a captura reduz a cobertura, não o incidente — E1 §16.2).
