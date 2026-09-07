@@ -5,6 +5,7 @@ import { LoginComponent } from './auth/login.component';
 import { LoginEstacaoComponent } from './auth/login-estacao.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { HeatmapComponent } from './heatmap/heatmap.component';
+import { PlacarComponent } from './placar/placar.component';
 import { IncidentTimelineComponent } from './incidents/incident-timeline.component';
 import { IncidentDetailComponent } from './incidents/incident-detail.component';
 import { StationsGridComponent } from './stations/stations-grid.component';
@@ -27,6 +28,7 @@ export const routes: Routes = [
   { path: 'login-estacao', component: LoginEstacaoComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [canActivateGestor] },
   { path: 'heatmap', component: HeatmapComponent, canActivate: [canActivateGestor] },
+  { path: 'placar', component: PlacarComponent, canActivate: [canActivateGestor] },
   { path: 'incidentes', component: IncidentTimelineComponent },
   { path: 'incidentes/:id', component: IncidentDetailComponent },
   { path: 'estacoes', component: StationsGridComponent },
