@@ -44,7 +44,10 @@ describe('EquipesConfigComponent', () => {
 
   it('codigo fora do padrao mostra erro e nao envia', () => {
     const fixture = montar();
-    fixture.componentInstance.novaEquipe.set({ id: 'invalido', nome: 'X', turno: 'MANHA', estacaoIds: [] });
+    fixture.componentInstance.novaEquipe.set({
+      id: 'invalido', nome: 'X', turno: 'MANHA', estacaoIds: [],
+      metaConformidade: null, metaZeroSeveridade4Ativa: false, metaTempoReconhecimentoSegundos: null,
+    });
 
     fixture.componentInstance.salvar();
 
@@ -65,18 +68,46 @@ describe('EquipesConfigComponent', () => {
 
   it('salvar com dados validos cadastra e limpa o rascunho', () => {
     const fixture = montar();
-    fixture.componentInstance.novaEquipe.set({ id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-02'] });
+    fixture.componentInstance.novaEquipe.set({
+      id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-02'],
+      metaConformidade: null, metaZeroSeveridade4Ativa: false, metaTempoReconhecimentoSegundos: null,
+    });
 
     fixture.componentInstance.salvar();
 
     const req = http.expectOne(`${environment.apiUrl}/teams`);
-    expect(req.request.body).toEqual({ id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-02'] });
+    expect(req.request.body).toEqual({
+      id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-02'],
+      metaConformidade: null, metaZeroSeveridade4Ativa: false, metaTempoReconhecimentoSegundos: null,
+    });
     req.flush({ id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-02'], ativa: true });
 
     http.expectOne(`${environment.apiUrl}/teams`).flush([]);
     http.expectOne(`${environment.apiUrl}/users`).flush([]);
 
     expect(fixture.componentInstance.novaEquipe().id).toBe('');
+  });
+
+  it('envia os campos de meta no cadastro de equipe', () => {
+    const fixture = montar();
+    fixture.componentInstance.novaEquipe.set({
+      id: 'EQ-09', nome: 'Equipe Meta', turno: 'MANHA', estacaoIds: ['EST-01'],
+      metaConformidade: 0.98, metaZeroSeveridade4Ativa: true, metaTempoReconhecimentoSegundos: 120,
+    });
+
+    fixture.componentInstance.salvar();
+
+    const req = http.expectOne(`${environment.apiUrl}/teams`);
+    expect(req.request.body.metaConformidade).toBe(0.98);
+    expect(req.request.body.metaZeroSeveridade4Ativa).toBe(true);
+    expect(req.request.body.metaTempoReconhecimentoSegundos).toBe(120);
+    req.flush({
+      id: 'EQ-09', nome: 'Equipe Meta', turno: 'MANHA', estacaoIds: ['EST-01'], ativa: true,
+      metaConformidade: 0.98, metaZeroSeveridade4Ativa: true, metaTempoReconhecimentoSegundos: 120,
+    });
+
+    http.expectOne(`${environment.apiUrl}/teams`).flush([]);
+    http.expectOne(`${environment.apiUrl}/users`).flush([]);
   });
 
   it('desativar chama deleteEquipe', () => {

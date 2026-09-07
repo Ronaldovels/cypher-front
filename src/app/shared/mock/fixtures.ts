@@ -65,6 +65,7 @@ const MOLDE: Molde = {
   peakSeverity: null,
   closedReason: null,
   status: 'PENDENTE',
+  normaAplicavel: null,
 };
 
 export const CAMERAS: Camera[] = [
@@ -86,7 +87,8 @@ export const INCIDENTS: Incident[] = [
   { ...MOLDE, id: 5, incidentKey: 'exemplo-5', cameraId: 'CAM-02', type: 'FALL_RISK',
     severity: 4, nivel: 'ALTO', descricao: 'Queda detectada', detectedAt: minutosAtras(12),
     reason: 'fallen_sustained', postureCategory: 'immediate_risk', rebaScore: 11,
-    actionLevel: 4, peakSeverity: 4, snapshotUrl: 'https://placehold.co/640x360?text=exemplo-5' },
+    actionLevel: 4, peakSeverity: 4, normaAplicavel: 'NR-35',
+    snapshotUrl: 'https://placehold.co/640x360?text=exemplo-5' },
   { ...MOLDE, id: 4, incidentKey: 'exemplo-4', cameraId: 'CAM-01', type: 'EPI_VIOLATION',
     severity: 3, nivel: 'ALTO', descricao: 'Capacete ausente', detectedAt: minutosAtras(90),
     epiMissing: ['HELMET'], epiPresent: ['VEST'], peakSeverity: 3 },
@@ -211,8 +213,8 @@ export function resetMockSetup(): void {
 // ---------------- equipes e usuários (mock) ----------------
 
 export const EQUIPES: Equipe[] = [
-  { id: 'EQ-01', nome: 'Equipe A', turno: 'MANHA', estacaoIds: ['EST-01', 'EST-02'], ativa: true },
-  { id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-03'], ativa: true },
+  { id: 'EQ-01', nome: 'Equipe A', turno: 'MANHA', estacaoIds: ['EST-01', 'EST-02'], ativa: true, metaConformidade: null, metaZeroSeveridade4Ativa: null, metaTempoReconhecimentoSegundos: null },
+  { id: 'EQ-02', nome: 'Equipe B', turno: 'TARDE', estacaoIds: ['EST-03'], ativa: true, metaConformidade: null, metaZeroSeveridade4Ativa: null, metaTempoReconhecimentoSegundos: null },
 ];
 
 /** Senha guardada só no mock — nunca no tipo público `Usuario`. Semeada a partir de `GESTOR_DEMO`, fonte única da credencial de demonstração. */

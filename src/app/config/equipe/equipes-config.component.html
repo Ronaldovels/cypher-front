@@ -34,6 +34,25 @@
         }
       </div>
     </div>
+    <div class="field">
+      <label>Meta de conformidade (0–1, opcional)</label>
+      <input class="input" type="number" min="0" max="1" step="0.01"
+             [value]="novaEquipe().metaConformidade"
+             (input)="novaEquipe.set({ ...novaEquipe(), metaConformidade: $any($event.target).value ? +($any($event.target).value) : null })" />
+    </div>
+    <div class="field">
+      <label>
+        <input type="checkbox" [checked]="novaEquipe().metaZeroSeveridade4Ativa"
+               (change)="novaEquipe.set({ ...novaEquipe(), metaZeroSeveridade4Ativa: $any($event.target).checked })" />
+        Acompanhar meta de zero incidentes severidade 4
+      </label>
+    </div>
+    <div class="field">
+      <label>Meta de tempo de reconhecimento (segundos, opcional)</label>
+      <input class="input" type="number" min="0"
+             [value]="novaEquipe().metaTempoReconhecimentoSegundos"
+             (input)="novaEquipe.set({ ...novaEquipe(), metaTempoReconhecimentoSegundos: $any($event.target).value ? +($any($event.target).value) : null })" />
+    </div>
     <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar equipe</button>
   </form>
 

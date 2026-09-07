@@ -73,6 +73,7 @@ describe('DashboardComponent', () => {
       epiPresent: [], epiMissing: [], snapshotUrl: null,
       detectedAt: '2026-08-10T14:31:00-03:00', endedAt: null,
       durationSeconds: null, peakSeverity: 4, closedReason: null, status: 'PENDENTE',
+      normaAplicavel: null,
     });
     fixture.detectChanges();
 

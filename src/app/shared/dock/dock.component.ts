@@ -21,6 +21,7 @@ const ITEMS: (DockItem | null)[] = [
   { key: 'alerts',    label: 'Alertas',       route: '/incidentes' },
   null,
   { key: 'heatmap',   label: 'Heatmap',       route: '/heatmap' },
+  { key: 'placar',    label: 'Placar',        route: '/placar' },
   null,
   { key: 'team',      label: 'Colaboradores', route: '/config/equipe' },
   { key: 'invite',    label: 'Cadastrar' },
@@ -129,6 +130,11 @@ function nearestZone(x: number, y: number): DockPos {
             <path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
             <rect x="9.5" y="9.5" width="5" height="5" fill="currentColor" stroke="none" opacity="0.55"/>
             <rect x="15.5" y="3.5" width="5" height="5" fill="currentColor" stroke="none" opacity="0.3"/>
+          </svg>
+        }
+        @case ('placar') {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 20V10M12 20V4M18 20v-7"/><path d="M3 20h18"/>
           </svg>
         }
         @case ('team') {

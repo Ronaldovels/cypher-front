@@ -554,3 +554,38 @@ Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
 Revisão/merge dos PRs [#11](https://github.com/lucvs07/cypher-capture/pull/11) (`cypher-capture`) e [#10](https://github.com/lucvs07/Cypher-Api/pull/10) (`cypher`). Concluir `e5c` (`cypher-front` — `PlacarComponent`, metas em `/config/equipe`, norma no card do kiosk). Com as três fatias mergeadas, teste manual ponta a ponta com o placar refletindo conformidade e cobertura reais e a validação da propriedade central (desligar a captura reduz a cobertura, não o incidente — E1 §16.2).
+
+---
+
+### 3.10 Review — Gamificação por equipe, front (`e5c`)
+
+**Data:** 2026-09-07
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Contexto
+Terceira e última fatia da E5. Execução via subagent-driven development no `cypher-front` (branch local `feat/e5-front-placar`, a partir de `dev`, sem worktree), um subagente implementador por tarefa + revisão de tarefa (spec + qualidade) após cada uma + revisão da branch inteira ao final. Scan pré-execução (3 tarefas, sem dependência entre si) não achou conflito bloqueante; a única decisão registrada foi tratar o estado "sem histórico suficiente para ranquear" (`deltaConformidadeSemana === null` com `dadosSuficientes === true`) como requisito funcional da Tarefa 1, não como retoque de acabamento.
+
+#### Incidente durante a execução — commit alheio na branch
+Sem isolamento por worktree, o checkout deste repositório é compartilhado entre sessões: um commit de docs do `e5b` (`docs(scrum): registra e5b... Review 3.9`) foi parar em `feat/e5-front-placar` por engano, provavelmente de uma sessão paralela que não trocou de branch antes de commitar. Detectado pelo controlador ao revisar o `git log` antes da revisão final, confirmado com o responsável antes de agir, e corrigido sem perda: commit movido para `dev` via `cherry-pick` (`0df7240`), removido de `feat/e5-front-placar` via `reset --hard` no commit anterior, e a branch inteira rebaseada sobre o `dev` atualizado para evitar conflito de merge no mesmo parágrafo do `sprint-backlog.md` que o `e5b` já tinha editado. Nada foi perdido; nada tinha sido publicado antes da correção. `dev` (com o commit do `e5b`) foi publicado em `origin` como parte dessa correção, com autorização explícita do responsável.
+
+#### Entregue
+- **Tarefa 1 — `PlacarComponent` (`/placar`).** `PlacarService.buscar(since?, until?)` → `GET /api/v1/placar`, GESTOR-only. `PlacarEquipe` espelha `PlacarEquipeResponse` campo a campo, incluindo os dois anuláveis (`conformidade`, `deltaConformidadeSemana`). Ranking nunca reordenado no front — segue a ordem que o backend já devolve. Barras de progresso são `div`s com `[style.width.%]`, sem lib de gráfico. Refinado dentro do style guide via skill `frontend-design` (mesmo passo de `alb`/`whb`), focado na linha densa do ranking (conformidade × cobertura × metas × sequência).
+- **Tarefa 2 — Metas em `/config/equipe`.** Três campos opcionais (`metaConformidade`, `metaZeroSeveridade4Ativa`, `metaTempoReconhecimentoSegundos`) adicionados a `Equipe`/`EquipePayload` e ao formulário existente — extensão de tela, sem redesenho.
+- **Tarefa 3 — Norma aplicável no kiosk.** `IncidentResponse.normaAplicavel` + `dicaDe(tipo)` (dica estática por tipo de incidente), exibidos como `.chip` + `.ph-meta` no card de evento recente — extensão do card existente (spec §4).
+
+Suíte final: **351/351** (era 345 no início da entrega). PR [#10](https://github.com/Ronaldovels/cypher-front/pull/10) aberto contra `dev` do `cypher-front`.
+
+#### Achados de revisão corrigidos antes do PR
+- **Revisão da Tarefa 1 (task-scoped, sem bloqueio):** nenhum achado Critical/Important; 3 minors registrados e deferidos (arredondamento de delta muito pequeno para "0%" sem sinal, ausência de assert para delta numérico assinado, fallback de erro HTTP para o estado vazio).
+- **Revisão final de branch (2 Important + 5 Minor, todos corrigidos num fix wave único):** (a) o `.chip` da norma aplicável era o 5º filho direto do grid de 4 colunas `.alert-row` (`styles.scss`), quebrando para uma linha implícita e vazando visualmente — corrigido agrupando severidade + chip num `span` flex, mantendo os 4 filhos do grid. (b) faltava assert de que um delta numérico positivo renderiza assinado (`+3%`) com a classe `on` — adicionado ao teste já existente. (c) JSDoc de `formatTime` tinha ficado deslocado sobre `dicaDe` após a inserção — realocado. (d) a string "sem histórico suficiente para ranquear" estava duplicada (função + template) com um ramo morto — unificada numa constante. (e) o parágrafo de dica no kiosk herdava margem UA de 1em dentro de uma coluna `gap:6px` — `margin:0` explícito. (f) tratamento de cursor inconsistente entre chips estáticos — uniformizado, removido um `cursor:default` morto num `.status` sem essa propriedade. (g) ranking ficava em branco quando todas as equipes estavam abaixo do piso de cobertura — adicionada uma linha `.vazio` explicando o motivo. Re-revisão escopada: todos os 7 achados endereçados, nenhuma regressão introduzida pelo fix.
+
+#### O que não foi concluído / passa para o backlog (follow-ups não bloqueantes)
+- Delta muito pequeno e não-nulo (ex. 0,4 pontos percentuais) arredonda para "0%" sem sinal — não viola o requisito (que trata do estado `null`), mas é um caso de borda de apresentação.
+- Sem estado de erro dedicado se `GET /placar` falhar — cai no mesmo "vazio" de lista zerada; mesmo padrão (sem tratamento de erro) de `dashboard`/`heatmap` já existentes.
+- Mock local (`useMockData`) não tem handler para `/placar` — ambos os ambientes reais publicados usam `useMockData:false`, então é só uma lacuna de conveniência de desenvolvimento.
+
+#### Feedback recebido
+Nenhum registrado ainda (banca/mentoria).
+
+#### Próximos passos
+Revisão/merge do PR [#10](https://github.com/Ronaldovels/cypher-front/pull/10) do `cypher-front`. Com as três fatias da E5 (`e5a`/`e5b`/`e5c`) em revisão, falta o teste manual ponta a ponta com os três projetos rodando localmente: placar refletindo conformidade/cobertura reais e a validação da propriedade central (desligar a captura reduz a cobertura, não o incidente — E1 §16.2), antes de mover os três cards para `Concluído`.

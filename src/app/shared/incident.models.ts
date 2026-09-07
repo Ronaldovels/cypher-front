@@ -52,6 +52,7 @@ export interface Incident {
   peakSeverity: number | null;
   closedReason: ClosedReason | null;
   status: AlertaStatus;
+  normaAplicavel: string | null;
 }
 
 export interface Page<T> {
@@ -171,6 +172,20 @@ export function incidentLabel(type: IncidentType): string {
     case 'ERGONOMIC_RISK': return 'Postura inadequada';
     case 'ZONE_VIOLATION': return 'Zona de risco';
     case 'EPI_VIOLATION': return 'EPI ausente';
+  }
+}
+
+/**
+ * Dica estática de conduta por tipo de incidente (camada educativa, spec §4).
+ *
+ * Texto fixo no front — não vem da API; a norma (`normaAplicavel`) sim.
+ */
+export function dicaDe(type: IncidentType): string {
+  switch (type) {
+    case 'FALL_RISK': return 'Isolar a área e verificar pontos de ancoragem antes de liberar o acesso.';
+    case 'ERGONOMIC_RISK': return 'Reforçar pausa e postura na estação; revisar rodízio se recorrente.';
+    case 'ZONE_VIOLATION': return 'Confirmar sinalização da zona e treinamento de quem entrou nela.';
+    case 'EPI_VIOLATION': return 'Verificar disponibilidade do EPI no posto antes de liberar a operação.';
   }
 }
 

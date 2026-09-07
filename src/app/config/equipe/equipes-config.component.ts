@@ -5,9 +5,16 @@ import { CODIGO_PADRAO, mensagemDeErro } from '../../shared/incident.models';
 import { EquipePayload, Turno } from '../../shared/team.models';
 import { TeamService } from '../../shared/team.service';
 
-interface FormEquipe { id: string; nome: string; turno: Turno; estacaoIds: string[]; }
+interface FormEquipe {
+  id: string; nome: string; turno: Turno; estacaoIds: string[];
+  metaConformidade: number | null; metaZeroSeveridade4Ativa: boolean;
+  metaTempoReconhecimentoSegundos: number | null;
+}
 
-const EQUIPE_VAZIA: FormEquipe = { id: '', nome: '', turno: 'MANHA', estacaoIds: [] };
+const EQUIPE_VAZIA: FormEquipe = {
+  id: '', nome: '', turno: 'MANHA', estacaoIds: [],
+  metaConformidade: null, metaZeroSeveridade4Ativa: false, metaTempoReconhecimentoSegundos: null,
+};
 
 /**
  * Cadastro de equipes — sub-aba "Equipes" de `/config/equipe`.
@@ -61,6 +68,9 @@ export class EquipesConfigComponent implements OnInit {
     this.salvando.set(true);
     const payload: EquipePayload = {
       id: form.id, nome: form.nome.trim(), turno: form.turno, estacaoIds: form.estacaoIds,
+      metaConformidade: form.metaConformidade,
+      metaZeroSeveridade4Ativa: form.metaZeroSeveridade4Ativa,
+      metaTempoReconhecimentoSegundos: form.metaTempoReconhecimentoSegundos,
     };
     this.team.createEquipe(payload).subscribe({
       next: () => {
