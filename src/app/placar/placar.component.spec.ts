@@ -61,6 +61,10 @@ describe('PlacarComponent', () => {
     expect(badge?.className).not.toContain('crit');
     expect(badge?.textContent).toContain('melhor sequência: 14');
     expect(badge?.textContent).toContain('atual: 0');
+
+    const delta = fixture.nativeElement.querySelector('[data-test="delta-semana"]');
+    expect(delta?.textContent).toContain('+3%');
+    expect(delta?.classList.contains('on')).toBe(true);
   });
 
   it('equipe com dadosSuficientes=false fica fora do ranking, em seção própria', () => {

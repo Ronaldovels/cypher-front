@@ -34,13 +34,15 @@
                 <span class="a-time">{{ hora(inc.detectedAt) }}</span>
                 <span class="a-station">{{ inc.cameraId }}</span>
                 <span class="a-type">{{ rotulo(inc.type) }}</span>
-                <span class="a-sev">{{ inc.nivel }}</span>
-                @if (inc.normaAplicavel) {
-                  <span class="chip">{{ inc.normaAplicavel }}</span>
-                }
+                <span style="display:flex;gap:8px;align-items:center;justify-content:flex-end">
+                  <span class="a-sev">{{ inc.nivel }}</span>
+                  @if (inc.normaAplicavel) {
+                    <span class="chip" style="cursor:default">{{ inc.normaAplicavel }}</span>
+                  }
+                </span>
               </div>
               @if (inc.normaAplicavel) {
-                <p class="ph-meta" style="padding-left:8px">{{ dica(inc.type) }}</p>
+                <p class="ph-meta" style="margin:0;padding-left:8px">{{ dica(inc.type) }}</p>
               }
             } @empty {
               @if (carregandoEventos()) {

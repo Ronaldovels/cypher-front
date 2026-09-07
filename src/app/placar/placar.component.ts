@@ -22,6 +22,8 @@ export class PlacarComponent implements OnInit {
   readonly equipes = signal<PlacarEquipe[]>([]);
   readonly carregando = signal(true);
 
+  readonly SEM_HISTORICO = 'sem histórico suficiente para ranquear';
+
   ngOnInit(): void {
     this.placarService.buscar().subscribe({
       next: e => { this.equipes.set(e); this.carregando.set(false); },
@@ -49,7 +51,7 @@ export class PlacarComponent implements OnInit {
   deltaSemanaTexto(equipe: PlacarEquipe): string {
     const d = equipe.deltaConformidadeSemana;
     if (d == null) {
-      return 'sem histórico suficiente para ranquear';
+      return this.SEM_HISTORICO;
     }
     const pontos = Math.round(d * 100);
     return `${pontos > 0 ? '+' : ''}${pontos}%`;

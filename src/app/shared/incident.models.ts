@@ -176,12 +176,6 @@ export function incidentLabel(type: IncidentType): string {
 }
 
 /**
- * Hora e minuto do instante, no fuso em que o evento aconteceu.
- *
- * O offset vem no próprio ISO, então a leitura é a da planta — não a do
- * navegador de quem está olhando o painel.
- */
-/**
  * Dica estática de conduta por tipo de incidente (camada educativa, spec §4).
  *
  * Texto fixo no front — não vem da API; a norma (`normaAplicavel`) sim.
@@ -195,6 +189,12 @@ export function dicaDe(type: IncidentType): string {
   }
 }
 
+/**
+ * Hora e minuto do instante, no fuso em que o evento aconteceu.
+ *
+ * O offset vem no próprio ISO, então a leitura é a da planta — não a do
+ * navegador de quem está olhando o painel.
+ */
 export function formatTime(iso: string): string {
   const match = iso.match(/T(\d{2}):(\d{2})/);
   return match ? `${match[1]}:${match[2]}` : '--:--';

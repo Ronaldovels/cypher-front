@@ -14,6 +14,9 @@
     } @else if (equipes().length === 0) {
       <p class="vazio">Nenhuma equipe ativa ainda. O placar aparece quando a primeira equipe registra turno.</p>
     } @else {
+      @if (ranqueadas().length === 0 && semDados().length > 0) {
+        <p class="vazio">nenhuma equipe com dados suficientes para o ranking ainda</p>
+      }
       @for (eq of ranqueadas(); track eq.equipeId; let i = $index) {
         <div class="list-row" style="flex-direction:column;align-items:stretch;gap:12px">
           <div style="display:flex;gap:12px;align-items:baseline;flex-wrap:wrap">
@@ -26,11 +29,11 @@
 
           <div>
             @if (temHistoricoSemana(eq)) {
-              <span class="status" [class.on]="(eq.deltaConformidadeSemana ?? 0) > 0" data-test="delta-semana" style="cursor:default">
+              <span class="status" [class.on]="(eq.deltaConformidadeSemana ?? 0) > 0" data-test="delta-semana">
                 {{ deltaSemanaTexto(eq) }} de conformidade na semana
               </span>
             } @else {
-              <span class="ph-meta" data-test="delta-semana">sem histórico suficiente para ranquear</span>
+              <span class="ph-meta" data-test="delta-semana">{{ SEM_HISTORICO }}</span>
             }
           </div>
 
