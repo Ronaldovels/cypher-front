@@ -42,6 +42,9 @@
         <div class="tl-filter-actions">
           <button type="submit" class="btn primary">Filtrar</button>
           <button type="button" class="btn ghost" (click)="limparFiltros()">Limpar</button>
+          <a class="btn ghost" [href]="urlExportacaoCsv()" target="_blank" rel="noopener">
+            exportar CSV
+          </a>
         </div>
       </form>
     </div>

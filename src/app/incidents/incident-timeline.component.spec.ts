@@ -239,4 +239,30 @@ describe('IncidentTimelineComponent', () => {
 
     expect(fixture.nativeElement.querySelector('app-dock')).toBeNull();
   });
+
+  it('urlExportacaoCsv reflete os filtros atuais', () => {
+    const fixture = montar();
+    const comp = fixture.componentInstance;
+
+    comp.camera.set('CAM-01');
+    comp.severityMin.set(3);
+    comp.status.set('PENDENTE');
+
+    const url = new URL(comp.urlExportacaoCsv(), 'http://localhost');
+    expect(url.pathname).toBe('/api/v1/reports/incidents.csv');
+    expect(url.searchParams.get('camera')).toBe('CAM-01');
+    expect(url.searchParams.get('severityMin')).toBe('3');
+    expect(url.searchParams.get('status')).toBe('PENDENTE');
+  });
+
+  it('urlExportacaoCsv omite parametros nao preenchidos', () => {
+    const fixture = montar();
+    const comp = fixture.componentInstance;
+
+    const url = new URL(comp.urlExportacaoCsv(), 'http://localhost');
+    expect(url.searchParams.has('camera')).toBe(false);
+    expect(url.searchParams.has('severityMin')).toBe(false);
+    expect(url.searchParams.has('status')).toBe(false);
+    expect(url.searchParams.has('since')).toBe(false);
+  });
 });
