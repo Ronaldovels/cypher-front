@@ -4,7 +4,7 @@
 
 **Goal:** `HeatmapComponent` ganha filtros reais (Setor/EPI/Turno/Período), ordenação real (ranking/nome/zona), os dois painéis fabricados (Temporal, Anual) passam a consumir os campos novos de `GET /summary`, e `urlResumoPdf` (E6, já mergeado) passa a incluir os mesmos filtros.
 
-**Architecture:** Cinco fatias. Tarefa 1 é plumbing puro (tipos + `IncidentService.loadSummary` aceitando filtros opcionais, sem UI) — pré-requisito de todo o resto. Tarefas 2–5 mexem só em `HeatmapComponent`/seu template, cada uma independente das outras depois da 1. A Task 2 também atualiza `urlResumoPdf` (achado depois dos planos escritos, spec §7) — é o único ponto que toca uma função já existente da E6 em vez de só adicionar código novo.
+**Architecture:** Seis fatias. Tarefa 1 é plumbing puro (tipos + `IncidentService.loadSummary` aceitando filtros opcionais, sem UI) — pré-requisito de todo o resto. Tarefas 2–5 mexem só em `HeatmapComponent`/seu template, cada uma independente das outras depois da 1. A Task 2 também atualiza `urlResumoPdf` (achado depois dos planos escritos, spec §7) — é o único ponto que toca uma função já existente da E6 em vez de só adicionar código novo. A Task 6, ao final, é uma revisão de design guiada pela skill `frontend-design` sobre o resultado combinado das cinco anteriores — não uma tarefa de implementação nova, mas obrigatória antes do PR.
 
 **Tech Stack:** Angular (standalone components, signals), `FormsModule` (`[(ngModel)]`, mesmo padrão de `IncidentTimelineComponent`), Vitest.
 
@@ -14,7 +14,9 @@
 
 ## Global Constraints
 
-- Repositório: `/home/asaas/projects/challenge/cypher-front`. **Sem branch de feature dedicada** — trabalho direto em `dev` (decisão do usuário para esta entrega).
+- Repositório: `/home/asaas/projects/challenge/cypher-front`. **Branch local (não worktree):** `git checkout -b feat/hf-front-heatmap` a partir de `dev`, dentro do próprio diretório do repo.
+- **Style guide existente vale durante toda a implementação, não só na revisão final** — Tasks 2–5 usam as classes já estabelecidas (`.fb-select` pros novos `<select>` de Setor/EPI/Ordenar, `.chip`, `.acell`) em vez de inventar markup novo; a Task 6 (skill `frontend-design`) audita o resultado combinado no final, mas não é o único momento em que o style guide se aplica.
+- **Revisão de design obrigatória ao final (Task 6, skill `frontend-design`)** — esta entrega muda mais superfície visual do Heatmap do que qualquer task individual (5 filtros novos funcionais, ordenação, dois painéis inteiros trocando de fabricado pra real); a skill revisa o resultado combinado das Tasks 1–5 antes do commit final, não cada task isoladamente.
 - **Depende do plano `2026-09-08-hfa-backend-heatmap.md`** rodando localmente para teste manual — os specs automatizados usam `HttpTestingController` (mock de rede), então podem ser escritos/rodados mesmo antes do backend.
 - **`IncidentService.loadSummary()` sem argumento continua funcionando exatamente como hoje** — Dashboard (`dashboard.component.ts:83`) e o refresh interno por SSE (`incident.service.ts:61`) chamam sem filtro nenhum; `HttpParams` vazio não anexa `?` à URL, então o teste existente (`carrega os agregados do dashboard`, `incident.service.spec.ts:168`) não muda.
 - **`[(ngModel)]` direto em signal** — mesmo padrão já usado em `camera`/`status` de `IncidentTimelineComponent` (`incident-timeline.component.html:12,31`); `severityMin` usa a forma separada (`[ngModel]`/`(ngModelChange)`) só porque precisa converter string→number. `setor`/`epi` são strings simples, então usam a forma direta.
@@ -899,9 +901,51 @@ git commit -m "feat: painel Historico Anual do heatmap passa a usar dado real, c
 
 ---
 
+### Task 6: Revisão de design e arquitetura de informação (skill `frontend-design`)
+
+> **Por que uma task própria, não uma revisão dentro de cada task anterior:** as Tasks 1–5 mudam a tela inteira — cinco filtros que passam de decorativos a funcionais, uma ordenação nova, dois painéis inteiros trocando de dado fabricado por dado real. Revisar cada mudança isolada (como a E6 fez pra um botão só) não é suficiente aqui: o resultado combinado é o que precisa fazer sentido como uma tela coesa. Esta task roda **depois** da Tarefa 5, com as cinco branches de trabalho já commitadas na mesma branch `feat/hf-front-heatmap`.
+
+**Files:**
+- Modify: `src/app/heatmap/heatmap.component.html` (e `.ts`/`src/styles.scss` se a revisão encontrar algo que precise de ajuste de lógica, não só de marcação/estilo)
+
+**Interfaces:**
+- Consumes: o resultado completo das Tasks 1–5 (filtros reais, ordenação real, painéis Temporal/Anual reais)
+
+- [ ] **Step 1: Rodar a app localmente e observar a tela `/heatmap` com dado real**
+
+Suba o backend (`feat/hf-backend-heatmap` do plano `hfa`, rodando localmente) e o front desta branch; logue como GESTOR e abra `/heatmap`. Exercite cada filtro (Setor, EPI, Turno, Período, Ordenar) e confira os dois painéis (Temporal, Anual) com o backend respondendo dado real.
+
+- [ ] **Step 2: Invocar a skill `frontend-design` para revisar a tela como um todo**
+
+Peça uma revisão de design guiada pela skill `frontend-design`, cobrindo especificamente:
+- **Filterbar** (`.fb-select`/`.chip`/`.fb-sep`) — com Setor/EPI virando `<select>` funcionais com opções dinâmicas (`setoresDisponiveis()`, `episDisponiveis`), confira se o espaçamento/alinhamento da barra continua coerente (a barra estava desenhada pra selects estáticos de texto curto — "Setor A" — e agora os valores reais podem ter nomes mais longos, ex. `estamparia`, `usinagem`).
+- **Ordenar** — o `<select>` de ordenação ao lado do título "Planta Baixa" (`.hch-r`) precisa continuar com a mesma hierarquia visual de antes (é uma ação secundária do card, não deveria competir com o título).
+- **Painéis Temporal/Anual sem o selo "dado de exemplo"** — as Tasks 4/5 removem `.sample-seal` das duas `div.hch-r`; confira se isso deixa um vazio visual estranho no cabeçalho do card (mesmo problema que apareceu no `.hch-r` da Planta Baixa, resolvido ali só porque o `<select>` de Ordenar já ocupava o espaço) — se sim, decida um ajuste mínimo (ex.: remover a `div.hch-r` vazia, como já é a orientação da Task 4/Step 5) em vez de deixar um contêiner sem conteúdo.
+- **Painel Anual com opacidade** — as células fora do período selecionado (`.acell.dimmed`) precisam continuar legíveis nos dois temas (claro/escuro) — conferir contra `--surface`/`--ink` de `src/styles.scss`, não só contra o tema que está aberto no momento do teste.
+
+- [ ] **Step 3: Aplicar os ajustes que a revisão encontrar**
+
+Cada achado da revisão é uma mudança pequena e local (CSS/marcação, eventualmente um `computed` a mais) — implementar, rodar `npx vitest run` de novo pra confirmar que nada quebrou, e seguir pro próximo achado. Não é esperado nenhuma mudança estrutural grande nesta task; se a revisão encontrar algo que exigiria revisitar o contrato da API (`SummaryResponse`/`SummaryFiltros`), isso é um achado pra registrar e discutir, não pra implementar sem alinhar antes.
+
+- [ ] **Step 4: Rodar a suíte inteira e confirmar que passa**
+
+Run: `npx vitest run`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/app/heatmap/heatmap.component.ts src/app/heatmap/heatmap.component.html src/styles.scss
+git commit -m "fix: revisao de design do heatmap funcional (frontend-design) - ajustes de layout e IA"
+```
+
+(se a revisão não encontrar nenhum achado que exija mudança de código, registrar isso explicitamente no relatório da task em vez de pular o commit — a ausência de achado é, ela mesma, o resultado da revisão, mesmo padrão já usado quando `e6b`/`whb` passaram por revisão de design sem achado.)
+
+---
+
 ## Self-Review
 
-**Cobertura da spec:** §2 (setor/EPI/turno/ordenar reais, painéis Temporal/Anual reais, opacidade do Anual por período) → Tasks 2–5. Plumbing (`SummaryFiltros`, `loadSummary` compatível) → Task 1. Vocabulário de EPI restrito aos 4 valores mapeados (spec §1.4) → Task 2, `episDisponiveis`. §7 (`urlResumoPdf` inclui turno/setor/epi) → Task 2, Step 6.
+**Cobertura da spec:** §2 (setor/EPI/turno/ordenar reais, painéis Temporal/Anual reais, opacidade do Anual por período) → Tasks 2–5. Plumbing (`SummaryFiltros`, `loadSummary` compatível) → Task 1. Vocabulário de EPI restrito aos 4 valores mapeados (spec §1.4) → Task 2, `episDisponiveis`. §7 (`urlResumoPdf` inclui turno/setor/epi) → Task 2, Step 6. Alinhamento ao style guide e revisão de arquitetura de informação (pedido explícito do usuário) → Task 6, skill `frontend-design`.
 
 **Placeholder scan:** nenhum "TBD"/"implementar depois".
 
@@ -915,10 +959,10 @@ git commit -m "feat: painel Historico Anual do heatmap passa a usar dado real, c
 
 Dois planos, sem dependência cruzada de execução (o front consome o shape final da resposta, já fechado nas duas specs juntas) — podem rodar em paralelo:
 
-- `heatmap-funcional/2026-09-08-hfa-backend-heatmap.md` (5 tasks, `cypher`)
-- `heatmap-funcional/2026-09-08-hfb-front-heatmap.md` (5 tasks, este arquivo, `cypher-front`)
+- `heatmap-funcional/2026-09-08-hfa-backend-heatmap.md` (6 tasks, `cypher`, branch `feat/hf-backend-heatmap` a partir de `main`)
+- `heatmap-funcional/2026-09-08-hfb-front-heatmap.md` (6 tasks, este arquivo, `cypher-front`, branch `feat/hf-front-heatmap` a partir de `dev`, Task 6 usa a skill `frontend-design`)
 
-Ambos direto em `main`/`dev`, sem branch de feature (decisão do usuário para esta entrega).
+Branches locais, sem worktree.
 
 **1. Subagent-Driven (recomendado)** — dispatch de um subagente por tarefa, revisão entre tarefas, iteração rápida.
 

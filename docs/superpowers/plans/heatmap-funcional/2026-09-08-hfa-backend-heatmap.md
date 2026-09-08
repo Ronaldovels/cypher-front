@@ -14,7 +14,7 @@
 
 ## Global Constraints
 
-- Repositório: `/home/asaas/projects/cypher`. **Sem branch de feature dedicada** — trabalho direto em `main` (decisão do usuário para esta entrega, spec §"Depende de").
+- Repositório: `/home/asaas/projects/cypher`. **Branch local (não worktree):** `git checkout -b feat/hf-backend-heatmap` a partir de `main`, dentro do próprio diretório do repo.
 - **Nenhum parâmetro é obrigatório** — `GET /summary` sem query string continua devolvendo exatamente o mesmo shape de hoje (spec §1). Todo teste existente em `SummaryApiTest` continua passando sem alteração.
 - **`incidentesHoje`/`incidentesOntem`/`criticosHoje`/`ultimosSeteDias`/`pendentes` nunca mudam** — os parâmetros novos só afetam `heatmap`, `distribuicaoTemporal` e `historicoAnual` (spec §1.1).
 - **Erros de validação usam `CatalogValidationException`** (`com.dev4.cypher.catalog.CatalogValidationException`, já existente, tratada globalmente por `CatalogExceptionHandler` → `{"erro": "..."}` no corpo) — mesmo padrão já usado por `EquipeService`/`UsuarioService`/`WebhookService`, apesar do nome da classe.

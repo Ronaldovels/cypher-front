@@ -6,7 +6,7 @@
 
 **Achado que originou esta spec:** durante o teste manual ponta a ponta da E6 (relatórios), o usuário pediu uma revisão da tela `/heatmap` como um todo. `HeatmapComponent` (`period`/`shift` signals, `<select>` de Setor/EPI/Ordenar) não tem nenhum binding — os únicos dados reais na tela são `celulas()`/`top5()`, derivados de `IncidentService.summary().heatmap`, que por sua vez é sempre "hoje" (hardcoded em `SummaryService.build()`), nunca respeitou nenhum filtro.
 
-**Depende de:** nenhuma entrega anterior — é uma extensão de `/summary` (E1) e do `HeatmapComponent` (E1), ambos já implementados. Trabalho direto na branch `dev`/`main` de cada repositório (sem branch de feature dedicada, por decisão do usuário para esta entrega).
+**Depende de:** nenhuma entrega anterior — é uma extensão de `/summary` (E1) e do `HeatmapComponent` (E1), ambos já implementados. Branches locais dedicadas (`feat/hf-backend-heatmap` a partir de `main`, `feat/hf-front-heatmap` a partir de `dev`), sem worktree — mesmo padrão das entregas anteriores.
 
 ---
 
