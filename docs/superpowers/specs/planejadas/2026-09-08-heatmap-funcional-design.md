@@ -116,10 +116,24 @@ Sem `detalhado=true`, os dois campos vêm `null` no JSON (mesma convenção de c
 
 ---
 
-## 7. Ordem de implementação
+## 7. `GET /reports/summary.pdf` também passa a respeitar os filtros
 
-1. **Backend.** `GET /summary` com os 6 parâmetros novos, incluindo `distribuicaoTemporal`/`historicoAnual` atrás de `detalhado=true`. Verificável com `curl`.
-2. **Frontend.** `HeatmapComponent`: filtros reais, ordenação real, os dois painéis fabricados substituídos pelos campos novos.
-3. **Ponta a ponta.** Cada combinação de filtro testada manualmente contra dado real, heatmap Anual conferido em dezembro (limite do ano) e janeiro (início do ano) para o cálculo de faixa2h/diaSemana não vazar pro ano vizinho.
+**Achado depois de escrever os planos (2026-09-08):** a spec original só ligava `period()` ao `since` do PDF, e mesmo assim só a metade de placar — a tabela de heatmap por estação dentro do PDF (`PdfReportBuilder`) sempre vinha de `summaryService.build()` sem argumento nenhum (sempre "hoje", sem filtro de turno/setor/EPI). Isso já era um descompasso visual antes desta entrega (o botão "Exportar PDF" fica ao lado da barra de filtros no Heatmap, sugerindo que os dois estão ligados) e ficaria mais visível depois — a tela passaria a filtrar de verdade enquanto o PDF continuaria sempre igual.
+
+**Decisão:** `GET /reports/summary.pdf` ganha `turno`/`setor`/`epi` (além de `since`/`until`, que já existiam) e repassa todos pra `summaryService.build(...)` — a tabela de heatmap do PDF passa a bater exatamente com o que está filtrado na tela no momento do clique. Os KPIs ("Indicadores (hoje)") **continuam sempre hoje**, sem filtro nenhum — são ponto-no-tempo por definição (decisão já tomada na spec E6 §1.3, não reaberta aqui).
+
+`since`/`until` do PDF passam a alimentar tanto o heatmap quanto o placar com a **mesma janela** (`PlacarService.janelaPadrao`, default últimos 7 dias) — antes só o placar usava essa janela; o heatmap do PDF ficava preso a "hoje" independente do que fosse pedido. Isso muda o default do heatmap do PDF de "hoje" para "últimos 7 dias" quando nenhum período é selecionado — consistente com o próprio default da tela (`period = signal('7d')`), não um comportamento nunca visto por um usuário normal.
+
+Validação de `turno`/`epi` inválidos no PDF usa o mesmo `400` já definido em §1.2/§1.4 — `SummaryService.build(...)` já lança `CatalogValidationException` pra esses casos, e `/reports/summary.pdf` herda o comportamento automaticamente por reaproveitar o mesmo método.
+
+Front: `HeatmapComponent.urlResumoPdf` passa a incluir `turno`/`setor`/`epi` junto do `since` que já mandava, usando os mesmos signals que os filtros da tela.
+
+---
+
+## 8. Ordem de implementação
+
+1. **Backend.** `GET /summary` com os 6 parâmetros novos, incluindo `distribuicaoTemporal`/`historicoAnual` atrás de `detalhado=true`; em seguida `GET /reports/summary.pdf` ganha `turno`/`setor`/`epi` (§7). Verificável com `curl`.
+2. **Frontend.** `HeatmapComponent`: filtros reais, ordenação real, os dois painéis fabricados substituídos pelos campos novos, `urlResumoPdf` passando os mesmos filtros (§7).
+3. **Ponta a ponta.** Cada combinação de filtro testada manualmente contra dado real, heatmap Anual conferido em dezembro (limite do ano) e janeiro (início do ano) para o cálculo de faixa2h/diaSemana não vazar pro ano vizinho; PDF exportado com um filtro ativo conferido contra o que a tela mostra no mesmo instante.
 
 Sem dependência cruzada com nenhuma entrega anterior — pode ser implementado inteiramente numa sessão, backend e front em paralelo (o front consome o shape final da resposta, mas os dois lados foram desenhados juntos nesta spec, então o contrato já está fechado).

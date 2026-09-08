@@ -2,13 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `HeatmapComponent` ganha filtros reais (Setor/EPI/Turno/Período), ordenação real (ranking/nome/zona), e os dois painéis fabricados (Temporal, Anual) passam a consumir os campos novos de `GET /summary`.
+**Goal:** `HeatmapComponent` ganha filtros reais (Setor/EPI/Turno/Período), ordenação real (ranking/nome/zona), os dois painéis fabricados (Temporal, Anual) passam a consumir os campos novos de `GET /summary`, e `urlResumoPdf` (E6, já mergeado) passa a incluir os mesmos filtros.
 
-**Architecture:** Cinco fatias. Tarefa 1 é plumbing puro (tipos + `IncidentService.loadSummary` aceitando filtros opcionais, sem UI) — pré-requisito de todo o resto. Tarefas 2–5 mexem só em `HeatmapComponent`/seu template, cada uma independente das outras depois da 1.
+**Architecture:** Cinco fatias. Tarefa 1 é plumbing puro (tipos + `IncidentService.loadSummary` aceitando filtros opcionais, sem UI) — pré-requisito de todo o resto. Tarefas 2–5 mexem só em `HeatmapComponent`/seu template, cada uma independente das outras depois da 1. A Task 2 também atualiza `urlResumoPdf` (achado depois dos planos escritos, spec §7) — é o único ponto que toca uma função já existente da E6 em vez de só adicionar código novo.
 
 **Tech Stack:** Angular (standalone components, signals), `FormsModule` (`[(ngModel)]`, mesmo padrão de `IncidentTimelineComponent`), Vitest.
 
-**Spec:** `docs/superpowers/specs/planejadas/2026-09-08-heatmap-funcional-design.md` (repo `cypher-front`), §2 (front).
+**Spec:** `docs/superpowers/specs/planejadas/2026-09-08-heatmap-funcional-design.md` (repo `cypher-front`), §2 (front) e §7 (PDF).
 
 **Repositório:** `/home/asaas/projects/challenge/cypher-front`
 
@@ -19,6 +19,7 @@
 - **`IncidentService.loadSummary()` sem argumento continua funcionando exatamente como hoje** — Dashboard (`dashboard.component.ts:83`) e o refresh interno por SSE (`incident.service.ts:61`) chamam sem filtro nenhum; `HttpParams` vazio não anexa `?` à URL, então o teste existente (`carrega os agregados do dashboard`, `incident.service.spec.ts:168`) não muda.
 - **`[(ngModel)]` direto em signal** — mesmo padrão já usado em `camera`/`status` de `IncidentTimelineComponent` (`incident-timeline.component.html:12,31`); `severityMin` usa a forma separada (`[ngModel]`/`(ngModelChange)`) só porque precisa converter string→number. `setor`/`epi` são strings simples, então usam a forma direta.
 - **EPI só mostra os 4 valores que o backend mapeia** (`capacete`, `oculos`, `luvas`, `botas` — spec §1.4/§2) — os outros quatro de `EPI_LIST` (`colete`, `mascara`, `auricular`, `cinto`) ficam fora do `<select>` até o `cypher-capture` detectar essas violações.
+- **`urlResumoPdf` já existe (E6, mergeado)** — a Task 2 (Step 6) o modifica pra incluir `turno`/`setor`/`epi` além do `since` que já mandava (spec §7, achado depois dos planos escritos: o botão de PDF fica ao lado da barra de filtros no Heatmap, sugerindo uma ligação que não existia). Único ponto deste plano que muda uma função já mergeada em vez de só adicionar código novo.
 - Run: `npx vitest run <arquivo>` para um arquivo; `npx vitest run` para a suíte inteira.
 
 ---
@@ -168,7 +169,7 @@ git commit -m "feat: loadSummary aceita filtros opcionais, Summary ganha campos 
 
 **Interfaces:**
 - Consumes: `IncidentService.loadSummary(filtros?)` de Task 1
-- Produces: `HeatmapComponent.setor`, `HeatmapComponent.epi` (signals novos); `setSetor(s)`, `setEpi(e)` (métodos novos); `setPeriod`/`setShift` passam a recarregar o summary
+- Produces: `HeatmapComponent.setor`, `HeatmapComponent.epi` (signals novos); `setSetor(s)`, `setEpi(e)` (métodos novos); `setPeriod`/`setShift` passam a recarregar o summary; `urlResumoPdf` passa a incluir `turno`/`setor`/`epi` (spec §7, achado depois dos planos escritos — o PDF ficava desacoplado dos filtros da tela mesmo estando ao lado deles na barra)
 
 - [ ] **Step 1: Escrever os testes**
 
@@ -234,6 +235,22 @@ Adicionar em `heatmap.component.spec.ts`, dentro do `describe('HeatmapComponent'
     const req = ultimaRequisicaoDeSummary();
     expect(req.request.params.has('since')).toBe(true);
     req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
+  });
+
+  it('urlResumoPdf inclui turno/setor/epi junto do since (spec §7)', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+    const comp = fixture.componentInstance;
+
+    comp.setShift('A');
+    comp.setSetor('montagem');
+    comp.setEpi('capacete');
+    http.match(r => r.url === `${environment.apiUrl}/summary`); // drena as 3 recargas dos setters acima
+
+    const url = new URL(comp.urlResumoPdf(), 'http://localhost');
+    expect(url.searchParams.get('turno')).toBe('A');
+    expect(url.searchParams.get('setor')).toBe('montagem');
+    expect(url.searchParams.get('epi')).toBe('capacete');
   });
 ```
 
@@ -345,16 +362,47 @@ Adicionar ao componente, perto de `top5Max` (linha 140):
 
 (importar `EPI_LIST` de `'../onboarding/models/onboarding.models'`.)
 
-- [ ] **Step 6: Rodar a suíte inteira do front e confirmar que passa**
+- [ ] **Step 6: Atualizar `urlResumoPdf` pra incluir os mesmos filtros (spec §7)**
+
+`urlResumoPdf` já existe (mergeado na E6) e só mandava `since`. Substituir:
+
+```typescript
+  readonly urlResumoPdf = computed(() => {
+    const inicio = inicioDoPeriodo(this.period(), new Date());
+    const params = new URLSearchParams();
+    if (inicio) params.set('since', inicio.toISOString());
+    const query = params.toString();
+    return `${environment.apiUrl}/reports/summary.pdf${query ? '?' + query : ''}`;
+  });
+```
+
+por:
+
+```typescript
+  readonly urlResumoPdf = computed(() => {
+    const filtros = this.filtrosAtuais();
+    const params = new URLSearchParams();
+    if (filtros.since) params.set('since', filtros.since);
+    if (filtros.turno) params.set('turno', filtros.turno);
+    if (filtros.setor) params.set('setor', filtros.setor);
+    if (filtros.epi) params.set('epi', filtros.epi);
+    const query = params.toString();
+    return `${environment.apiUrl}/reports/summary.pdf${query ? '?' + query : ''}`;
+  });
+```
+
+(`filtrosAtuais()` tem `detalhado: true` sempre — o endpoint de PDF não usa esse campo, então ele não entra no `URLSearchParams` acima; nenhum problema em o `computed` carregar um campo a mais que a URL final ignora.)
+
+- [ ] **Step 7: Rodar a suíte inteira do front e confirmar que passa**
 
 Run: `npx vitest run`
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add src/app/heatmap/heatmap.component.ts src/app/heatmap/heatmap.component.html
-git commit -m "feat: liga os filtros de setor, EPI, turno e periodo do heatmap ao backend"
+git commit -m "feat: liga os filtros de setor, EPI, turno e periodo do heatmap ao backend e ao PDF"
 ```
 
 ---
@@ -853,7 +901,7 @@ git commit -m "feat: painel Historico Anual do heatmap passa a usar dado real, c
 
 ## Self-Review
 
-**Cobertura da spec:** §2 (setor/EPI/turno/ordenar reais, painéis Temporal/Anual reais, opacidade do Anual por período) → Tasks 2–5. Plumbing (`SummaryFiltros`, `loadSummary` compatível) → Task 1. Vocabulário de EPI restrito aos 4 valores mapeados (spec §1.4) → Task 2, `episDisponiveis`.
+**Cobertura da spec:** §2 (setor/EPI/turno/ordenar reais, painéis Temporal/Anual reais, opacidade do Anual por período) → Tasks 2–5. Plumbing (`SummaryFiltros`, `loadSummary` compatível) → Task 1. Vocabulário de EPI restrito aos 4 valores mapeados (spec §1.4) → Task 2, `episDisponiveis`. §7 (`urlResumoPdf` inclui turno/setor/epi) → Task 2, Step 6.
 
 **Placeholder scan:** nenhum "TBD"/"implementar depois".
 

@@ -2,13 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `GET /api/v1/summary` ganha seis parâmetros opcionais (`since`, `until`, `turno`, `setor`, `epi`, `detalhado`) que tornam o heatmap espacial filtrável e adicionam duas agregações novas (`distribuicaoTemporal`, `historicoAnual`), sem quebrar nenhum consumidor existente.
+**Goal:** `GET /api/v1/summary` ganha seis parâmetros opcionais (`since`, `until`, `turno`, `setor`, `epi`, `detalhado`) que tornam o heatmap espacial filtrável e adicionam duas agregações novas (`distribuicaoTemporal`, `historicoAnual`), sem quebrar nenhum consumidor existente. `GET /reports/summary.pdf` (E6) passa a repassar `turno`/`setor`/`epi` também, pro heatmap dentro do PDF bater com o que está filtrado na tela.
 
-**Architecture:** Tudo em `SummaryService.build(...)` — o método já carrega `findByEmpresaId` inteiro em memória e filtra com streams (comentário da própria classe: "sete dias é curto o bastante pra caber em memória"). Os filtros novos (turno/setor/epi) e a janela generalizada (since/until) são predicados adicionais sobre a mesma lista, não uma consulta nova ao banco. `historicoAnual` é uma segunda passada sobre a mesma lista `doTenant`, com sua própria janela (ano corrente, fixa) e os mesmos filtros de turno/setor/epi — mas **sem** `since`/`until`.
+**Architecture:** Tudo em `SummaryService.build(...)` — o método já carrega `findByEmpresaId` inteiro em memória e filtra com streams (comentário da própria classe: "sete dias é curto o bastante pra caber em memória"). Os filtros novos (turno/setor/epi) e a janela generalizada (since/until) são predicados adicionais sobre a mesma lista, não uma consulta nova ao banco. `historicoAnual` é uma segunda passada sobre a mesma lista `doTenant`, com sua própria janela (ano corrente, fixa) e os mesmos filtros de turno/setor/epi — mas **sem** `since`/`until`. A Task 6 é a única que toca `ReportController` (E6, já mergeado) — só repassa os parâmetros novos pro `SummaryService` que as Tasks 1–5 constroem.
 
 **Tech Stack:** Spring Boot 4.0.6, JUnit 5, MockMvc, AssertJ.
 
-**Spec:** `docs/superpowers/specs/planejadas/2026-09-08-heatmap-funcional-design.md` (repo `cypher-front`), §1 (backend).
+**Spec:** `docs/superpowers/specs/planejadas/2026-09-08-heatmap-funcional-design.md` (repo `cypher-front`), §1 (backend) e §7 (PDF).
 
 **Repositório:** `/home/asaas/projects/cypher`
 
@@ -29,6 +29,7 @@
   );
   ```
 - **`historicoAnual` ignora `since`/`until`** — é sempre `LocalDate.now(zona).getYear()` inteiro, Jan 1 a Dez 31, mas respeita `turno`/`setor`/`epi` (spec §1.5).
+- **Task 6 toca `ReportController` (E6, já mergeado em `main`)** — único ponto deste plano fora de `SummaryService`/`SummaryResponse`/`SummaryController`. `PdfReportBuilder`/`PlacarService` não mudam; só o `ReportController.summaryPdf` passa a ler 3 parâmetros a mais e repassá-los pro `SummaryService.build(...)` que as Tasks 1–5 já constroem (spec §7).
 - Run: `cd /home/asaas/projects/cypher && ./mvnw -o test -Dtest=NomeDaClasse` para uma classe; `./mvnw -o test` para a suíte inteira.
 
 ---
@@ -711,9 +712,128 @@ git commit -m "feat: adiciona historicoAnual ao summary, atras de detalhado=true
 
 ---
 
+### Task 6: `GET /reports/summary.pdf` também respeita turno/setor/epi
+
+> **Achado depois dos planos escritos (2026-09-08):** o botão "Exportar PDF" fica ao lado da barra de filtros no Heatmap — mas o heatmap por estação dentro do PDF sempre veio de `summaryService.build()` sem argumento nenhum, sempre "hoje", sem filtro nenhum. Esta task fecha esse descompasso. Ver spec §7.
+
+**Files:**
+- Modify: `src/main/java/com/dev4/cypher/controller/ReportController.java`
+- Test: `src/test/java/com/dev4/cypher/ReportControllerApiTest.java`
+
+**Interfaces:**
+- Consumes: `SummaryService.build(OffsetDateTime, OffsetDateTime, String, String, String, boolean)` de Task 5, `PlacarService.janelaPadrao(OffsetDateTime, OffsetDateTime)` (já existente)
+- Produces: `GET /reports/summary.pdf?since&until&turno&setor&epi` — o heatmap dentro do PDF passa a refletir os quatro filtros; KPIs ("Indicadores (hoje)") continuam sempre hoje, sem mudança
+
+- [ ] **Step 1: Escrever os testes**
+
+Adicionar em `ReportControllerApiTest.java`, logo após `pdfDeResumoEscapaCaracteresHtmlDeNomeDeEquipe` (usa `criarCameraEPegarApiKey`/`payloadDeIncidente` já existentes no arquivo):
+
+```java
+    @Test
+    void pdfDeResumoRepassaSetorAoHeatmap() throws Exception {
+        MockHttpSession session = AuthTestSupport.loginGestorBootstrap(mvc);
+        mvc.perform(post("/api/v1/stations").session(session)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"id\": \"EST-PDF-A\", \"nome\": \"Estacao Pdf A\", \"setor\": \"pdf-setor-a\", \"ativa\": true}"));
+        String apiKey = criarCameraEPegarApiKey(session, "CAM-PDF-A", "EST-PDF-A");
+        mvc.perform(post("/api/v1/incidents").header("X-Cypher-Key", apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadDeIncidente("CAM-PDF-A", "incident-pdf-a")));
+
+        // payloadDeIncidente grava detectedAt fixo em 2026-08-29T10:00:00Z (ver
+        // helper no fim do arquivo) -- since aqui ancora nesse dia pra nao
+        // depender de o teste rodar exatamente "hoje".
+        byte[] pdfDoSetorCerto = mvc.perform(get("/api/v1/reports/summary.pdf")
+                        .param("since", "2026-08-29T00:00:00Z")
+                        .param("setor", "pdf-setor-a")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        byte[] pdfDeOutroSetor = mvc.perform(get("/api/v1/reports/summary.pdf")
+                        .param("since", "2026-08-29T00:00:00Z")
+                        .param("setor", "pdf-setor-que-nao-existe")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+
+        // Com o setor errado, a contagem de EST-PDF-A no heatmap do PDF zera --
+        // os dois documentos deixam de ser identicos.
+        assertThat(pdfDoSetorCerto).isNotEqualTo(pdfDeOutroSetor);
+    }
+
+    @Test
+    void pdfDeResumoDevolve400ParaTurnoInvalido() throws Exception {
+        MockHttpSession session = AuthTestSupport.loginGestorBootstrap(mvc);
+
+        mvc.perform(get("/api/v1/reports/summary.pdf").param("turno", "X").session(session))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").exists());
+    }
+
+    @Test
+    void pdfDeResumoDevolve400ParaEpiInvalido() throws Exception {
+        MockHttpSession session = AuthTestSupport.loginGestorBootstrap(mvc);
+
+        mvc.perform(get("/api/v1/reports/summary.pdf").param("epi", "colete").session(session))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").exists());
+    }
+```
+
+(adicionar o import estático `org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath` se ainda não estiver no arquivo — os outros testes de CSV/PDF já usam `status()`, conferir se `jsonPath` já é importado antes de duplicar o import.)
+
+- [ ] **Step 2: Rodar e confirmar que falha**
+
+Run: `cd /home/asaas/projects/cypher && ./mvnw -o test -Dtest=ReportControllerApiTest`
+Expected: FAIL — `summary.pdf` ainda não aceita `turno`/`setor`/`epi`; os dois PDFs do primeiro teste saem idênticos (sem filtro nenhum aplicado); os dois testes de `400` recebem `200` porque o parâmetro é ignorado.
+
+- [ ] **Step 3: Atualizar `ReportController.summaryPdf`**
+
+Em `src/main/java/com/dev4/cypher/controller/ReportController.java`, substituir o método:
+
+```java
+    @GetMapping("/summary.pdf")
+    public ResponseEntity<byte[]> summaryPdf(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime since,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime until,
+            @RequestParam(required = false) String turno,
+            @RequestParam(required = false) String setor,
+            @RequestParam(required = false) String epi) throws IOException {
+        OffsetDateTime[] janela = PlacarService.janelaPadrao(since, until);
+        byte[] pdf = PdfReportBuilder.resumoExecutivo(
+                summaryService.build(janela[0], janela[1], turno, setor, epi, false),
+                placarService.placar(janela[0], janela[1]));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resumo.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+```
+
+(`janela[0]`/`janela[1]` agora alimentam tanto `placarService.placar(...)` quanto o heatmap dentro de `summaryService.build(...)` — antes só o placar usava essa janela; o heatmap do PDF ficava preso a "hoje". Os KPIs de `SummaryResponse` — `incidentesHoje`/`incidentesOntem`/`criticosHoje`/`ultimosSeteDias` — continuam calculados sem depender de `since`/`until`/`janela`, dentro do próprio `SummaryService.build(...)`, então "Indicadores (hoje)" no PDF não muda.)
+
+- [ ] **Step 4: Rodar e confirmar que passa**
+
+Run: `cd /home/asaas/projects/cypher && ./mvnw -o test -Dtest=ReportControllerApiTest`
+Expected: PASS
+
+- [ ] **Step 5: Rodar a suíte inteira e confirmar que passa**
+
+Run: `cd /home/asaas/projects/cypher && ./mvnw -o test`
+Expected: PASS
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/main/java/com/dev4/cypher/controller/ReportController.java src/test/java/com/dev4/cypher/ReportControllerApiTest.java
+git commit -m "feat: liga turno/setor/epi ao heatmap do PDF de resumo executivo"
+```
+
+---
+
 ## Self-Review
 
-**Cobertura da spec:** §1.1 (since/until) → Task 1. §1.2 (turno) e §1.3 (setor) → Task 2. §1.4 (epi + validação 400) → Task 3. §1.5 (`detalhado`, `distribuicaoTemporal` respeitando os mesmos filtros, `historicoAnual` ignorando since/until) → Tasks 4 e 5. §1.6 (custo conhecido de carregar o ano em memória) → refletido no comentário da Task 5, não endereçado por decisão da própria spec. §3 (comportamento sob falha/vazio) → coberto pelos testes de setor/epi inexistente (vazio, não erro) e epi/turno inválido (400).
+**Cobertura da spec:** §1.1 (since/until) → Task 1. §1.2 (turno) e §1.3 (setor) → Task 2. §1.4 (epi + validação 400) → Task 3. §1.5 (`detalhado`, `distribuicaoTemporal` respeitando os mesmos filtros, `historicoAnual` ignorando since/until) → Tasks 4 e 5. §1.6 (custo conhecido de carregar o ano em memória) → refletido no comentário da Task 5, não endereçado por decisão da própria spec. §3 (comportamento sob falha/vazio) → coberto pelos testes de setor/epi inexistente (vazio, não erro) e epi/turno inválido (400). §7 (`GET /reports/summary.pdf` repassa turno/setor/epi, mesma janela do placar alimenta o heatmap do PDF) → Task 6.
 
 **Placeholder scan:** nenhum "TBD"/"implementar depois".
 
