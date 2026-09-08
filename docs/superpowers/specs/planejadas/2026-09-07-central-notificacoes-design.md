@@ -56,11 +56,12 @@ public class AlertaLeitura {
 - **`IncidentService` ganha:**
   - `loadNotificacoes()` → `GET /notificacoes`, retorna a lista com `lida`.
   - `marcarLidas(alertaIds: number[])` → `POST /notificacoes/marcar-lidas`.
-  - Um signal `naoLidas` inicializado via `GET /notificacoes/contagem-nao-lidas` no bootstrap do serviço, e incrementado em +1 a cada evento novo recebido pelo SSE já existente (`incident.service.ts`) — sem round-trip extra por evento.
-- **`chrome-topbar.component.ts`**: `notifBadge` deixa de ser `input()` alimentado por página; passa a ler `incidentService.naoLidas()` diretamente (removendo a necessidade de cada página passar o valor manualmente — hoje só o Dashboard passava o valor certo, as outras hardcodavam `0`).
+  - Um signal `naoLidas`, incrementado em +1 a cada evento novo recebido pelo SSE já existente (`incident.service.ts`) — sem round-trip extra por evento.
+- **`chrome-topbar.component.ts`**: `notifBadge` deixa de ser `input()` alimentado por página; passa a ler `incidentService.naoLidas()` diretamente (removendo a necessidade de cada página passar o valor manualmente — hoje só o Dashboard passava o valor certo, as outras hardcodavam `0`). O próprio `ChromeTopbarComponent` dispara `loadNaoLidas()` quando `auth.role() === 'GESTOR'` — não há bootstrap automático dentro do serviço, para não disparar a chamada (que exige papel GESTOR) também para sessões de OPERADOR, que também renderizam o chrome (ex: `station-kiosk`).
 - **Ao abrir o offcanvas:** dispara `loadNotificacoes()`; assim que a lista chega, dispara `marcarLidas(ids retornados)` automaticamente (sem ação do usuário) — zera `naoLidas` para os itens carregados. Compensa a lacuna entre o incremento otimista do SSE e a contagem real do backend re-sincronizando a cada abertura.
 - **Cada item da lista linka para o alerta**, reaproveitando a navegação que a Timeline de Incidentes já usa hoje para abrir o detalhe.
 - **Estado vazio:** mensagem simples ("Nenhuma notificação por aqui") quando a lista vier vazia.
+- **Consistência de design (roteiro §4):** a lista de notificações reaproveita `.list-row`/`.chip` já existentes em `src/styles.scss`. O offcanvas em si (painel deslizante + backdrop) é um primitivo visual novo — não há equivalente hoje no projeto — mesma exceção já registrada para o canvas de zonas de risco (`2026-08-29-zonas-de-risco-design.md` §4.3). Por ser primitivo novo, o plano de implementação inclui uma revisão de design dedicada com a skill `frontend-design` antes do PR.
 
 ## 5. Comportamento de falha
 
