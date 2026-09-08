@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
+import { environment } from '../../environments/environment';
 import { AuthService } from '../shared/auth/auth.service';
 import { CatalogService } from '../shared/catalog.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
@@ -80,6 +81,16 @@ export class IncidentTimelineComponent implements OnInit {
 
   readonly totalPaginas = computed(() => this._resultado()?.totalPages ?? 0);
   readonly totalElementos = computed(() => this._resultado()?.totalElements ?? 0);
+
+  readonly urlExportacaoCsv = computed(() => {
+    const params = new URLSearchParams();
+    if (this.camera()) params.set('camera', this.camera());
+    if (this.severityMin() != null) params.set('severityMin', String(this.severityMin()));
+    if (this.status()) params.set('status', this.status());
+    if (this.since()) params.set('since', new Date(this.since()).toISOString());
+    const query = params.toString();
+    return `${environment.apiUrl}/reports/incidents.csv${query ? '?' + query : ''}`;
+  });
 
   hora = formatDateTime;
   rotulo = incidentLabel;

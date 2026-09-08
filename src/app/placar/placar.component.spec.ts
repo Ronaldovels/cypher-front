@@ -94,4 +94,11 @@ describe('PlacarComponent', () => {
     expect(delta?.textContent).not.toContain('%');
     expect(delta?.classList.contains('status')).toBe(false);
   });
+
+  it('urlPlacarCsv aponta para o endpoint de exportacao, sem parametro de periodo', () => {
+    const fixture = TestBed.createComponent(PlacarComponent);
+    const comp = fixture.componentInstance;
+
+    expect(comp.urlPlacarCsv).toBe(`${environment.apiUrl}/reports/placar.csv`);
+  });
 });

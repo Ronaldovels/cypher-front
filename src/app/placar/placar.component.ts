@@ -1,6 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
+import { environment } from '../../environments/environment';
 import { PlacarEquipe } from '../shared/placar.models';
 import { PlacarService } from '../shared/placar.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
@@ -23,6 +24,7 @@ export class PlacarComponent implements OnInit {
   readonly carregando = signal(true);
 
   readonly SEM_HISTORICO = 'sem histórico suficiente para ranquear';
+  readonly urlPlacarCsv = `${environment.apiUrl}/reports/placar.csv`;
 
   ngOnInit(): void {
     this.placarService.buscar().subscribe({

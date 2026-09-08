@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 
+import { environment } from '../../environments/environment';
 import { AuthService } from '../shared/auth/auth.service';
 import { CatalogService } from '../shared/catalog.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
@@ -32,6 +33,26 @@ export const TEMP_MATRIX = [
 
 export const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 export const MONTH_STARTS = [0, 5, 9, 13, 17, 22, 26, 31, 35, 40, 44, 48];
+
+/**
+ * Mapeia o chip de período (decorativo até esta entrega) para o `since` da
+ * URL de exportação do PDF. `custom` nunca teve um seletor de intervalo por
+ * trás — é só um rótulo — então retorna `null` e a URL final omite `since`,
+ * caindo no default do backend (últimos 7 dias). Spec E6 §9.
+ */
+export function inicioDoPeriodo(period: string, agora: Date): Date | null {
+  switch (period) {
+    case 'hoje': {
+      const inicio = new Date(agora);
+      inicio.setHours(0, 0, 0, 0);
+      return inicio;
+    }
+    case '7d': return new Date(agora.getTime() - 7 * 86400000);
+    case '30d': return new Date(agora.getTime() - 30 * 86400000);
+    case '90d': return new Date(agora.getTime() - 90 * 86400000);
+    default: return null;
+  }
+}
 
 function buildAnnual(): { w: number; d: number; v: number; peak: boolean }[] {
   const weekBase = (w: number): number => {
@@ -117,6 +138,14 @@ export class HeatmapComponent implements OnInit, OnDestroy {
     [...this.celulas()].sort((a, b) => b.incidentes - a.incidentes).slice(0, 5));
 
   readonly top5Max = computed(() => this.top5()[0]?.incidentes || 1);
+
+  readonly urlResumoPdf = computed(() => {
+    const inicio = inicioDoPeriodo(this.period(), new Date());
+    const params = new URLSearchParams();
+    if (inicio) params.set('since', inicio.toISOString());
+    const query = params.toString();
+    return `${environment.apiUrl}/reports/summary.pdf${query ? '?' + query : ''}`;
+  });
 
   ngOnInit(): void {
     this.catalogService.load();
