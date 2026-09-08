@@ -51,7 +51,7 @@ Relatórios e exportação (E6) mergeada em 2026-09-08 (`e6a`: PR #11 em `cypher
 
 | Ordem | Entrega | Spec | Plano de implementação | Depende de | Bloqueio |
 |---|---|---|---|---|---|
-| — | Heatmap funcional | `planejadas/2026-09-08-heatmap-funcional-design.md` | `plans/heatmap-funcional/` (`hfa` backend, `hfb` front) — 5 tarefas cada, ambos escritos e liberados | nenhuma | **nenhum** — pode ser puxada a qualquer momento |
+| — | Heatmap funcional | `planejadas/2026-09-08-heatmap-funcional-design.md` | `plans/heatmap-funcional/` (`hfa` backend, `hfb` front) — 6 tarefas cada, branches locais dedicadas (`feat/hf-backend-heatmap` de `main`, `feat/hf-front-heatmap` de `dev`), ambos escritos e liberados | nenhuma | **nenhum** — pode ser puxada a qualquer momento |
 
 Nasceu de um achado do teste manual ponta a ponta da E6 (2026-09-08), não do roteiro original de 6 entregas — mesmo padrão do Orquestrador de pipelines (§2). Sem branch de feature dedicada — trabalho direto em `main`/`dev` de cada repositório, por decisão do usuário para esta entrega.
 
