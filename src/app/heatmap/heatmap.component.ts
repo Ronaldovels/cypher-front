@@ -13,25 +13,11 @@ import { StationCell, SummaryFiltros, severityClass } from '../shared/incident.m
 import { EPI_LIST } from '../onboarding/models/onboarding.models';
 
 // ─── DADOS DE EXEMPLO ──────────────────────────────────
-// A matriz temporal (dia × hora) e o histórico anual não têm endpoint em E1
-// (spec do parceiro humano). Ficam com dado fabricado, mas rotulados em tela
-// com o selo "dado de exemplo" e opacidade reduzida — não removidos.
+// O histórico anual não tem endpoint em E1 (spec do parceiro humano). Fica
+// com dado fabricado, mas rotulado em tela com o selo "dado de exemplo" e
+// opacidade reduzida — não removido.
 export const TEMP_HOURS = ['12AM', '2AM', '4AM', '6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
 export const TEMP_DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-export const TEMP_MATRIX = [
-  [2, 1, 8, 2, 3, 0, 0],
-  [3, 2, 5, 1, 2, 0, 0],
-  [1, 0, 3, 1, 1, 0, 0],
-  [0, 1, 2, 0, 0, 0, 0],
-  [4, 3, 9, 3, 5, 1, 0],
-  [3, 2, 7, 2, 4, 1, 0],
-  [2, 3, 5, 2, 3, 0, 0],
-  [3, 2, 6, 3, 4, 1, 0],
-  [2, 1, 4, 1, 3, 0, 0],
-  [1, 1, 3, 1, 2, 0, 0],
-  [2, 1, 5, 2, 3, 0, 0],
-  [3, 2, 14, 2, 4, 0, 0],
-];
 
 export const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 export const MONTH_STARTS = [0, 5, 9, 13, 17, 22, 26, 31, 35, 40, 44, 48];
@@ -104,7 +90,6 @@ export class HeatmapComponent implements OnInit, OnDestroy {
   // ─── Dado de exemplo (painéis rotulados, ver constantes acima) ───
   tempHours = TEMP_HOURS;
   tempDays = TEMP_DAYS;
-  tempMatrix = TEMP_MATRIX;
   months = MONTHS;
   monthStarts = MONTH_STARTS;
   annualCells = buildAnnual();
@@ -135,6 +120,16 @@ export class HeatmapComponent implements OnInit, OnDestroy {
    * câmeras que a cobrem (spec §6.5).
    */
   readonly celulas = computed(() => this.incidentService.summary()?.heatmap ?? []);
+
+  /** distribuicaoTemporal (lista de células) → matriz [faixa2h][diaSemana], mesmo formato que o template já espera. */
+  readonly matrizTemporal = computed<number[][]>(() => {
+    const celulas = this.incidentService.summary()?.distribuicaoTemporal ?? [];
+    const matriz: number[][] = Array.from({ length: 12 }, () => Array(7).fill(0));
+    for (const c of celulas) {
+      matriz[c.faixa2h][c.diaSemana] = c.incidentes;
+    }
+    return matriz;
+  });
 
   /**
    * Agrupamento por setor, só para organizar a grade visualmente — a API não

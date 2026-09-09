@@ -126,11 +126,11 @@ describe('HeatmapComponent', () => {
     expect(fixture.nativeElement.querySelector('app-connection-badge')).not.toBeNull();
   });
 
-  it('a matriz temporal e o histórico anual carregam o selo de dado de exemplo, com opacidade reduzida', () => {
+  it('o histórico anual ainda carrega o selo de dado de exemplo, com opacidade reduzida (Temporal já usa dado real)', () => {
     const fixture = montarCom([]);
     const selos = fixture.nativeElement.querySelectorAll('.sample-seal');
 
-    expect(selos.length).toBe(2);
+    expect(selos.length).toBe(1);
     selos.forEach((selo: HTMLElement) => {
       expect(selo.textContent?.toLowerCase()).toContain('dado de exemplo');
     });
@@ -281,6 +281,23 @@ describe('HeatmapComponent', () => {
   it('ordenar por zona (default) mantem o agrupamento por setor', () => {
     const fixture = montarCom([]);
     expect(fixture.componentInstance.ordenar()).toBe('zona');
+  });
+
+  it('matrizTemporal converte distribuicaoTemporal em linhas de faixa2h x colunas de diaSemana', () => {
+    const fixture = TestBed.createComponent(HeatmapComponent);
+    fixture.detectChanges();
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [], ultimosSeteDias: [],
+      distribuicaoTemporal: [{ diaSemana: 2, faixa2h: 11, incidentes: 4 }],
+    });
+    fixture.detectChanges();
+
+    const matriz = fixture.componentInstance.matrizTemporal();
+    expect(matriz[11][2]).toBe(4);
+    expect(matriz[0][0]).toBe(0);
+    expect(matriz.length).toBe(12);
+    expect(matriz[0].length).toBe(7);
   });
 
   it('urlResumoPdf inclui turno/setor/epi junto do since (spec §7)', () => {

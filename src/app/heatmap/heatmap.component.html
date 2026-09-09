@@ -127,7 +127,7 @@
       </div>
     </div>
 
-    <!-- ─── TEMPORAL HEATMAP (dado de exemplo — sem endpoint em E1) ─── -->
+    <!-- ─── TEMPORAL HEATMAP (dado real — distribuicaoTemporal) ─── -->
     <div class="hp-card">
       <div class="hc-head">
         <div class="hch-l">
@@ -135,7 +135,6 @@
           <div class="hch-sub">Dia da semana × faixa horária</div>
         </div>
         <div class="hch-r">
-          <span class="sample-seal">dado de exemplo</span>
         </div>
       </div>
 
@@ -145,7 +144,7 @@
           @for (d of tempDays; track $index; let i = $index) {
             <span [class]="'day-h' + (i === 2 ? ' peak' : '')">{{ d }}</span>
           }
-          @for (row of tempMatrix; track $index; let ri = $index) {
+          @for (row of matrizTemporal(); track $index; let ri = $index) {
             <span class="hr-l">{{ tempHours[ri] }}</span>
             @for (v of row; track $index; let ci = $index) {
               <div [class]="'temp-cell ' + tempTier(v)">
