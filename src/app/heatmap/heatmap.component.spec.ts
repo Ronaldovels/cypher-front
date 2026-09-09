@@ -252,6 +252,37 @@ describe('HeatmapComponent', () => {
     req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
   });
 
+  it('ordenar por ranking lista as celulas por incidentes desc, sem agrupar', () => {
+    const fixture = montarCom([
+      { estacaoId: 'EST-01', nome: 'Esteira', setor: 'montagem', incidentes: 1 },
+      { estacaoId: 'EST-02', nome: 'Prensa', setor: 'estamparia', incidentes: 5 },
+    ]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+    const comp = fixture.componentInstance;
+
+    comp.setOrdenar('ranking');
+
+    expect(comp.celulasOrdenadas().map(c => c.estacaoId)).toEqual(['EST-02', 'EST-01']);
+  });
+
+  it('ordenar por nome lista as celulas em ordem alfabetica, sem agrupar', () => {
+    const fixture = montarCom([
+      { estacaoId: 'EST-02', nome: 'Zebra', setor: 'estamparia', incidentes: 5 },
+      { estacaoId: 'EST-01', nome: 'Alfa', setor: 'montagem', incidentes: 1 },
+    ]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+    const comp = fixture.componentInstance;
+
+    comp.setOrdenar('nome');
+
+    expect(comp.celulasOrdenadas().map(c => c.nome)).toEqual(['Alfa', 'Zebra']);
+  });
+
+  it('ordenar por zona (default) mantem o agrupamento por setor', () => {
+    const fixture = montarCom([]);
+    expect(fixture.componentInstance.ordenar()).toBe('zona');
+  });
+
   it('urlResumoPdf inclui turno/setor/epi junto do since (spec §7)', () => {
     const fixture = montarCom([]);
     http.match(r => r.url === `${environment.apiUrl}/summary`);

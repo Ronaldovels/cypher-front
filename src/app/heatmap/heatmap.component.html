@@ -61,8 +61,10 @@
           <div class="hch-sub">Intensidade de incidentes por estação</div>
         </div>
         <div class="hch-r">
-          <select class="fb-select">
-            <option>Ordenar: ranking</option><option>Ordenar: nome</option><option>Ordenar: zona</option>
+          <select class="fb-select" [(ngModel)]="ordenar" name="ordenar" (ngModelChange)="setOrdenar($event)">
+            <option value="ranking">Ordenar: ranking</option>
+            <option value="nome">Ordenar: nome</option>
+            <option value="zona">Ordenar: zona</option>
           </select>
         </div>
       </div>
@@ -78,7 +80,7 @@
       <!-- Zones: agrupadas por setor (StationCell.setor); "sem setor" é o grupo residual -->
       @if (celulas().length === 0) {
         <div class="vazio">nenhuma estação cadastrada</div>
-      } @else {
+      } @else if (ordenar() === 'zona') {
         <div class="spatial-zones">
           @for (g of grupos(); track g.setor) {
             <div class="zone">
@@ -93,6 +95,17 @@
                   </div>
                 }
               </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="zone-grid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr))">
+          @for (c of celulasOrdenadas(); track c.estacaoId) {
+            <div [class]="'heat-tile ' + classeDe(c.incidentes)"
+                 role="button" [attr.aria-label]="c.estacaoId + ' · ' + c.nome + ': ' + c.incidentes + ' incidentes'"
+                 [title]="c.nome + ' · ' + (c.setor || 'sem setor')">
+              <span class="tid">{{ c.estacaoId }} · {{ c.nome }}</span>
+              <span class="tst">{{ rotuloIntensidade(c.incidentes) }}</span>
             </div>
           }
         </div>

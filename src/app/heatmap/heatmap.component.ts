@@ -114,6 +114,7 @@ export class HeatmapComponent implements OnInit, OnDestroy {
   shift = signal('all');
   readonly setor = signal('');
   readonly epi = signal('');
+  readonly ordenar = signal<'ranking' | 'nome' | 'zona'>('zona');
 
   private readonly filtrosAtuais = computed((): SummaryFiltros => {
     const filtros: SummaryFiltros = { detalhado: true };
@@ -148,7 +149,18 @@ export class HeatmapComponent implements OnInit, OnDestroy {
       lista.push(celula);
       porSetor.set(chave, lista);
     }
-    return Array.from(porSetor.entries()).map(([setor, celulas]) => ({ setor, celulas }));
+    return Array.from(porSetor.entries())
+      .map(([setor, celulas]) => ({ setor, celulas }))
+      .sort((a, b) => a.setor.localeCompare(b.setor));
+  });
+
+  /** Lista plana (sem agrupar por setor), usada quando ordenar() !== 'zona'. */
+  readonly celulasOrdenadas = computed(() => {
+    const modo = this.ordenar();
+    const copia = [...this.celulas()];
+    if (modo === 'ranking') return copia.sort((a, b) => b.incidentes - a.incidentes);
+    if (modo === 'nome') return copia.sort((a, b) => a.nome.localeCompare(b.nome));
+    return copia;
   });
 
   /** Top 5 estações por concentração de incidentes, derivado das células reais. */
@@ -203,6 +215,7 @@ export class HeatmapComponent implements OnInit, OnDestroy {
   setShift(s: string) { this.shift.set(s); this.recarregarSummary(); }
   setSetor(s: string) { this.setor.set(s); this.recarregarSummary(); }
   setEpi(e: string) { this.epi.set(e); this.recarregarSummary(); }
+  setOrdenar(o: 'ranking' | 'nome' | 'zona') { this.ordenar.set(o); }
 
   monthLeft(i: number): string { return `calc(${this.monthStarts[i]} * (100% / 52))`; }
 
