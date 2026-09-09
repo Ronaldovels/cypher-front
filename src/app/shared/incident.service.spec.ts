@@ -1,7 +1,7 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from './event-source.factory';
@@ -353,6 +353,33 @@ describe('IncidentService — SSE', () => {
     expect(service.incidents().length).toBe(1);
     expect(service.incidents()[0].incidentKey).toBe('k-bom');
     expect(service.connection()).toBe('ao vivo');
+  });
+
+  it('reagenda o refresh do summary reaplicando o último filtro usado (não some ao vivo)', () => {
+    vi.useFakeTimers();
+    try {
+      service.loadSummary({ setor: 'montagem' });
+      http.expectOne(r => r.url === `${environment.apiUrl}/summary`)
+        .flush({
+          incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+          heatmap: [], ultimosSeteDias: [],
+        });
+
+      service.connect();
+      criados[0].abrir();
+      criados[0].emitir('incident', incidente({ incidentKey: 'k-ao-vivo' }));
+
+      vi.advanceTimersByTime(2000);
+
+      const refresh = http.expectOne(r => r.url === `${environment.apiUrl}/summary`);
+      expect(refresh.request.params.get('setor')).toBe('montagem');
+      refresh.flush({
+        incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+        heatmap: [], ultimosSeteDias: [],
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('erro do store não se disfarça de payload malformado', () => {

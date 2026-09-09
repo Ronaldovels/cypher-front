@@ -39,9 +39,13 @@ export class IncidentService {
   private readonly _summary = signal<Summary | null>(null);
   private summaryTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** Últimos filtros usados em `loadSummary`, para o auto-refresh via SSE reaplicar. */
+  private ultimoFiltros?: SummaryFiltros;
+
   readonly summary = this._summary.asReadonly();
 
   loadSummary(filtros?: SummaryFiltros): void {
+    this.ultimoFiltros = filtros;
     let params = new HttpParams();
     if (filtros) {
       for (const [chave, valor] of Object.entries(filtros)) {
@@ -66,7 +70,7 @@ export class IncidentService {
     }
     this.summaryTimer = setTimeout(() => {
       this.summaryTimer = null;
-      this.loadSummary();
+      this.loadSummary(this.ultimoFiltros);
     }, 2000);
   }
 
