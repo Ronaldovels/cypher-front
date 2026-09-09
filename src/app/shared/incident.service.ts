@@ -1,10 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from './event-source.factory';
-import { AlertaStatus, ConnectionState, Incident, IncidentSearchFilters, Page, Summary } from './incident.models';
+import { AlertaStatus, ConnectionState, Incident, IncidentSearchFilters, Page, Summary, SummaryFiltros } from './incident.models';
 
 /**
  * Store de incidentes.
@@ -41,8 +41,16 @@ export class IncidentService {
 
   readonly summary = this._summary.asReadonly();
 
-  loadSummary(): void {
-    this.http.get<Summary>(`${environment.apiUrl}/summary`, { withCredentials: true })
+  loadSummary(filtros?: SummaryFiltros): void {
+    let params = new HttpParams();
+    if (filtros) {
+      for (const [chave, valor] of Object.entries(filtros)) {
+        if (valor !== undefined && valor !== null && valor !== '') {
+          params = params.set(chave, String(valor));
+        }
+      }
+    }
+    this.http.get<Summary>(`${environment.apiUrl}/summary`, { withCredentials: true, params })
       .subscribe({ next: s => this._summary.set(s), error: () => { } });
   }
 

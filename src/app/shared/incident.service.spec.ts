@@ -178,6 +178,37 @@ describe('IncidentService', () => {
     expect(service.summary()?.incidentesHoje).toBe(3);
     expect(service.summary()?.heatmap[0].estacaoId).toBe('EST-01');
   });
+
+  it('loadSummary manda os filtros como query params quando informados', () => {
+    service.loadSummary({ since: '2026-09-01T00:00:00.000Z', turno: 'A', setor: 'montagem', epi: 'capacete', detalhado: true });
+
+    const req = http.expectOne(r => r.url === `${environment.apiUrl}/summary`);
+    expect(req.request.params.get('since')).toBe('2026-09-01T00:00:00.000Z');
+    expect(req.request.params.get('turno')).toBe('A');
+    expect(req.request.params.get('setor')).toBe('montagem');
+    expect(req.request.params.get('epi')).toBe('capacete');
+    expect(req.request.params.get('detalhado')).toBe('true');
+    req.flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [], ultimosSeteDias: [],
+      distribuicaoTemporal: [{ diaSemana: 2, faixa2h: 11, incidentes: 1 }],
+      historicoAnual: [{ dia: '2026-01-01', incidentes: 0 }],
+    });
+
+    expect(service.summary()?.distribuicaoTemporal?.[0].incidentes).toBe(1);
+    expect(service.summary()?.historicoAnual?.[0].dia).toBe('2026-01-01');
+  });
+
+  it('loadSummary sem filtros nao manda nenhum param novo (mesma URL de sempre)', () => {
+    service.loadSummary();
+
+    const req = http.expectOne(`${environment.apiUrl}/summary`);
+    expect(req.request.params.keys().length).toBe(0);
+    req.flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [], ultimosSeteDias: [],
+    });
+  });
 });
 
 class EventSourceFake implements EventSourceLike {

@@ -140,6 +140,8 @@ export function resumo(): Summary {
       dia: diaAtras(6 - k),
       incidentes: k === 6 ? INCIDENTS.length : DIAS_ANTERIORES[k],
     })),
+    distribuicaoTemporal: null,
+    historicoAnual: null,
   };
 }
 
