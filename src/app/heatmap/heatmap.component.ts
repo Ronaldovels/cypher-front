@@ -12,15 +12,10 @@ import { IncidentService } from '../shared/incident.service';
 import { StationCell, SummaryFiltros, severityClass } from '../shared/incident.models';
 import { EPI_LIST } from '../onboarding/models/onboarding.models';
 
-// ─── DADOS DE EXEMPLO ──────────────────────────────────
-// O histórico anual não tem endpoint em E1 (spec do parceiro humano). Fica
-// com dado fabricado, mas rotulado em tela com o selo "dado de exemplo" e
-// opacidade reduzida — não removido.
 export const TEMP_HOURS = ['12AM', '2AM', '4AM', '6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
 export const TEMP_DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 export const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-export const MONTH_STARTS = [0, 5, 9, 13, 17, 22, 26, 31, 35, 40, 44, 48];
 
 /**
  * Mapeia o chip de período (decorativo até esta entrega) para o `since` da
@@ -42,29 +37,55 @@ export function inicioDoPeriodo(period: string, agora: Date): Date | null {
   }
 }
 
-function buildAnnual(): { w: number; d: number; v: number; peak: boolean }[] {
-  const weekBase = (w: number): number => {
-    if (w === 11) return 9;
-    if (w >= 8 && w <= 13) return 5;
-    if (w >= 0 && w <= 7) return 4;
-    if (w >= 14 && w <= 24) return 1.6;
-    if (w >= 25 && w <= 34) return 5;
-    if (w >= 35 && w <= 43) return 3;
-    return 1;
-  };
-  const cells: { w: number; d: number; v: number; peak: boolean }[] = [];
-  let seed = 7;
-  const rng = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-  for (let w = 0; w < 52; w++) {
-    for (let d = 0; d < 7; d++) {
-      const dayMul = (d === 5 || d === 6) ? 0.35 : 1;
-      const wedBoost = d === 2 ? 1.4 : 1;
-      const raw = weekBase(w) * dayMul * wedBoost * (0.5 + rng());
-      const v = Math.round(Math.max(0, raw));
-      cells.push({ w, d, v, peak: w === 11 && v > 6 });
+export interface CelulaAnual {
+  dia: string;
+  incidentes: number;
+  semana: number;
+  diaSemana: number;
+}
+
+/**
+ * Converte a lista diária (Jan 1 .. Dez 31, sempre nessa ordem — vem assim
+ * de `SummaryService.historicoAnual`) numa grade estilo GitHub: 7 linhas
+ * (uma por dia da semana, 0=Seg) x N colunas (uma por semana). O offset do
+ * primeiro dia alinha a coluna 0 corretamente mesmo quando o ano não começa
+ * numa segunda-feira.
+ */
+export function celulasAnuais(historico: { dia: string; incidentes: number }[]): CelulaAnual[] {
+  if (historico.length === 0) return [];
+  const primeiro = new Date(historico[0].dia + 'T00:00:00');
+  const offsetSegunda = (primeiro.getDay() + 6) % 7; // Date.getDay(): 0=Dom..6=Sab -> 0=Seg..6=Dom
+  return historico.map((d, indice) => {
+    const posicao = indice + offsetSegunda;
+    return { dia: d.dia, incidentes: d.incidentes, semana: Math.floor(posicao / 7), diaSemana: posicao % 7 };
+  });
+}
+
+/** Onde cada mês começa (índice de semana), pra posicionar os rótulos Jan..Dez sobre a grade real. */
+export function inicioDasSemanasPorMes(celulas: CelulaAnual[]): number[] {
+  const resultado: number[] = [];
+  let mesAtual = -1;
+  for (const c of celulas) {
+    const mes = new Date(c.dia + 'T00:00:00').getMonth();
+    if (mes !== mesAtual) {
+      resultado.push(c.semana);
+      mesAtual = mes;
     }
   }
-  return cells;
+  return resultado;
+}
+
+/**
+ * Se o dia cai dentro da janela que o chip de período implica — usada pra
+ * esmaecer o resto do calendário anual em vez de encolher a grade (spec §9
+ * da E6 aplicada aqui: o Anual sempre mostra o ano inteiro). `custom` nunca
+ * teve intervalo por trás (mesmo motivo de `inicioDoPeriodo`), então nada é
+ * esmaecido.
+ */
+export function dentroDoPeriodo(dia: string, period: string, agora: Date): boolean {
+  const inicio = inicioDoPeriodo(period, agora);
+  if (!inicio) return true;
+  return new Date(dia + 'T00:00:00').getTime() >= inicio.getTime();
 }
 
 /** Grupo de células do heatmap real, por setor (StationCell.setor). */
@@ -87,13 +108,10 @@ export class HeatmapComponent implements OnInit, OnDestroy {
 
   cfg = this.cfgService.config;
 
-  // ─── Dado de exemplo (painéis rotulados, ver constantes acima) ───
+  // ─── Rótulos dos eixos (painéis Temporal e Anual usam dado real) ───
   tempHours = TEMP_HOURS;
   tempDays = TEMP_DAYS;
   months = MONTHS;
-  monthStarts = MONTH_STARTS;
-  annualCells = buildAnnual();
-  annualTotal = this.annualCells.reduce((a, c) => a + c.v, 0);
 
   period = signal('7d');
   shift = signal('all');
@@ -130,6 +148,21 @@ export class HeatmapComponent implements OnInit, OnDestroy {
     }
     return matriz;
   });
+
+  readonly celulasAno = computed(() =>
+    celulasAnuais(this.incidentService.summary()?.historicoAnual ?? []));
+
+  readonly inicioDosMeses = computed(() => inicioDasSemanasPorMes(this.celulasAno()));
+
+  readonly totalSemanasNoAno = computed(() =>
+    this.celulasAno().reduce((max, c) => Math.max(max, c.semana), 0) + 1);
+
+  readonly annualTotal = computed(() =>
+    this.celulasAno().reduce((soma, c) => soma + c.incidentes, 0));
+
+  estaEsmaecido(dia: string): boolean {
+    return !dentroDoPeriodo(dia, this.period(), new Date());
+  }
 
   /**
    * Agrupamento por setor, só para organizar a grade visualmente — a API não
@@ -212,7 +245,9 @@ export class HeatmapComponent implements OnInit, OnDestroy {
   setEpi(e: string) { this.epi.set(e); this.recarregarSummary(); }
   setOrdenar(o: 'ranking' | 'nome' | 'zona') { this.ordenar.set(o); }
 
-  monthLeft(i: number): string { return `calc(${this.monthStarts[i]} * (100% / 52))`; }
+  monthLeft(indiceSemanaDoMes: number): string {
+    return `calc(${indiceSemanaDoMes} * (100% / ${this.totalSemanasNoAno()}))`;
+  }
 
   tempTier(n: number): string {
     if (n === 0) return 'h0'; if (n <= 3) return 'h1';
@@ -223,8 +258,5 @@ export class HeatmapComponent implements OnInit, OnDestroy {
     if (n === 0) return 'a0'; if (n <= 2) return 'a1';
     if (n <= 5) return 'a2'; if (n <= 9) return 'a3';
     return 'a4';
-  }
-  annualCellTitle(c: { w: number; d: number; v: number }): string {
-    return `Semana ${c.w + 1} · ${TEMP_DAYS[c.d] || ''} · ${c.v} incidente${c.v === 1 ? '' : 's'}`;
   }
 }

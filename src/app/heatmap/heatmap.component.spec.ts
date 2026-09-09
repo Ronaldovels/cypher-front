@@ -8,11 +8,52 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from '../shared/event-source.factory';
 import { USE_MOCK_DATA } from '../shared/mock/use-mock-data.token';
-import { HeatmapComponent, inicioDoPeriodo } from './heatmap.component';
+import { celulasAnuais, dentroDoPeriodo, HeatmapComponent, inicioDoPeriodo } from './heatmap.component';
 
 const SSE_INERTE: EventSourceLike = {
   addEventListener: () => { }, close: () => { }, onopen: null, onerror: null,
 };
+
+describe('celulasAnuais', () => {
+  it('alinha o primeiro dia do ano na linha certa da semana e incrementa semana a cada 7', () => {
+    // 2026-01-01 é uma quinta-feira -> diaSemana ISO (0=Seg) = 3.
+    const historico = [
+      { dia: '2026-01-01', incidentes: 1 },
+      { dia: '2026-01-02', incidentes: 0 },
+      { dia: '2026-01-03', incidentes: 2 },
+      { dia: '2026-01-04', incidentes: 0 },
+    ];
+    const celulas = celulasAnuais(historico);
+
+    expect(celulas[0]).toEqual({ dia: '2026-01-01', incidentes: 1, semana: 0, diaSemana: 3 });
+    expect(celulas[3]).toEqual({ dia: '2026-01-04', incidentes: 0, semana: 0, diaSemana: 6 });
+  });
+
+  it('semana incrementa ao cruzar o setimo slot', () => {
+    // com offset 3 (quinta), o slot 4 (indice) cai na semana 1.
+    const historico = Array.from({ length: 6 }, (_, i) => ({ dia: `2026-01-0${i + 1}`, incidentes: 0 }));
+    const celulas = celulasAnuais(historico);
+
+    expect(celulas[3].semana).toBe(0); // posicao 3+3=6 -> semana 0 ainda (0..6)
+    expect(celulas[4].semana).toBe(1); // posicao 4+3=7 -> semana 1
+  });
+});
+
+describe('dentroDoPeriodo', () => {
+  const agora = new Date('2026-09-08T15:00:00.000Z');
+
+  it('dia dentro dos ultimos 7 dias retorna true para period=7d', () => {
+    expect(dentroDoPeriodo('2026-09-05', '7d', agora)).toBe(true);
+  });
+
+  it('dia fora dos ultimos 7 dias retorna false para period=7d', () => {
+    expect(dentroDoPeriodo('2026-08-01', '7d', agora)).toBe(false);
+  });
+
+  it('period=custom nunca esmaece nada (sem intervalo por tras) — sempre true', () => {
+    expect(dentroDoPeriodo('2020-01-01', 'custom', agora)).toBe(true);
+  });
+});
 
 describe('inicioDoPeriodo', () => {
   const agora = new Date('2026-09-08T15:00:00.000Z');
@@ -126,17 +167,26 @@ describe('HeatmapComponent', () => {
     expect(fixture.nativeElement.querySelector('app-connection-badge')).not.toBeNull();
   });
 
-  it('o histórico anual ainda carrega o selo de dado de exemplo, com opacidade reduzida (Temporal já usa dado real)', () => {
+  it('não sobra nenhum selo de dado de exemplo (Temporal e Anual já usam dado real)', () => {
     const fixture = montarCom([]);
     const selos = fixture.nativeElement.querySelectorAll('.sample-seal');
 
-    expect(selos.length).toBe(1);
-    selos.forEach((selo: HTMLElement) => {
-      expect(selo.textContent?.toLowerCase()).toContain('dado de exemplo');
-    });
+    expect(selos.length).toBe(0);
+  });
 
-    const conteudosAmostra = fixture.nativeElement.querySelectorAll('.sample-content');
-    expect(conteudosAmostra.length).toBeGreaterThanOrEqual(2);
+  it('celulasAno reflete o historicoAnual real', () => {
+    const fixture = TestBed.createComponent(HeatmapComponent);
+    fixture.detectChanges();
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [], ultimosSeteDias: [],
+      historicoAnual: [{ dia: '2026-01-01', incidentes: 3 }, { dia: '2026-01-02', incidentes: 0 }],
+    });
+    fixture.detectChanges();
+
+    const celulas = fixture.componentInstance.celulasAno();
+    expect(celulas.length).toBe(2);
+    expect(celulas[0].incidentes).toBe(3);
   });
 
   it('não exporta mais constantes de dados fabricados para o grid de estações', async () => {

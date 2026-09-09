@@ -178,50 +178,44 @@
       </div>
     </div>
 
-    <!-- ─── ANNUAL HEATMAP (dado de exemplo — sem endpoint em E1) ─── -->
     <div class="hp-card annual">
       <div class="hc-head annual-head">
         <div class="hch-l">
           <div class="hch-title">Histórico Anual de Incidentes</div>
-          <div class="hch-sub">Setor A · Jan–Dez 2025 · {{ annualTotal }} incidentes registrados</div>
-        </div>
-        <div class="ah-r">
-          <span class="sample-seal">dado de exemplo</span>
+          <div class="hch-sub">Jan–Dez · {{ annualTotal() }} incidentes registrados</div>
         </div>
       </div>
 
-      <div class="sample-content">
-        <div class="annual-wrap">
-          <div class="annual-days">
-            <span>Seg</span><span></span>
-            <span>Qua</span><span></span>
-            <span>Sex</span><span></span><span></span>
-          </div>
-          <div class="annual-months">
-            @for (m of months; track $index; let i = $index) {
-              <span class="mlbl" [style.left]="monthLeft(i)">{{ m }}</span>
-            }
-          </div>
-          <div class="annual-grid">
-            @for (cell of annualCells; track $index) {
-              <div [class]="'acell ' + annualTier(cell.v) + (cell.peak ? ' peak' : '')"
-                   [title]="annualCellTitle(cell)">
-              </div>
-            }
-          </div>
+      <div class="annual-wrap">
+        <div class="annual-days">
+          <span>Seg</span><span></span>
+          <span>Qua</span><span></span>
+          <span>Sex</span><span></span><span></span>
         </div>
+        <div class="annual-months">
+          @for (inicioSemana of inicioDosMeses(); track $index; let i = $index) {
+            <span class="mlbl" [style.left]="monthLeft(inicioSemana)">{{ months[i] }}</span>
+          }
+        </div>
+        <div class="annual-grid">
+          @for (cell of celulasAno(); track cell.dia) {
+            <div [class]="'acell ' + annualTier(cell.incidentes) + (estaEsmaecido(cell.dia) ? ' dimmed' : '')"
+                 [title]="cell.dia + ' · ' + cell.incidentes + ' incidente' + (cell.incidentes === 1 ? '' : 's')">
+            </div>
+          }
+        </div>
+      </div>
 
-        <div class="annual-foot">
-          <span class="lg">
-            Menos
-            <span class="acell a0"></span>
-            <span class="acell a1"></span>
-            <span class="acell a2"></span>
-            <span class="acell a3"></span>
-            <span class="acell a4"></span>
-            Mais
-          </span>
-        </div>
+      <div class="annual-foot">
+        <span class="lg">
+          Menos
+          <span class="acell a0"></span>
+          <span class="acell a1"></span>
+          <span class="acell a2"></span>
+          <span class="acell a3"></span>
+          <span class="acell a4"></span>
+          Mais
+        </span>
       </div>
     </div>
   </main>
