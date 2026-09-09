@@ -23,10 +23,20 @@
     </a>
     <div class="fb-sep"></div>
     <span class="fb-label">Setor</span>
-    <select class="fb-select"><option>Setor A</option><option>Setor B</option><option>Setor C</option></select>
+    <select class="fb-select" [(ngModel)]="setor" name="heatmapSetor" (ngModelChange)="setSetor($event)">
+      <option value="">Todos os setores</option>
+      @for (s of setoresDisponiveis(); track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
     <div class="fb-sep"></div>
     <span class="fb-label">EPI</span>
-    <select class="fb-select"><option>Todos os EPIs</option><option>Capacete</option><option>Óculos</option><option>Luvas</option></select>
+    <select class="fb-select" [(ngModel)]="epi" name="heatmapEpi" (ngModelChange)="setEpi($event)">
+      <option value="">Todos os EPIs</option>
+      @for (e of episDisponiveis; track e.key) {
+        <option [value]="e.key">{{ e.name }}</option>
+      }
+    </select>
     <div class="fb-sep"></div>
     <span class="fb-label">Turno</span>
     <div class="fb-group">

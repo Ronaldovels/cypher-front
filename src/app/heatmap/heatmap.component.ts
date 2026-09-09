@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 import { environment } from '../../environments/environment';
 import { AuthService } from '../shared/auth/auth.service';
@@ -8,7 +9,8 @@ import { ConfigService } from '../shared/config.service';
 import { ConnectionBadgeComponent } from '../shared/connection-badge/connection-badge.component';
 import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
-import { StationCell, severityClass } from '../shared/incident.models';
+import { StationCell, SummaryFiltros, severityClass } from '../shared/incident.models';
+import { EPI_LIST } from '../onboarding/models/onboarding.models';
 
 // ─── DADOS DE EXEMPLO ──────────────────────────────────
 // A matriz temporal (dia × hora) e o histórico anual não têm endpoint em E1
@@ -87,7 +89,7 @@ interface GrupoSetor {
 
 @Component({
   selector: 'app-heatmap',
-  imports: [ChromeTopbarComponent, DockComponent, ConnectionBadgeComponent],
+  imports: [ChromeTopbarComponent, DockComponent, ConnectionBadgeComponent, FormsModule],
   templateUrl: './heatmap.component.html',
 })
 export class HeatmapComponent implements OnInit, OnDestroy {
@@ -110,6 +112,22 @@ export class HeatmapComponent implements OnInit, OnDestroy {
 
   period = signal('7d');
   shift = signal('all');
+  readonly setor = signal('');
+  readonly epi = signal('');
+
+  private readonly filtrosAtuais = computed((): SummaryFiltros => {
+    const filtros: SummaryFiltros = { detalhado: true };
+    const inicio = inicioDoPeriodo(this.period(), new Date());
+    if (inicio) filtros.since = inicio.toISOString();
+    if (this.shift() !== 'all') filtros.turno = this.shift();
+    if (this.setor()) filtros.setor = this.setor();
+    if (this.epi()) filtros.epi = this.epi();
+    return filtros;
+  });
+
+  private recarregarSummary(): void {
+    this.incidentService.loadSummary(this.filtrosAtuais());
+  }
 
   /**
    * A célula do heatmap é a estação: ela agrega os incidentes de todas as
@@ -139,17 +157,32 @@ export class HeatmapComponent implements OnInit, OnDestroy {
 
   readonly top5Max = computed(() => this.top5()[0]?.incidentes || 1);
 
+  /** Setores distintos das estações cadastradas, para popular o <select> — nunca mais "Setor A/B/C" fixo. */
+  readonly setoresDisponiveis = computed(() => {
+    const setores = new Set<string>();
+    for (const s of this.catalogService.stations()) {
+      if (s.setor) setores.add(s.setor);
+    }
+    return Array.from(setores).sort();
+  });
+
+  /** Só os 4 EPIs que o backend sabe filtrar (spec §1.4) — os outros 4 de EPI_LIST ficam de fora até o cypher-capture detectar essas violações. */
+  readonly episDisponiveis = EPI_LIST.filter(e => ['capacete', 'oculos', 'luvas', 'botas'].includes(e.key));
+
   readonly urlResumoPdf = computed(() => {
-    const inicio = inicioDoPeriodo(this.period(), new Date());
+    const filtros = this.filtrosAtuais();
     const params = new URLSearchParams();
-    if (inicio) params.set('since', inicio.toISOString());
+    if (filtros.since) params.set('since', filtros.since);
+    if (filtros.turno) params.set('turno', filtros.turno);
+    if (filtros.setor) params.set('setor', filtros.setor);
+    if (filtros.epi) params.set('epi', filtros.epi);
     const query = params.toString();
     return `${environment.apiUrl}/reports/summary.pdf${query ? '?' + query : ''}`;
   });
 
   ngOnInit(): void {
     this.catalogService.load();
-    this.incidentService.loadSummary();
+    this.incidentService.loadSummary(this.filtrosAtuais());
     this.incidentService.connect();
   }
 
@@ -166,8 +199,10 @@ export class HeatmapComponent implements OnInit, OnDestroy {
     return incidentes === 0 ? 'ok' : `${incidentes} inf`;
   }
 
-  setPeriod(p: string) { this.period.set(p); }
-  setShift(s: string) { this.shift.set(s); }
+  setPeriod(p: string) { this.period.set(p); this.recarregarSummary(); }
+  setShift(s: string) { this.shift.set(s); this.recarregarSummary(); }
+  setSetor(s: string) { this.setor.set(s); this.recarregarSummary(); }
+  setEpi(e: string) { this.epi.set(e); this.recarregarSummary(); }
 
   monthLeft(i: number): string { return `calc(${this.monthStarts[i]} * (100% / 52))`; }
 

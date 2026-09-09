@@ -190,4 +190,81 @@ describe('HeatmapComponent', () => {
     const url = new URL(comp.urlResumoPdf(), 'http://localhost');
     expect(url.searchParams.has('since')).toBe(false);
   });
+
+  function ultimaRequisicaoDeSummary() {
+    const pendentes = http.match(r => r.url === `${environment.apiUrl}/summary`);
+    return pendentes[pendentes.length - 1];
+  }
+
+  it('trocar o setor recarrega o summary com o filtro', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`); // drena a carga inicial do ngOnInit
+
+    fixture.componentInstance.setSetor('montagem');
+
+    const req = ultimaRequisicaoDeSummary();
+    expect(req.request.params.get('setor')).toBe('montagem');
+    expect(req.request.params.get('detalhado')).toBe('true');
+    req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
+  });
+
+  it('trocar o EPI recarrega o summary com o filtro', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+
+    fixture.componentInstance.setEpi('capacete');
+
+    const req = ultimaRequisicaoDeSummary();
+    expect(req.request.params.get('epi')).toBe('capacete');
+    req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
+  });
+
+  it('trocar o turno recarrega o summary com o filtro', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+
+    fixture.componentInstance.setShift('A');
+
+    const req = ultimaRequisicaoDeSummary();
+    expect(req.request.params.get('turno')).toBe('A');
+    req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
+  });
+
+  it('turno "all" nao manda o parametro turno', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+
+    fixture.componentInstance.setShift('all');
+
+    const req = ultimaRequisicaoDeSummary();
+    expect(req.request.params.has('turno')).toBe(false);
+    req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
+  });
+
+  it('trocar o periodo recarrega o summary com since', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+
+    fixture.componentInstance.setPeriod('30d');
+
+    const req = ultimaRequisicaoDeSummary();
+    expect(req.request.params.has('since')).toBe(true);
+    req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
+  });
+
+  it('urlResumoPdf inclui turno/setor/epi junto do since (spec §7)', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+    const comp = fixture.componentInstance;
+
+    comp.setShift('A');
+    comp.setSetor('montagem');
+    comp.setEpi('capacete');
+    http.match(r => r.url === `${environment.apiUrl}/summary`); // drena as 3 recargas dos setters acima
+
+    const url = new URL(comp.urlResumoPdf(), 'http://localhost');
+    expect(url.searchParams.get('turno')).toBe('A');
+    expect(url.searchParams.get('setor')).toBe('montagem');
+    expect(url.searchParams.get('epi')).toBe('capacete');
+  });
 });
