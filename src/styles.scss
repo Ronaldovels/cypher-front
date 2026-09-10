@@ -708,8 +708,14 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .acell.a3 { background:color-mix(in srgb, var(--accent) 68%, transparent); }
 .acell.a4 { background:var(--accent); }
 .acell.peak { box-shadow:0 0 6px color-mix(in srgb, var(--accent) 50%, transparent); }
-.acell.dimmed { opacity: .55; box-shadow: inset 0 0 0 1px var(--line); }
+.acell.dimmed { box-shadow: inset 0 0 0 1px var(--line-3); }
+.acell.dimmed.a0 { background:color-mix(in srgb, var(--accent) 6%, transparent); }
+.acell.dimmed.a1 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+.acell.dimmed.a2 { background:color-mix(in srgb, var(--accent) 25%, transparent); }
+.acell.dimmed.a3 { background:color-mix(in srgb, var(--accent) 38%, transparent); }
+.acell.dimmed.a4 { background:color-mix(in srgb, var(--accent) 55%, transparent); }
 .theme-light .acell.a0 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+.theme-light .acell.dimmed.a0 { background:color-mix(in srgb, var(--accent) 9%, transparent); }
 .annual-foot { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
 .annual-foot .l { font-family:var(--mono); font-size:10px; color:var(--ink-ghost); text-decoration:none; letter-spacing:0.02em; }
 .annual-foot .l:hover { color:var(--accent); }
