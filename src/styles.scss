@@ -708,7 +708,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .acell.a3 { background:color-mix(in srgb, var(--accent) 68%, transparent); }
 .acell.a4 { background:var(--accent); }
 .acell.peak { box-shadow:0 0 6px color-mix(in srgb, var(--accent) 50%, transparent); }
-.acell.dimmed { opacity: .35; }
+.acell.dimmed { opacity: .55; box-shadow: inset 0 0 0 1px var(--line); }
 .theme-light .acell.a0 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
 .annual-foot { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
 .annual-foot .l { font-family:var(--mono); font-size:10px; color:var(--ink-ghost); text-decoration:none; letter-spacing:0.02em; }
