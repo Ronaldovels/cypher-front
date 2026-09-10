@@ -4,7 +4,7 @@ import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from './event-source.factory';
-import { AlertaStatus, ConnectionState, Incident, IncidentSearchFilters, Page, Summary, SummaryFiltros } from './incident.models';
+import { AlertaStatus, ConnectionState, Incident, IncidentSearchFilters, Notificacao, Page, Summary, SummaryFiltros } from './incident.models';
 
 /**
  * Store de incidentes.
@@ -72,6 +72,27 @@ export class IncidentService {
       this.summaryTimer = null;
       this.loadSummary(this.ultimoFiltros);
     }, 2000);
+  }
+
+  private readonly _naoLidas = signal<number>(0);
+
+  /** Contagem de notificações não lidas — badge global do sino (spec central-notificações §3/§4). */
+  readonly naoLidas = this._naoLidas.asReadonly();
+
+  loadNaoLidas(): void {
+    this.http.get<{ naoLidas: number }>(`${environment.apiUrl}/notificacoes/contagem-nao-lidas`, { withCredentials: true })
+      .subscribe({ next: r => this._naoLidas.set(r.naoLidas), error: () => { } });
+  }
+
+  /** Últimas 30 notificações; quem chama decide o que fazer com o resultado (não entra em nenhum store). */
+  loadNotificacoes(): Observable<Notificacao[]> {
+    return this.http.get<Notificacao[]>(`${environment.apiUrl}/notificacoes`, { withCredentials: true });
+  }
+
+  /** Idempotente no backend — resincroniza naoLidas ao final em vez de decrementar otimista, cobrindo qualquer divergência com o SSE. */
+  marcarLidas(alertaIds: number[]): void {
+    this.http.post<void>(`${environment.apiUrl}/notificacoes/marcar-lidas`, { alertaIds }, { withCredentials: true })
+      .subscribe({ next: () => this.loadNaoLidas(), error: () => { } });
   }
 
   loadHistory(since?: string): void {
@@ -161,8 +182,8 @@ export class IncidentService {
     };
     stream.onerror = () => this._connection.set('offline');
 
-    stream.addEventListener('incident', event => this.receber(event));
-    stream.addEventListener('incident-changed', event => this.receber(event));
+    stream.addEventListener('incident', event => this.receber(event, true));
+    stream.addEventListener('incident-changed', event => this.receber(event, false));
 
     this.stream = stream;
   }
@@ -173,7 +194,7 @@ export class IncidentService {
     this._connection.set('offline');
   }
 
-  private receber(event: MessageEvent): void {
+  private receber(event: MessageEvent, novo: boolean): void {
     let incidente: Incident;
     try {
       incidente = JSON.parse(event.data) as Incident;
@@ -185,5 +206,8 @@ export class IncidentService {
     // e engoli-lo junto com o parse deixaria esse bug invisível.
     this.upsert(incidente);
     this.scheduleSummaryRefresh();
+    if (novo) {
+      this._naoLidas.update(n => n + 1);
+    }
   }
 }

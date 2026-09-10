@@ -158,6 +158,18 @@ export interface Summary {
   historicoAnual: DayCount[] | null;
 }
 
+/** Uma notificação = um Alerta com estado de leitura, para o GESTOR autenticado (spec central-notificações §2). */
+export interface Notificacao {
+  id: number;
+  cameraId: string;
+  type: IncidentType;
+  severity: number;
+  nivel: AlertaNivel;
+  descricao: string;
+  detectedAt: string;
+  lida: boolean;
+}
+
 export interface TemporalCell {
   diaSemana: number;
   faixa2h: number;
