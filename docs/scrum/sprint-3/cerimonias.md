@@ -747,3 +747,28 @@ Nenhum registrado ainda (banca/mentoria).
 
 #### Próximos passos
 Cards `e6a`/`e6b` movidos para `Concluído` no Trello e neste documento — roteiro de entregas original (E1–E6) completo. Próximo: escrever o plano de implementação da spec "Heatmap funcional" (`writing-plans`).
+
+### 3.14 Review — Heatmap funcional (`hfa`/`hfb`)
+
+**Data:** 2026-09-09
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Entregue
+- **Backend (`hfa`, `cypher`)** — 6 tasks do plano (`plans/heatmap-funcional/2026-09-08-hfa-backend-heatmap.md`): `GET /api/v1/summary` ganhou 6 parâmetros opcionais (`since`/`until`/`turno`/`setor`/`epi`/`detalhado`), sem quebrar as chamadas existentes do Dashboard; duas agregações novas, `distribuicaoTemporal` e `historicoAnual`, calculadas só quando `detalhado=true`; `GET /reports/summary.pdf` (E6) passou a repassar `turno`/`setor`/`epi` para o heatmap do PDF também. 8 commits na branch `feat/hf-backend-heatmap` (a partir de `main`), sem PR aberto ainda.
+- **Front (`hfb`, `cypher-front`)** — 6 tasks do plano (`plans/heatmap-funcional/2026-09-08-hfb-front-heatmap.md`): `HeatmapComponent` ganhou filtros reais (Setor/EPI/Turno/Período) e ordenação real (ranking/nome/zona) na Planta Baixa; os painéis "Distribuição Temporal" e "Histórico Anual" passaram de dado fabricado para dado real, consumindo `distribuicaoTemporal`/`historicoAnual`; `urlResumoPdf` (E6) passou a incluir os mesmos filtros. 9 commits na branch `feat/hf-front-heatmap` (a partir de `dev`), sem PR aberto ainda.
+- Os dois implementados via subagent-driven development, um agente por repositório, cada task com implementação + revisão dedicada, seguidos de revisão final de branch inteira em cada um.
+- **Achados reais de revisão, corrigidos antes do fechamento de cada branch:**
+  - `hfa`: perda de dado em agregados temporais quando a câmera/estação de origem estava desativada; um teste intermitente estabilizado; fragilidade de relógio corrigida em 2 testes novos (dependiam de instante de execução em vez de tempo fixado); cobertura de isolamento de tenant adicionada para o caso `detalhado=true` (as duas agregações novas também precisavam respeitar o escopo por empresa).
+  - `hfb`: correção do auto-refresh via SSE, que descartava os filtros ativos do usuário a cada atualização automática do heatmap; revisão de design (skill `frontend-design`) corrigiu o contraste de `.acell.dimmed`; fix wave da revisão final corrigiu uma regressão visual real (o painel Temporal continuava sendo renderizado com a opacidade reduzida de "dado de exemplo" mesmo já consumindo dado real) e um bug real de posicionamento (a grade do Histórico Anual ignorava o offset de dia-da-semana já calculado, desalinhando os dias no grid).
+- Cada achado foi tratado como bloqueante do próprio ciclo de revisão (fix dedicado + re-revisão) antes de a branch ser considerada pronta. Suíte completa verde nos dois repositórios: 389/389 testes backend, 380/380 testes front.
+- Nenhuma entrega dependia desta, e esta não bloqueia nenhuma outra.
+
+#### O que não foi concluído / passa para o backlog
+- PRs ainda não abertos em nenhum dos dois repositórios — implementação e revisão de branch concluídas, mas o card segue em revisão até a abertura formal dos PRs.
+- Teste manual ponta a ponta (filtros reais contra dado de produção, PDF com turno/setor/epi) ainda não feito — depende dos PRs abertos e revisados.
+
+#### Feedback recebido
+Nenhum registrado ainda (banca/mentoria).
+
+#### Próximos passos
+Abrir os PRs (`hfa` contra `main` do `cypher`, `hfb` contra `dev` do `cypher-front`), revisar e mergear; depois teste manual ponta a ponta. Cards `hfa`/`hfb` seguem em `Review`/`Em revisão` no Trello e neste documento até lá.
