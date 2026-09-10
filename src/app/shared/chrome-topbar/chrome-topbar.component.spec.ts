@@ -31,6 +31,11 @@ describe('ChromeTopbarComponent', () => {
   afterEach(() => {
     localStorage.clear();
     document.body.className = '';
+    // `app-notification-center` reparenta seu proprio host para
+    // `document.body`; sem limpar, um fixture de teste anterior deixaria
+    // um `.notif-offcanvas` orfao que poderia satisfazer indevidamente a
+    // asercao de um teste seguinte.
+    document.querySelectorAll('app-notification-center').forEach(el => el.remove());
   });
 
   function montarComo(papel: 'GESTOR' | 'OPERADOR' | null) {
@@ -138,7 +143,10 @@ describe('ChromeTopbarComponent', () => {
     fixture.detectChanges();
 
     http.expectOne(`${environment.apiUrl}/notificacoes`).flush([]);
-    expect(fixture.nativeElement.querySelector('.notif-offcanvas')).not.toBeNull();
+    // O offcanvas reparenta seu host para `document.body` (fora do contexto
+    // de empilhamento do topbar — ver notification-center.component.ts),
+    // entao ele nao aparece mais dentro de `fixture.nativeElement`.
+    expect(document.body.querySelector('.notif-offcanvas')).not.toBeNull();
   });
 });
 
