@@ -136,43 +136,41 @@
         </div>
       </div>
 
-      <div class="sample-content">
-        <div class="temporal">
-          <span class="corner"></span>
-          @for (d of tempDays; track $index; let i = $index) {
-            <span [class]="'day-h' + (i === 2 ? ' peak' : '')">{{ d }}</span>
-          }
-          @for (row of matrizTemporal(); track $index; let ri = $index) {
-            <span class="hr-l">{{ tempHours[ri] }}</span>
-            @for (v of row; track $index; let ci = $index) {
-              <div [class]="'temp-cell ' + tempTier(v)">
-                <div class="ttsmall">
-                  <div class="l1">{{ tempDays[ci] }} · {{ tempHours[ri] }} – {{ tempHours[(ri + 1) % 12] }}</div>
-                  <div class="l2">
-                    <span class="ico">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
-                    </span>
-                    {{ v }} incidente{{ v === 1 ? '' : 's' }}
-                  </div>
-                  @if (v >= 13) {
-                    <div class="l3">Pico da semana neste período</div>
-                  }
+      <div class="temporal">
+        <span class="corner"></span>
+        @for (d of tempDays; track $index) {
+          <span class="day-h">{{ d }}</span>
+        }
+        @for (row of matrizTemporal(); track $index; let ri = $index) {
+          <span class="hr-l">{{ tempHours[ri] }}</span>
+          @for (v of row; track $index; let ci = $index) {
+            <div [class]="'temp-cell ' + tempTier(v)">
+              <div class="ttsmall">
+                <div class="l1">{{ tempDays[ci] }} · {{ tempHours[ri] }} – {{ tempHours[(ri + 1) % 12] }}</div>
+                <div class="l2">
+                  <span class="ico">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+                  </span>
+                  {{ v }} incidente{{ v === 1 ? '' : 's' }}
                 </div>
+                @if (v > 0 && v === tempMax()) {
+                  <div class="l3">Pico da semana neste período</div>
+                }
               </div>
-            }
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Legend strip -->
+      <div class="lh-legend">
+        <span>Baixo</span>
+        <div class="swatches">
+          @for (t of ['h0','h1','h2','h3','h4']; track t) {
+            <span [class]="'sw temp-cell ' + t"></span>
           }
         </div>
-
-        <!-- Legend strip -->
-        <div class="lh-legend">
-          <span>Baixo</span>
-          <div class="swatches">
-            @for (t of ['h0','h1','h2','h3','h4']; track t) {
-              <span [class]="'sw temp-cell ' + t"></span>
-            }
-          </div>
-          <span>Alto</span>
-        </div>
+        <span>Alto</span>
       </div>
     </div>
 
@@ -198,6 +196,8 @@
         <div class="annual-grid">
           @for (cell of celulasAno(); track cell.dia) {
             <div [class]="'acell ' + annualTier(cell.incidentes) + (estaEsmaecido(cell.dia) ? ' dimmed' : '')"
+                 [style.grid-row]="cell.diaSemana + 1"
+                 [style.grid-column]="cell.semana + 1"
                  [title]="cell.dia + ' · ' + cell.incidentes + ' incidente' + (cell.incidentes === 1 ? '' : 's')">
             </div>
           }

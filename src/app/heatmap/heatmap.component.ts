@@ -149,6 +149,19 @@ export class HeatmapComponent implements OnInit, OnDestroy {
     return matriz;
   });
 
+  /**
+   * Maior valor em matrizTemporal(), usado para destacar o pico real (em vez
+   * do "quarta-feira sempre pica" da matriz fabricada). 0 quando o máximo não
+   * é único — com dado real esparso, empatar o topo em várias células tornaria
+   * o rótulo "Pico da semana" enganoso ao aparecer em várias delas.
+   */
+  readonly tempMax = computed(() => {
+    const valores = this.matrizTemporal().flat();
+    const max = valores.reduce((m, v) => Math.max(m, v), 0);
+    if (max === 0) return 0;
+    return valores.filter(v => v === max).length === 1 ? max : 0;
+  });
+
   readonly celulasAno = computed(() =>
     celulasAnuais(this.incidentService.summary()?.historicoAnual ?? []));
 
@@ -249,6 +262,10 @@ export class HeatmapComponent implements OnInit, OnDestroy {
     return `calc(${indiceSemanaDoMes} * (100% / ${this.totalSemanasNoAno()}))`;
   }
 
+  // Limiares herdados da matriz fabricada (escala 0-14) removida nesta correção
+  // de branch. Não recalibrados aqui de propósito — decidir a escala real de
+  // incidentes é escopo de produto, não desta correção. Revisar quando houver
+  // volume real de demonstração.
   tempTier(n: number): string {
     if (n === 0) return 'h0'; if (n <= 3) return 'h1';
     if (n <= 7) return 'h2'; if (n <= 12) return 'h3';

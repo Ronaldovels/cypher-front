@@ -174,6 +174,32 @@ describe('HeatmapComponent', () => {
     expect(selos.length).toBe(0);
   });
 
+  it('não sobra nenhum wrapper de opacidade de dado de exemplo (Temporal já usa dado real)', () => {
+    const fixture = montarCom([]);
+    const wrappers = fixture.nativeElement.querySelectorAll('.sample-content');
+
+    expect(wrappers.length).toBe(0);
+  });
+
+  it('a grade anual posiciona cada célula pelo offset calculado (diaSemana/semana), não pela ordem do DOM', () => {
+    const fixture = TestBed.createComponent(HeatmapComponent);
+    fixture.detectChanges();
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [], ultimosSeteDias: [],
+      // 2026-01-01 é quinta-feira -> diaSemana ISO (0=Seg) = 3.
+      historicoAnual: [{ dia: '2026-01-01', incidentes: 1 }, { dia: '2026-01-02', incidentes: 0 }],
+    });
+    fixture.detectChanges();
+
+    const primeiraCelula = fixture.componentInstance.celulasAno()[0];
+    expect(primeiraCelula.diaSemana).toBe(3);
+
+    const acell = fixture.nativeElement.querySelector('.annual-grid .acell') as HTMLElement;
+    expect(acell.style.gridRow).toBe(`${primeiraCelula.diaSemana + 1}`);
+    expect(acell.style.gridColumn).toBe(`${primeiraCelula.semana + 1}`);
+  });
+
   it('celulasAno reflete o historicoAnual real', () => {
     const fixture = TestBed.createComponent(HeatmapComponent);
     fixture.detectChanges();

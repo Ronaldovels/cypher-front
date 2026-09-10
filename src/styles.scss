@@ -657,7 +657,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .temporal { display:grid; grid-template-columns:38px repeat(7,1fr); gap:4px; font-variant-numeric:tabular-nums; }
 .temporal .corner { /* empty */ }
 .temporal .day-h { font-family:var(--mono); font-size:10px; letter-spacing:0.08em; color:var(--ink-ghost); text-align:center; padding-bottom:4px; }
-.temporal .day-h.peak { color:var(--accent); font-weight:700; }
 .temporal .hr-l { font-family:var(--mono); font-size:10px; color:var(--ink-ghost); letter-spacing:0.04em; text-align:right; align-self:center; padding-right:6px; }
 .temp-cell { position:relative; height:30px; border-radius:6px; cursor:pointer; border:1px solid transparent; transition:all .14s ease; }
 .temp-cell:hover { transform:scale(1.06); z-index:3; border-color:rgba(255,255,255,0.4); }
@@ -729,7 +728,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
    confundir dado de exemplo com dado real, entao ele nao pode ser o texto menos
    legivel da tela. Com --ink-2 sao 9.15:1 no escuro e 11.39:1 no claro. */
 .sample-seal { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-2); border:1px dashed var(--line-3); border-radius:999px; padding:4px 12px; }
-.sample-content { opacity:0.55; }
 
 /* Heatmap responsive */
 .theme-light .temp-cell.h0 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
