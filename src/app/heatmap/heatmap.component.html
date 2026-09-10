@@ -23,10 +23,20 @@
     </a>
     <div class="fb-sep"></div>
     <span class="fb-label">Setor</span>
-    <select class="fb-select"><option>Setor A</option><option>Setor B</option><option>Setor C</option></select>
+    <select class="fb-select" [(ngModel)]="setor" name="heatmapSetor" (ngModelChange)="setSetor($event)">
+      <option value="">Todos os setores</option>
+      @for (s of setoresDisponiveis(); track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
     <div class="fb-sep"></div>
     <span class="fb-label">EPI</span>
-    <select class="fb-select"><option>Todos os EPIs</option><option>Capacete</option><option>Óculos</option><option>Luvas</option></select>
+    <select class="fb-select" [(ngModel)]="epi" name="heatmapEpi" (ngModelChange)="setEpi($event)">
+      <option value="">Todos os EPIs</option>
+      @for (e of episDisponiveis; track e.key) {
+        <option [value]="e.key">{{ e.name }}</option>
+      }
+    </select>
     <div class="fb-sep"></div>
     <span class="fb-label">Turno</span>
     <div class="fb-group">
@@ -51,8 +61,10 @@
           <div class="hch-sub">Intensidade de incidentes por estação</div>
         </div>
         <div class="hch-r">
-          <select class="fb-select">
-            <option>Ordenar: ranking</option><option>Ordenar: nome</option><option>Ordenar: zona</option>
+          <select class="fb-select" [(ngModel)]="ordenar" name="ordenar" (ngModelChange)="setOrdenar($event)">
+            <option value="ranking">Ordenar: ranking</option>
+            <option value="nome">Ordenar: nome</option>
+            <option value="zona">Ordenar: zona</option>
           </select>
         </div>
       </div>
@@ -68,7 +80,7 @@
       <!-- Zones: agrupadas por setor (StationCell.setor); "sem setor" é o grupo residual -->
       @if (celulas().length === 0) {
         <div class="vazio">nenhuma estação cadastrada</div>
-      } @else {
+      } @else if (ordenar() === 'zona') {
         <div class="spatial-zones">
           @for (g of grupos(); track g.setor) {
             <div class="zone">
@@ -83,6 +95,17 @@
                   </div>
                 }
               </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="zone-grid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr))">
+          @for (c of celulasOrdenadas(); track c.estacaoId) {
+            <div [class]="'heat-tile ' + classeDe(c.incidentes)"
+                 role="button" [attr.aria-label]="c.estacaoId + ' · ' + c.nome + ': ' + c.incidentes + ' incidentes'"
+                 [title]="c.nome + ' · ' + (c.setor || 'sem setor')">
+              <span class="tid">{{ c.estacaoId }} · {{ c.nome }}</span>
+              <span class="tst">{{ rotuloIntensidade(c.incidentes) }}</span>
             </div>
           }
         </div>
@@ -104,47 +127,52 @@
       </div>
     </div>
 
-    <!-- ─── TEMPORAL HEATMAP (dado de exemplo — sem endpoint em E1) ─── -->
+    <!-- ─── TEMPORAL HEATMAP (dado real — distribuicaoTemporal) ─── -->
     <div class="hp-card">
       <div class="hc-head">
         <div class="hch-l">
           <div class="hch-title">Distribuição Temporal · Incidentes por Horário</div>
           <div class="hch-sub">Dia da semana × faixa horária</div>
         </div>
-        <div class="hch-r">
-          <span class="sample-seal">dado de exemplo</span>
-        </div>
       </div>
 
-      <div class="sample-content">
-        <div class="temporal">
-          <span class="corner"></span>
-          @for (d of tempDays; track $index; let i = $index) {
-            <span [class]="'day-h' + (i === 2 ? ' peak' : '')">{{ d }}</span>
-          }
-          @for (row of tempMatrix; track $index; let ri = $index) {
-            <span class="hr-l">{{ tempHours[ri] }}</span>
-            @for (v of row; track $index; let ci = $index) {
-              <div [class]="'temp-cell ' + tempTier(v)">
-                <div class="ttsmall">
-                  <div class="l1">{{ tempDays[ci] }} · {{ tempHours[ri] }} – {{ tempHours[(ri + 1) % 12] }}</div>
-                  <div class="l2">
-                    <span class="ico">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
-                    </span>
-                    {{ v }} incidente{{ v === 1 ? '' : 's' }}
-                  </div>
-                  @if (v >= 13) {
-                    <div class="l3">Pico da semana neste período</div>
-                  }
+      <div class="temporal">
+        <span class="corner"></span>
+        @for (d of tempDays; track $index) {
+          <span class="day-h">{{ d }}</span>
+        }
+        @for (row of matrizTemporal(); track $index; let ri = $index) {
+          <span class="hr-l">{{ tempHours[ri] }}</span>
+          @for (v of row; track $index; let ci = $index) {
+            <div [class]="'temp-cell ' + tempTier(v)">
+              <div class="ttsmall">
+                <div class="l1">{{ tempDays[ci] }} · {{ tempHours[ri] }} – {{ tempHours[(ri + 1) % 12] }}</div>
+                <div class="l2">
+                  <span class="ico">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+                  </span>
+                  {{ v }} incidente{{ v === 1 ? '' : 's' }}
                 </div>
+                @if (v > 0 && v === tempMax()) {
+                  <div class="l3">Pico da semana neste período</div>
+                }
               </div>
-            }
+            </div>
           }
-        </div>
+        }
+      </div>
 
-        <!-- Legend strip -->
-        <div class="lh-legend">
+      <!-- Rodapé: pico real (dia/faixa) + legenda de intensidade -->
+      <div class="temp-foot">
+        @if (picoTemporal(); as pico) {
+          <span class="temp-insight">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+            Pico: {{ pico.dia }} · {{ pico.faixa }} — {{ pico.valor }} incidente{{ pico.valor === 1 ? '' : 's' }}
+          </span>
+        } @else {
+          <span class="temp-insight quiet">Sem concentração dominante no período</span>
+        }
+        <span class="lh-legend">
           <span>Baixo</span>
           <div class="swatches">
             @for (t of ['h0','h1','h2','h3','h4']; track t) {
@@ -152,54 +180,65 @@
             }
           </div>
           <span>Alto</span>
-        </div>
+        </span>
       </div>
     </div>
 
-    <!-- ─── ANNUAL HEATMAP (dado de exemplo — sem endpoint em E1) ─── -->
+    <!-- ─── HISTÓRICO ANUAL (dado real — historicoAnual, somado em mês × dia da semana:
+         mesmo desenho do card Temporal ao lado, só trocando "hora" por "mês") ─── -->
     <div class="hp-card annual">
-      <div class="hc-head annual-head">
+      <div class="hc-head">
         <div class="hch-l">
           <div class="hch-title">Histórico Anual de Incidentes</div>
-          <div class="hch-sub">Setor A · Jan–Dez 2025 · {{ annualTotal }} incidentes registrados</div>
-        </div>
-        <div class="ah-r">
-          <span class="sample-seal">dado de exemplo</span>
+          <div class="hch-sub">Mês × dia da semana</div>
         </div>
       </div>
 
-      <div class="sample-content">
-        <div class="annual-wrap">
-          <div class="annual-days">
-            <span>Seg</span><span></span>
-            <span>Qua</span><span></span>
-            <span>Sex</span><span></span><span></span>
-          </div>
-          <div class="annual-months">
-            @for (m of months; track $index; let i = $index) {
-              <span class="mlbl" [style.left]="monthLeft(i)">{{ m }}</span>
-            }
-          </div>
-          <div class="annual-grid">
-            @for (cell of annualCells; track $index) {
-              <div [class]="'acell ' + annualTier(cell.v) + (cell.peak ? ' peak' : '')"
-                   [title]="annualCellTitle(cell)">
+      <div class="temporal">
+        <span class="corner"></span>
+        @for (d of tempDays; track $index) {
+          <span class="day-h">{{ d }}</span>
+        }
+        @for (row of matrizAnual(); track $index; let ri = $index) {
+          <span class="hr-l">{{ months[ri] }}</span>
+          @for (v of row; track $index; let ci = $index) {
+            <div [class]="'temp-cell ' + annualTier(v)">
+              <div class="ttsmall">
+                <div class="l1">{{ months[ri] }} · {{ tempDays[ci] }}</div>
+                <div class="l2">
+                  <span class="ico">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+                  </span>
+                  {{ v }} incidente{{ v === 1 ? '' : 's' }}
+                </div>
+                @if (v > 0 && v === annualMax()) {
+                  <div class="l3">Pico do ano</div>
+                }
               </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Rodapé: pico real (mês/dia) + legenda de intensidade -->
+      <div class="temp-foot">
+        @if (picoAnual(); as pico) {
+          <span class="temp-insight">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+            Pico: {{ pico.mes }} · {{ pico.dia }} — {{ pico.valor }} incidente{{ pico.valor === 1 ? '' : 's' }}
+          </span>
+        } @else {
+          <span class="temp-insight quiet">Sem concentração dominante no ano</span>
+        }
+        <span class="lh-legend">
+          <span>Baixo</span>
+          <div class="swatches">
+            @for (t of ['h0','h1','h2','h3','h4']; track t) {
+              <span [class]="'sw temp-cell ' + t"></span>
             }
           </div>
-        </div>
-
-        <div class="annual-foot">
-          <span class="lg">
-            Menos
-            <span class="acell a0"></span>
-            <span class="acell a1"></span>
-            <span class="acell a2"></span>
-            <span class="acell a3"></span>
-            <span class="acell a4"></span>
-            Mais
-          </span>
-        </div>
+          <span>Alto</span>
+        </span>
       </div>
     </div>
   </main>

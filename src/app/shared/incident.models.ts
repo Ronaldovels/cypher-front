@@ -154,6 +154,23 @@ export interface Summary {
   pendentes: number;
   heatmap: StationCell[];
   ultimosSeteDias: DayCount[];
+  distribuicaoTemporal: TemporalCell[] | null;
+  historicoAnual: DayCount[] | null;
+}
+
+export interface TemporalCell {
+  diaSemana: number;
+  faixa2h: number;
+  incidentes: number;
+}
+
+export interface SummaryFiltros {
+  since?: string;
+  until?: string;
+  turno?: string;
+  setor?: string;
+  epi?: string;
+  detalhado?: boolean;
 }
 
 export type ConnectionState = 'conectando' | 'ao vivo' | 'offline';

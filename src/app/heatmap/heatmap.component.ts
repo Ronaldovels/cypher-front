@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 import { environment } from '../../environments/environment';
 import { AuthService } from '../shared/auth/auth.service';
@@ -8,31 +9,13 @@ import { ConfigService } from '../shared/config.service';
 import { ConnectionBadgeComponent } from '../shared/connection-badge/connection-badge.component';
 import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
-import { StationCell, severityClass } from '../shared/incident.models';
+import { StationCell, SummaryFiltros, severityClass } from '../shared/incident.models';
+import { EPI_LIST } from '../onboarding/models/onboarding.models';
 
-// ─── DADOS DE EXEMPLO ──────────────────────────────────
-// A matriz temporal (dia × hora) e o histórico anual não têm endpoint em E1
-// (spec do parceiro humano). Ficam com dado fabricado, mas rotulados em tela
-// com o selo "dado de exemplo" e opacidade reduzida — não removidos.
 export const TEMP_HOURS = ['12AM', '2AM', '4AM', '6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
 export const TEMP_DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-export const TEMP_MATRIX = [
-  [2, 1, 8, 2, 3, 0, 0],
-  [3, 2, 5, 1, 2, 0, 0],
-  [1, 0, 3, 1, 1, 0, 0],
-  [0, 1, 2, 0, 0, 0, 0],
-  [4, 3, 9, 3, 5, 1, 0],
-  [3, 2, 7, 2, 4, 1, 0],
-  [2, 3, 5, 2, 3, 0, 0],
-  [3, 2, 6, 3, 4, 1, 0],
-  [2, 1, 4, 1, 3, 0, 0],
-  [1, 1, 3, 1, 2, 0, 0],
-  [2, 1, 5, 2, 3, 0, 0],
-  [3, 2, 14, 2, 4, 0, 0],
-];
 
 export const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-export const MONTH_STARTS = [0, 5, 9, 13, 17, 22, 26, 31, 35, 40, 44, 48];
 
 /**
  * Mapeia o chip de período (decorativo até esta entrega) para o `since` da
@@ -54,29 +37,26 @@ export function inicioDoPeriodo(period: string, agora: Date): Date | null {
   }
 }
 
-function buildAnnual(): { w: number; d: number; v: number; peak: boolean }[] {
-  const weekBase = (w: number): number => {
-    if (w === 11) return 9;
-    if (w >= 8 && w <= 13) return 5;
-    if (w >= 0 && w <= 7) return 4;
-    if (w >= 14 && w <= 24) return 1.6;
-    if (w >= 25 && w <= 34) return 5;
-    if (w >= 35 && w <= 43) return 3;
-    return 1;
-  };
-  const cells: { w: number; d: number; v: number; peak: boolean }[] = [];
-  let seed = 7;
-  const rng = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-  for (let w = 0; w < 52; w++) {
-    for (let d = 0; d < 7; d++) {
-      const dayMul = (d === 5 || d === 6) ? 0.35 : 1;
-      const wedBoost = d === 2 ? 1.4 : 1;
-      const raw = weekBase(w) * dayMul * wedBoost * (0.5 + rng());
-      const v = Math.round(Math.max(0, raw));
-      cells.push({ w, d, v, peak: w === 11 && v > 6 });
-    }
+/**
+ * Soma `historicoAnual` (uma linha por dia do ano) numa matriz mês × dia da
+ * semana — mesmo formato de agregação de `matrizTemporal` (dia da semana ×
+ * faixa horária), só que no grão do ano inteiro em vez da semana. Todas as
+ * segundas de março somam na mesma célula `[2][0]`, independente de qual
+ * segunda do mês cada incidente aconteceu. Essa é a segunda versão da grade
+ * Anual: a primeira (calendário estilo GitHub, uma célula por dia) media a
+ * segmentação por mês em blocos separados, mas isso deixava a tela com um
+ * padrão visual diferente do card Temporal ao lado — esta versão adota
+ * exatamente o mesmo desenho (mesma grade 12×7, mesmos eixos completos,
+ * mesmo rodapé de pico+legenda), trocando "hora" por "mês" no eixo.
+ */
+export function matrizAnualPorMes(historico: { dia: string; incidentes: number }[]): number[][] {
+  const matriz: number[][] = Array.from({ length: 12 }, () => Array(7).fill(0));
+  for (const d of historico) {
+    const data = new Date(d.dia + 'T00:00:00');
+    const diaSemana = (data.getDay() + 6) % 7; // Date.getDay(): 0=Dom..6=Sab -> 0=Seg..6=Dom
+    matriz[data.getMonth()][diaSemana] += d.incidentes;
   }
-  return cells;
+  return matriz;
 }
 
 /** Grupo de células do heatmap real, por setor (StationCell.setor). */
@@ -87,7 +67,7 @@ interface GrupoSetor {
 
 @Component({
   selector: 'app-heatmap',
-  imports: [ChromeTopbarComponent, DockComponent, ConnectionBadgeComponent],
+  imports: [ChromeTopbarComponent, DockComponent, ConnectionBadgeComponent, FormsModule],
   templateUrl: './heatmap.component.html',
 })
 export class HeatmapComponent implements OnInit, OnDestroy {
@@ -99,23 +79,99 @@ export class HeatmapComponent implements OnInit, OnDestroy {
 
   cfg = this.cfgService.config;
 
-  // ─── Dado de exemplo (painéis rotulados, ver constantes acima) ───
+  // ─── Rótulos dos eixos (painéis Temporal e Anual usam dado real) ───
   tempHours = TEMP_HOURS;
   tempDays = TEMP_DAYS;
-  tempMatrix = TEMP_MATRIX;
   months = MONTHS;
-  monthStarts = MONTH_STARTS;
-  annualCells = buildAnnual();
-  annualTotal = this.annualCells.reduce((a, c) => a + c.v, 0);
 
   period = signal('7d');
   shift = signal('all');
+  readonly setor = signal('');
+  readonly epi = signal('');
+  readonly ordenar = signal<'ranking' | 'nome' | 'zona'>('zona');
+
+  private readonly filtrosAtuais = computed((): SummaryFiltros => {
+    const filtros: SummaryFiltros = { detalhado: true };
+    const inicio = inicioDoPeriodo(this.period(), new Date());
+    if (inicio) filtros.since = inicio.toISOString();
+    if (this.shift() !== 'all') filtros.turno = this.shift();
+    if (this.setor()) filtros.setor = this.setor();
+    if (this.epi()) filtros.epi = this.epi();
+    return filtros;
+  });
+
+  private recarregarSummary(): void {
+    this.incidentService.loadSummary(this.filtrosAtuais());
+  }
 
   /**
    * A célula do heatmap é a estação: ela agrega os incidentes de todas as
    * câmeras que a cobrem (spec §6.5).
    */
   readonly celulas = computed(() => this.incidentService.summary()?.heatmap ?? []);
+
+  /** distribuicaoTemporal (lista de células) → matriz [faixa2h][diaSemana], mesmo formato que o template já espera. */
+  readonly matrizTemporal = computed<number[][]>(() => {
+    const celulas = this.incidentService.summary()?.distribuicaoTemporal ?? [];
+    const matriz: number[][] = Array.from({ length: 12 }, () => Array(7).fill(0));
+    for (const c of celulas) {
+      matriz[c.faixa2h][c.diaSemana] = c.incidentes;
+    }
+    return matriz;
+  });
+
+  /**
+   * Maior valor em matrizTemporal(), usado para destacar o pico real (em vez
+   * do "quarta-feira sempre pica" da matriz fabricada). 0 quando o máximo não
+   * é único — com dado real esparso, empatar o topo em várias células tornaria
+   * o rótulo "Pico da semana" enganoso ao aparecer em várias delas.
+   */
+  readonly tempMax = computed(() => {
+    const valores = this.matrizTemporal().flat();
+    const max = valores.reduce((m, v) => Math.max(m, v), 0);
+    if (max === 0) return 0;
+    return valores.filter(v => v === max).length === 1 ? max : 0;
+  });
+
+  /** Dia/faixa do pico real, para a barra de insight abaixo da grade Temporal. `null` sem pico único (matriz vazia ou empate). */
+  readonly picoTemporal = computed<{ dia: string; faixa: string; valor: number } | null>(() => {
+    const max = this.tempMax();
+    if (max === 0) return null;
+    const matriz = this.matrizTemporal();
+    for (let faixa2h = 0; faixa2h < matriz.length; faixa2h++) {
+      const diaSemana = matriz[faixa2h].indexOf(max);
+      if (diaSemana !== -1) {
+        return { dia: TEMP_DAYS[diaSemana], faixa: `${TEMP_HOURS[faixa2h]}–${TEMP_HOURS[(faixa2h + 1) % 12]}`, valor: max };
+      }
+    }
+    return null;
+  });
+
+  /** historicoAnual (lista de dias) → matriz [mês][diaSemana], mesma forma de matrizTemporal. */
+  readonly matrizAnual = computed<number[][]>(() =>
+    matrizAnualPorMes(this.incidentService.summary()?.historicoAnual ?? []));
+
+  /** Maior valor em matrizAnual(), mesmo critério de tempMax (0 se o máximo empatar). */
+  readonly annualMax = computed(() => {
+    const valores = this.matrizAnual().flat();
+    const max = valores.reduce((m, v) => Math.max(m, v), 0);
+    if (max === 0) return 0;
+    return valores.filter(v => v === max).length === 1 ? max : 0;
+  });
+
+  /** Mês/dia da semana do pico real, para a barra de insight abaixo da grade Anual. */
+  readonly picoAnual = computed<{ mes: string; dia: string; valor: number } | null>(() => {
+    const max = this.annualMax();
+    if (max === 0) return null;
+    const matriz = this.matrizAnual();
+    for (let mes = 0; mes < matriz.length; mes++) {
+      const diaSemana = matriz[mes].indexOf(max);
+      if (diaSemana !== -1) {
+        return { mes: MONTHS[mes], dia: TEMP_DAYS[diaSemana], valor: max };
+      }
+    }
+    return null;
+  });
 
   /**
    * Agrupamento por setor, só para organizar a grade visualmente — a API não
@@ -130,7 +186,18 @@ export class HeatmapComponent implements OnInit, OnDestroy {
       lista.push(celula);
       porSetor.set(chave, lista);
     }
-    return Array.from(porSetor.entries()).map(([setor, celulas]) => ({ setor, celulas }));
+    return Array.from(porSetor.entries())
+      .map(([setor, celulas]) => ({ setor, celulas }))
+      .sort((a, b) => a.setor.localeCompare(b.setor));
+  });
+
+  /** Lista plana (sem agrupar por setor), usada quando ordenar() !== 'zona'. */
+  readonly celulasOrdenadas = computed(() => {
+    const modo = this.ordenar();
+    const copia = [...this.celulas()];
+    if (modo === 'ranking') return copia.sort((a, b) => b.incidentes - a.incidentes);
+    if (modo === 'nome') return copia.sort((a, b) => a.nome.localeCompare(b.nome));
+    return copia;
   });
 
   /** Top 5 estações por concentração de incidentes, derivado das células reais. */
@@ -139,17 +206,32 @@ export class HeatmapComponent implements OnInit, OnDestroy {
 
   readonly top5Max = computed(() => this.top5()[0]?.incidentes || 1);
 
+  /** Setores distintos das estações cadastradas, para popular o <select> — nunca mais "Setor A/B/C" fixo. */
+  readonly setoresDisponiveis = computed(() => {
+    const setores = new Set<string>();
+    for (const s of this.catalogService.stations()) {
+      if (s.setor) setores.add(s.setor);
+    }
+    return Array.from(setores).sort();
+  });
+
+  /** Só os 4 EPIs que o backend sabe filtrar (spec §1.4) — os outros 4 de EPI_LIST ficam de fora até o cypher-capture detectar essas violações. */
+  readonly episDisponiveis = EPI_LIST.filter(e => ['capacete', 'oculos', 'luvas', 'botas'].includes(e.key));
+
   readonly urlResumoPdf = computed(() => {
-    const inicio = inicioDoPeriodo(this.period(), new Date());
+    const filtros = this.filtrosAtuais();
     const params = new URLSearchParams();
-    if (inicio) params.set('since', inicio.toISOString());
+    if (filtros.since) params.set('since', filtros.since);
+    if (filtros.turno) params.set('turno', filtros.turno);
+    if (filtros.setor) params.set('setor', filtros.setor);
+    if (filtros.epi) params.set('epi', filtros.epi);
     const query = params.toString();
     return `${environment.apiUrl}/reports/summary.pdf${query ? '?' + query : ''}`;
   });
 
   ngOnInit(): void {
     this.catalogService.load();
-    this.incidentService.loadSummary();
+    this.incidentService.loadSummary(this.filtrosAtuais());
     this.incidentService.connect();
   }
 
@@ -166,22 +248,28 @@ export class HeatmapComponent implements OnInit, OnDestroy {
     return incidentes === 0 ? 'ok' : `${incidentes} inf`;
   }
 
-  setPeriod(p: string) { this.period.set(p); }
-  setShift(s: string) { this.shift.set(s); }
+  setPeriod(p: string) { this.period.set(p); this.recarregarSummary(); }
+  setShift(s: string) { this.shift.set(s); this.recarregarSummary(); }
+  setSetor(s: string) { this.setor.set(s); this.recarregarSummary(); }
+  setEpi(e: string) { this.epi.set(e); this.recarregarSummary(); }
+  setOrdenar(o: 'ranking' | 'nome' | 'zona') { this.ordenar.set(o); }
 
-  monthLeft(i: number): string { return `calc(${this.monthStarts[i]} * (100% / 52))`; }
-
+  // Limiares herdados da matriz fabricada (escala 0-14) removida nesta correção
+  // de branch. Não recalibrados aqui de propósito — decidir a escala real de
+  // incidentes é escopo de produto, não desta correção. Revisar quando houver
+  // volume real de demonstração.
   tempTier(n: number): string {
     if (n === 0) return 'h0'; if (n <= 3) return 'h1';
     if (n <= 7) return 'h2'; if (n <= 12) return 'h3';
     return 'h4';
   }
+
+  // Escala maior que tempTier porque cada célula soma ~4-5 ocorrências (todas
+  // as segundas de um mês, por ex.) em vez de uma única faixa de 2h numa
+  // semana — mesmo aviso: não calibrado a volume real de demonstração.
   annualTier(n: number): string {
-    if (n === 0) return 'a0'; if (n <= 2) return 'a1';
-    if (n <= 5) return 'a2'; if (n <= 9) return 'a3';
-    return 'a4';
-  }
-  annualCellTitle(c: { w: number; d: number; v: number }): string {
-    return `Semana ${c.w + 1} · ${TEMP_DAYS[c.d] || ''} · ${c.v} incidente${c.v === 1 ? '' : 's'}`;
+    if (n === 0) return 'h0'; if (n <= 6) return 'h1';
+    if (n <= 14) return 'h2'; if (n <= 24) return 'h3';
+    return 'h4';
   }
 }

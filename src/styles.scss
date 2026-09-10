@@ -653,13 +653,16 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .rk-row.med  .bdg { background:rgba(61,136,246,0.14); color:#3D88F6; border:1px solid rgba(61,136,246,0.40); }
 .rk-row.crit .bdg::after { content:''; width:5px; height:5px; border-radius:50%; background:#EE4242; animation:dockPulse 1.6s ease-in-out infinite; }
 
-/* Temporal heatmap */
-.temporal { display:grid; grid-template-columns:38px repeat(7,1fr); gap:4px; font-variant-numeric:tabular-nums; }
+/* Temporal heatmap — flex:1 dentro do .hp-card (coluna flex) para preencher
+   a altura que sobrar quando o card vizinho (Planta Baixa) for mais alto,
+   em vez de ficar com uma faixa de espaço em branco abaixo de células de
+   altura fixa. */
+.temporal { display:grid; grid-template-columns:38px repeat(7,1fr); grid-template-rows:auto repeat(12,1fr); gap:4px; font-variant-numeric:tabular-nums; flex:1; min-height:0; }
 .temporal .corner { /* empty */ }
 .temporal .day-h { font-family:var(--mono); font-size:10px; letter-spacing:0.08em; color:var(--ink-ghost); text-align:center; padding-bottom:4px; }
-.temporal .day-h.peak { color:var(--accent); font-weight:700; }
 .temporal .hr-l { font-family:var(--mono); font-size:10px; color:var(--ink-ghost); letter-spacing:0.04em; text-align:right; align-self:center; padding-right:6px; }
-.temp-cell { position:relative; height:30px; border-radius:6px; cursor:pointer; border:1px solid transparent; transition:all .14s ease; }
+.temp-cell { position:relative; border-radius:6px; cursor:pointer; border:1px solid transparent; transition:all .14s ease; }
+.temporal .temp-cell { height:100%; min-height:22px; }
 .temp-cell:hover { transform:scale(1.06); z-index:3; border-color:rgba(255,255,255,0.4); }
 .theme-light .temp-cell:hover { border-color:rgba(20,20,25,0.45); }
 .temp-cell.h0 { background:color-mix(in srgb, var(--accent) 7%, transparent); }
@@ -675,7 +678,11 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .ttsmall .l2 { font-size:11px; color:var(--ink-2); display:flex; align-items:center; gap:6px; }
 .ttsmall .l2 .ico { color:var(--accent); display:flex; }
 .ttsmall .l3 { font-family:var(--mono); font-size:10px; color:var(--accent); margin-top:4px; letter-spacing:0.02em; }
-.lh-legend { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; font-family:var(--mono); font-size:10px; color:var(--ink-ghost); letter-spacing:0.08em; }
+.temp-foot { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:14px; }
+.temp-insight { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; color:var(--ink-2); letter-spacing:0.02em; }
+.temp-insight svg { color:var(--accent); flex-shrink:0; }
+.temp-insight.quiet { color:var(--ink-ghost); }
+.lh-legend { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; color:var(--ink-ghost); letter-spacing:0.08em; }
 .lh-legend .swatches { display:flex; gap:3px; }
 .lh-legend .sw { width:14px; height:14px; border-radius:3px; }
 .temp-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:6px; }
@@ -690,29 +697,11 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .tkpi.ok   .tkpi-trend { color:#34D07E; }
 .tkpi.flat .tkpi-trend { color:var(--ink-mute); }
 
-/* Annual heatmap */
-.annual-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-.annual-head .ah-r { display:inline-flex; align-items:center; gap:8px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; padding:5px 12px; font-family:var(--mono); font-size:10px; color:var(--accent); letter-spacing:0.04em; }
-.annual-wrap { display:grid; grid-template-columns:28px 1fr; gap:6px; }
-.annual-months { grid-column:2; display:flex; font-family:var(--mono); font-size:9px; color:var(--ink-ghost); letter-spacing:0.08em; position:relative; height:14px; }
-.annual-months .mlbl { position:absolute; top:0; white-space:nowrap; }
-.annual-days { grid-column:1; display:grid; grid-template-rows:repeat(7,1fr); font-family:var(--mono); font-size:8px; color:var(--ink-ghost); letter-spacing:0.04em; text-align:right; padding-right:4px; padding-top:14px; }
-.annual-days span { display:flex; align-items:center; justify-content:flex-end; height:14px; }
-.annual-days span:nth-child(even) { visibility:hidden; }
-.annual-grid { grid-column:2; display:grid; grid-auto-flow:column; grid-template-rows:repeat(7,12px); gap:2.5px; }
-.acell { width:12px; height:12px; border-radius:2.5px; cursor:pointer; transition:transform .12s; }
-.acell:hover { transform:scale(1.5); z-index:2; }
-.acell.a0 { background:color-mix(in srgb, var(--accent) 7%, transparent); }
-.acell.a1 { background:color-mix(in srgb, var(--accent) 22%, transparent); }
-.acell.a2 { background:color-mix(in srgb, var(--accent) 45%, transparent); }
-.acell.a3 { background:color-mix(in srgb, var(--accent) 68%, transparent); }
-.acell.a4 { background:var(--accent); }
-.acell.peak { box-shadow:0 0 6px color-mix(in srgb, var(--accent) 50%, transparent); }
-.theme-light .acell.a0 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
-.annual-foot { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
-.annual-foot .l { font-family:var(--mono); font-size:10px; color:var(--ink-ghost); text-decoration:none; letter-spacing:0.02em; }
-.annual-foot .l:hover { color:var(--accent); }
-.annual-foot .lg { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:9px; color:var(--ink-ghost); letter-spacing:0.08em; }
+/* Annual heatmap — sem CSS própria: a grade Anual reaproveita .temporal/
+   .temp-cell/.temp-foot inteiras (mesmo desenho do card Temporal, eixo de
+   mês em vez de hora) em vez de um sistema de célula (.acell) e layout
+   (.annual-wrap/.annual-grid/.month-block) só seus, que destoava do resto
+   da tela. */
 
 /* Selo de "dado de exemplo" — painéis do heatmap sem endpoint possível em E1
    (matriz temporal e histórico anual). Só selo + opacidade, sem tipografia
@@ -722,7 +711,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
    confundir dado de exemplo com dado real, entao ele nao pode ser o texto menos
    legivel da tela. Com --ink-2 sao 9.15:1 no escuro e 11.39:1 no claro. */
 .sample-seal { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-2); border:1px dashed var(--line-3); border-radius:999px; padding:4px 12px; }
-.sample-content { opacity:0.55; }
 
 /* Heatmap responsive */
 .theme-light .temp-cell.h0 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
