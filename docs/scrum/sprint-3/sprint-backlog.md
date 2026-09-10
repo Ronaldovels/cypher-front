@@ -142,6 +142,16 @@ Cada repositório usa uma **branch local dedicada** (`feat/cn-backend-notificaco
 
 Nenhuma restante — todo o roteiro original (E1–E6) foi puxado e mergeado. Ver `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §2 para o histórico completo de ordem/priorização — a §3 (entregas planejadas) está vazia no momento. "Heatmap funcional" e "Central de notificações" (acima) também já foram mergeadas, ambas fora do roteiro original de 6 entregas.
 
+### Review com a SPI (2026-09-08) — 3 cards por repositório
+
+Achados de uma sessão de review com o time durante a visita da SPI na terça-feira (2026-09-08), registrados aqui em 2026-09-10. Nenhum destes itens tem spec ou plano de implementação ainda — são achados de review, não uma entrega especificada; cada card entra no Product Backlog e precisa de brainstorming (`superpowers:brainstorming`) antes de virar plano executável.
+
+| Card | Achados da review | Repositório | Status |
+|---|---|---|---|
+| SPI review — backend (`cypher`) | Rotação de câmera personalizável: falta campo `rotacao` na entidade `Camera` e no DTO de config (`CameraConfigClient`/`CameraConfig` hoje só carregam `codigo`/`nome`/`estacaoId`/`fonte`/`streamPort`/`ativa`) — pré-requisito para o `cypher-capture` aplicar a rotação por câmera em vez de via flag `--rotate` na CLI | `cypher` | 🗂️ Product Backlog |
+| SPI review — capture (`cypher-capture`) | (1) REBA com câmeras anguladas na diagonal — `extract_angles`/`trunk_flexion` (`src/pose/angles.py`) assume câmera com roll ≈ 0 (comentário explícito no código), sem correção de perspectiva; (2) respeitar zona na pipeline — hoje `ZoneDetector.check()` só alimenta o classificador de postura com um flag `in_zone`, mas `process_frame` roda pose/REBA/EPI pro frame inteiro, não restrito à zona configurada; (3) aplicar a rotação de câmera (ver card do `cypher`) usando a lógica já existente e testada em `apply_rotation()` (`src/utils/video.py`), hoje só acessível via flag `--rotate` da CLI, precisa ler do `CameraConfigClient` | `cypher-capture` | 🗂️ Product Backlog |
+| SPI review — front (`cypher-front`) | Cores binárias (verde/vermelho) para badges Ativo/Inativo em vez do `--accent` de onboarding (`.status.on` em `styles.scss:828`, hoje reaproveitado em estações/equipes/webhooks); remover o destaque de cor que lembra "gerado por IA" de cards e alertas (mesmo `--accent` em KPIs, `.ai-badge`, `.notif-row.unread`, etc.); segmentar câmeras por estação na tela "Ao Vivo" (`stations-grid`/`station-kiosk` já agrupam por estação no nível superior — validar com a SPI se o pedido é um refinamento dentro da tela ou algo além disso); repensar arquitetura de informação e layout dos filtros de incidentes (`incident-timeline.component.html`, hoje um formulário inline sem hierarquia visual); remover o link morto "Cadastrar" da dock (`dock.component.ts`, item `invite` sem rota); reconciliar inputs/selects soltos (ex: `.fb-select` do Heatmap) com os primitivos globais já existentes (`.field`/`.input`/`.select`) — mesma UI de rotação de câmera do card do `cypher-capture` | `cypher-front` | 🗂️ Product Backlog |
+
 ### Gestão ágil e protótipo (em andamento — objeto real desta Sprint)
 
 | Card | Descrição | Responsável | Status |
