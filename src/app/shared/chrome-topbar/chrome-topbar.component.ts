@@ -1,11 +1,13 @@
-import { Component, input, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { IncidentService } from '../incident.service';
+import { NotificationCenterComponent } from '../notification-center/notification-center.component';
 import { ThemeService } from '../theme.service';
 
 @Component({
   selector: 'app-chrome-topbar',
-  imports: [RouterLink],
+  imports: [RouterLink, NotificationCenterComponent],
   template: `
     <header class="dtop">
       @if (auth.role() === 'GESTOR') {
@@ -54,14 +56,17 @@ import { ThemeService } from '../theme.service';
       </div>
 
       <div class="tools">
-        <button class="icon-btn" aria-label="Notificações">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 16c0-7 1.5-10 6-10s6 3 6 10"/><path d="M4.5 16h15"/><path d="M10.5 19a1.5 1.5 0 0 0 3 0"/>
-          </svg>
-          @if (notifBadge() > 0) {
-            <span class="bdg">{{ notifBadge() }}</span>
-          }
-        </button>
+        @if (auth.role() === 'GESTOR') {
+          <button class="icon-btn" aria-label="Notificações" data-test="open-notifications"
+                  (click)="notifOpen.set(true)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 16c0-7 1.5-10 6-10s6 3 6 10"/><path d="M4.5 16h15"/><path d="M10.5 19a1.5 1.5 0 0 0 3 0"/>
+            </svg>
+            @if (notifBadge() > 0) {
+              <span class="bdg">{{ notifBadge() }}</span>
+            }
+          </button>
+        }
 
         <button class="icon-btn" data-test="theme-toggle"
                 [attr.aria-label]="temaEscuro() ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
@@ -99,6 +104,7 @@ import { ThemeService } from '../theme.service';
         </button>
       </div>
     </header>
+    <app-notification-center [open]="notifOpen()" (closed)="notifOpen.set(false)" />
   `,
 })
 export class ChromeTopbarComponent {
@@ -107,13 +113,24 @@ export class ChromeTopbarComponent {
   subtitle = input<string>('');
   shift  = input<string | null>(null);
   live   = input<boolean>(true);
-  notifBadge = input<number>(0);
 
   private themeService = inject(ThemeService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private incidentService = inject(IncidentService);
 
   readonly auth = this.authService;
+
+  notifOpen = signal(false);
+  notifBadge = computed(() => this.incidentService.naoLidas());
+
+  constructor() {
+    effect(() => {
+      if (this.auth.role() === 'GESTOR') {
+        this.incidentService.loadNaoLidas();
+      }
+    });
+  }
 
   temaEscuro = computed(() => this.themeService.theme() === 'dark');
 
