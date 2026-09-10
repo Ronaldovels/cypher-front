@@ -162,57 +162,82 @@
         }
       </div>
 
-      <!-- Legend strip -->
-      <div class="lh-legend">
-        <span>Baixo</span>
-        <div class="swatches">
-          @for (t of ['h0','h1','h2','h3','h4']; track t) {
-            <span [class]="'sw temp-cell ' + t"></span>
-          }
-        </div>
-        <span>Alto</span>
+      <!-- Rodapé: pico real (dia/faixa) + legenda de intensidade -->
+      <div class="temp-foot">
+        @if (picoTemporal(); as pico) {
+          <span class="temp-insight">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+            Pico: {{ pico.dia }} · {{ pico.faixa }} — {{ pico.valor }} incidente{{ pico.valor === 1 ? '' : 's' }}
+          </span>
+        } @else {
+          <span class="temp-insight quiet">Sem concentração dominante no período</span>
+        }
+        <span class="lh-legend">
+          <span>Baixo</span>
+          <div class="swatches">
+            @for (t of ['h0','h1','h2','h3','h4']; track t) {
+              <span [class]="'sw temp-cell ' + t"></span>
+            }
+          </div>
+          <span>Alto</span>
+        </span>
       </div>
     </div>
 
+    <!-- ─── HISTÓRICO ANUAL (dado real — historicoAnual, somado em mês × dia da semana:
+         mesmo desenho do card Temporal ao lado, só trocando "hora" por "mês") ─── -->
     <div class="hp-card annual">
-      <div class="hc-head annual-head">
+      <div class="hc-head">
         <div class="hch-l">
           <div class="hch-title">Histórico Anual de Incidentes</div>
-          <div class="hch-sub">Jan–Dez · {{ annualTotal() }} incidentes registrados</div>
+          <div class="hch-sub">Mês × dia da semana</div>
         </div>
       </div>
 
-      <div class="annual-wrap">
-        <div class="annual-days">
-          <span>Seg</span><span></span>
-          <span>Qua</span><span></span>
-          <span>Sex</span><span></span><span></span>
-        </div>
-        <div class="annual-months">
-          @for (inicioSemana of inicioDosMeses(); track $index; let i = $index) {
-            <span class="mlbl" [style.left]="monthLeft(inicioSemana)">{{ months[i] }}</span>
-          }
-        </div>
-        <div class="annual-grid">
-          @for (cell of celulasAno(); track cell.dia) {
-            <div [class]="'acell ' + annualTier(cell.incidentes) + (estaEsmaecido(cell.dia) ? ' dimmed' : '')"
-                 [style.grid-row]="cell.diaSemana + 1"
-                 [style.grid-column]="cell.semana + 1"
-                 [title]="cell.dia + ' · ' + cell.incidentes + ' incidente' + (cell.incidentes === 1 ? '' : 's')">
+      <div class="temporal">
+        <span class="corner"></span>
+        @for (d of tempDays; track $index) {
+          <span class="day-h">{{ d }}</span>
+        }
+        @for (row of matrizAnual(); track $index; let ri = $index) {
+          <span class="hr-l">{{ months[ri] }}</span>
+          @for (v of row; track $index; let ci = $index) {
+            <div [class]="'temp-cell ' + annualTier(v)">
+              <div class="ttsmall">
+                <div class="l1">{{ months[ri] }} · {{ tempDays[ci] }}</div>
+                <div class="l2">
+                  <span class="ico">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+                  </span>
+                  {{ v }} incidente{{ v === 1 ? '' : 's' }}
+                </div>
+                @if (v > 0 && v === annualMax()) {
+                  <div class="l3">Pico do ano</div>
+                }
+              </div>
             </div>
           }
-        </div>
+        }
       </div>
 
-      <div class="annual-foot">
-        <span class="lg">
-          Menos
-          <span class="acell a0"></span>
-          <span class="acell a1"></span>
-          <span class="acell a2"></span>
-          <span class="acell a3"></span>
-          <span class="acell a4"></span>
-          Mais
+      <!-- Rodapé: pico real (mês/dia) + legenda de intensidade -->
+      <div class="temp-foot">
+        @if (picoAnual(); as pico) {
+          <span class="temp-insight">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><path d="M12 10v4M12 17v0.5"/></svg>
+            Pico: {{ pico.mes }} · {{ pico.dia }} — {{ pico.valor }} incidente{{ pico.valor === 1 ? '' : 's' }}
+          </span>
+        } @else {
+          <span class="temp-insight quiet">Sem concentração dominante no ano</span>
+        }
+        <span class="lh-legend">
+          <span>Baixo</span>
+          <div class="swatches">
+            @for (t of ['h0','h1','h2','h3','h4']; track t) {
+              <span [class]="'sw temp-cell ' + t"></span>
+            }
+          </div>
+          <span>Alto</span>
         </span>
       </div>
     </div>

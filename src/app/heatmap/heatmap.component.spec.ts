@@ -8,50 +8,34 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from '../shared/event-source.factory';
 import { USE_MOCK_DATA } from '../shared/mock/use-mock-data.token';
-import { celulasAnuais, dentroDoPeriodo, HeatmapComponent, inicioDoPeriodo } from './heatmap.component';
+import { HeatmapComponent, inicioDoPeriodo, matrizAnualPorMes } from './heatmap.component';
 
 const SSE_INERTE: EventSourceLike = {
   addEventListener: () => { }, close: () => { }, onopen: null, onerror: null,
 };
 
-describe('celulasAnuais', () => {
-  it('alinha o primeiro dia do ano na linha certa da semana e incrementa semana a cada 7', () => {
-    // 2026-01-01 é uma quinta-feira -> diaSemana ISO (0=Seg) = 3.
+describe('matrizAnualPorMes', () => {
+  it('soma incidentes de dias do mesmo mes e dia da semana na mesma celula', () => {
+    // 2026-03-02 e 2026-03-09 sao as duas primeiras segundas de marco.
     const historico = [
-      { dia: '2026-01-01', incidentes: 1 },
-      { dia: '2026-01-02', incidentes: 0 },
-      { dia: '2026-01-03', incidentes: 2 },
-      { dia: '2026-01-04', incidentes: 0 },
+      { dia: '2026-03-02', incidentes: 2 }, // segunda
+      { dia: '2026-03-09', incidentes: 3 }, // segunda seguinte, mesmo mes
+      { dia: '2026-03-04', incidentes: 1 }, // quarta, nao soma na mesma celula
+      { dia: '2026-04-06', incidentes: 5 }, // segunda de abril, mes diferente
     ];
-    const celulas = celulasAnuais(historico);
 
-    expect(celulas[0]).toEqual({ dia: '2026-01-01', incidentes: 1, semana: 0, diaSemana: 3 });
-    expect(celulas[3]).toEqual({ dia: '2026-01-04', incidentes: 0, semana: 0, diaSemana: 6 });
+    const matriz = matrizAnualPorMes(historico);
+
+    expect(matriz[2][0]).toBe(5); // marco (indice 2) x segunda (indice 0) = 2+3
+    expect(matriz[2][2]).toBe(1); // marco x quarta
+    expect(matriz[3][0]).toBe(5); // abril x segunda
+    expect(matriz.length).toBe(12);
+    expect(matriz[0].length).toBe(7);
   });
 
-  it('semana incrementa ao cruzar o setimo slot', () => {
-    // com offset 3 (quinta), o slot 4 (indice) cai na semana 1.
-    const historico = Array.from({ length: 6 }, (_, i) => ({ dia: `2026-01-0${i + 1}`, incidentes: 0 }));
-    const celulas = celulasAnuais(historico);
-
-    expect(celulas[3].semana).toBe(0); // posicao 3+3=6 -> semana 0 ainda (0..6)
-    expect(celulas[4].semana).toBe(1); // posicao 4+3=7 -> semana 1
-  });
-});
-
-describe('dentroDoPeriodo', () => {
-  const agora = new Date('2026-09-08T15:00:00.000Z');
-
-  it('dia dentro dos ultimos 7 dias retorna true para period=7d', () => {
-    expect(dentroDoPeriodo('2026-09-05', '7d', agora)).toBe(true);
-  });
-
-  it('dia fora dos ultimos 7 dias retorna false para period=7d', () => {
-    expect(dentroDoPeriodo('2026-08-01', '7d', agora)).toBe(false);
-  });
-
-  it('period=custom nunca esmaece nada (sem intervalo por tras) — sempre true', () => {
-    expect(dentroDoPeriodo('2020-01-01', 'custom', agora)).toBe(true);
+  it('historico vazio devolve matriz 12x7 zerada', () => {
+    const matriz = matrizAnualPorMes([]);
+    expect(matriz.every(linha => linha.every(v => v === 0))).toBe(true);
   });
 });
 
@@ -181,38 +165,45 @@ describe('HeatmapComponent', () => {
     expect(wrappers.length).toBe(0);
   });
 
-  it('a grade anual posiciona cada célula pelo offset calculado (diaSemana/semana), não pela ordem do DOM', () => {
-    const fixture = TestBed.createComponent(HeatmapComponent);
-    fixture.detectChanges();
-    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
-      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
-      heatmap: [], ultimosSeteDias: [],
-      // 2026-01-01 é quinta-feira -> diaSemana ISO (0=Seg) = 3.
-      historicoAnual: [{ dia: '2026-01-01', incidentes: 1 }, { dia: '2026-01-02', incidentes: 0 }],
-    });
-    fixture.detectChanges();
+  it('a grade anual reaproveita o mesmo desenho do card Temporal (mesmas classes .temporal/.temp-cell)', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
 
-    const primeiraCelula = fixture.componentInstance.celulasAno()[0];
-    expect(primeiraCelula.diaSemana).toBe(3);
+    const grades = fixture.nativeElement.querySelectorAll('.temporal');
+    expect(grades.length).toBe(2); // Temporal e Anual, mesmo componente de grade
 
-    const acell = fixture.nativeElement.querySelector('.annual-grid .acell') as HTMLElement;
-    expect(acell.style.gridRow).toBe(`${primeiraCelula.diaSemana + 1}`);
-    expect(acell.style.gridColumn).toBe(`${primeiraCelula.semana + 1}`);
+    const grafAnual = grades[1];
+    const rotulosDia = Array.from(grafAnual.querySelectorAll('.day-h')).map((el: any) => el.textContent.trim());
+    expect(rotulosDia).toEqual(['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']); // todos os 7, nenhum escondido
+    const rotulosLinha = Array.from(grafAnual.querySelectorAll('.hr-l')).map((el: any) => el.textContent.trim());
+    expect(rotulosLinha).toEqual(['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']);
   });
 
-  it('celulasAno reflete o historicoAnual real', () => {
+  it('matrizAnual reflete o historicoAnual real, somado por mes x dia da semana', () => {
     const fixture = TestBed.createComponent(HeatmapComponent);
     fixture.detectChanges();
     http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
       incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
       heatmap: [], ultimosSeteDias: [],
-      historicoAnual: [{ dia: '2026-01-01', incidentes: 3 }, { dia: '2026-01-02', incidentes: 0 }],
+      // 2026-01-01 e 2026-01-08 sao as duas primeiras quintas de janeiro (diaSemana=3).
+      historicoAnual: [{ dia: '2026-01-01', incidentes: 3 }, { dia: '2026-01-08', incidentes: 1 }],
     });
     fixture.detectChanges();
 
-    const celulas = fixture.componentInstance.celulasAno();
-    expect(celulas.length).toBe(2);
-    expect(celulas[0].incidentes).toBe(3);
+    expect(fixture.componentInstance.matrizAnual()[0][3]).toBe(4); // Jan x quinta = 3+1
+  });
+
+  it('picoAnual aponta o mes/dia do valor maximo unico', () => {
+    const fixture = TestBed.createComponent(HeatmapComponent);
+    fixture.detectChanges();
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [], ultimosSeteDias: [],
+      historicoAnual: [{ dia: '2026-03-02', incidentes: 5 }, { dia: '2026-07-04', incidentes: 2 }],
+    });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.picoAnual()).toEqual({ mes: 'Mar', dia: 'Seg', valor: 5 });
   });
 
   it('não exporta mais constantes de dados fabricados para o grid de estações', async () => {
@@ -374,6 +365,39 @@ describe('HeatmapComponent', () => {
     expect(matriz[0][0]).toBe(0);
     expect(matriz.length).toBe(12);
     expect(matriz[0].length).toBe(7);
+  });
+
+  it('picoTemporal aponta o dia/faixa do valor maximo unico', () => {
+    const fixture = TestBed.createComponent(HeatmapComponent);
+    fixture.detectChanges();
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [], ultimosSeteDias: [],
+      distribuicaoTemporal: [
+        { diaSemana: 2, faixa2h: 11, incidentes: 4 },
+        { diaSemana: 5, faixa2h: 0, incidentes: 1 },
+      ],
+    });
+    fixture.detectChanges();
+
+    const pico = fixture.componentInstance.picoTemporal();
+    expect(pico).toEqual({ dia: 'Qua', faixa: '10PM–12AM', valor: 4 });
+  });
+
+  it('picoTemporal e nulo quando o maximo empata em mais de uma celula', () => {
+    const fixture = TestBed.createComponent(HeatmapComponent);
+    fixture.detectChanges();
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,
+      heatmap: [], ultimosSeteDias: [],
+      distribuicaoTemporal: [
+        { diaSemana: 2, faixa2h: 11, incidentes: 4 },
+        { diaSemana: 5, faixa2h: 0, incidentes: 4 },
+      ],
+    });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.picoTemporal()).toBeNull();
   });
 
   it('urlResumoPdf inclui turno/setor/epi junto do since (spec §7)', () => {
