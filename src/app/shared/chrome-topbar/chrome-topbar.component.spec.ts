@@ -31,6 +31,11 @@ describe('ChromeTopbarComponent', () => {
   afterEach(() => {
     localStorage.clear();
     document.body.className = '';
+    // `app-notification-center` reparenta seu proprio host para
+    // `document.body`; sem limpar, um fixture de teste anterior deixaria
+    // um `.notif-offcanvas` orfao que poderia satisfazer indevidamente a
+    // asercao de um teste seguinte.
+    document.querySelectorAll('app-notification-center').forEach(el => el.remove());
   });
 
   function montarComo(papel: 'GESTOR' | 'OPERADOR' | null) {
@@ -39,6 +44,8 @@ describe('ChromeTopbarComponent', () => {
     const req = http.expectOne(`${environment.apiUrl}/auth/me`);
     if (papel === 'GESTOR') {
       req.flush({ papel: 'GESTOR', username: 'g1' });
+      fixture.detectChanges();
+      http.expectOne(`${environment.apiUrl}/notificacoes/contagem-nao-lidas`).flush({ naoLidas: 0 });
     } else if (papel === 'OPERADOR') {
       req.flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
     } else {
@@ -120,6 +127,27 @@ describe('ChromeTopbarComponent', () => {
 
     expect(navegar).toHaveBeenCalledWith(['/login-estacao']);
   });
+
+  it('para OPERADOR, nao aparece o sino de notificacoes nem chama a contagem', () => {
+    const fixture = montarComo('OPERADOR');
+
+    expect(fixture.nativeElement.querySelector('[data-test="open-notifications"]')).toBeNull();
+    http.expectNone(`${environment.apiUrl}/notificacoes/contagem-nao-lidas`);
+  });
+
+  it('clicar no sino abre a central de notificacoes', () => {
+    const fixture = montarComo('GESTOR');
+    const sino: HTMLButtonElement = fixture.nativeElement.querySelector('[data-test="open-notifications"]');
+
+    sino.click();
+    fixture.detectChanges();
+
+    http.expectOne(`${environment.apiUrl}/notificacoes`).flush([]);
+    // O offcanvas reparenta seu host para `document.body` (fora do contexto
+    // de empilhamento do topbar — ver notification-center.component.ts),
+    // entao ele nao aparece mais dentro de `fixture.nativeElement`.
+    expect(document.body.querySelector('.notif-offcanvas')).not.toBeNull();
+  });
 });
 
 describe('ChromeTopbarComponent — nome da empresa (design doc de multi-tenant, §5)', () => {
@@ -128,10 +156,12 @@ describe('ChromeTopbarComponent — nome da empresa (design doc de multi-tenant,
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection(), provideRouter([]),
+        provideHttpClient(withFetch()), provideHttpClientTesting(),
         { provide: AuthService, useValue: authStub }],
     });
     const fixture = TestBed.createComponent(ChromeTopbarComponent);
     fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne(`${environment.apiUrl}/notificacoes/contagem-nao-lidas`).flush({ naoLidas: 0 });
 
     expect(fixture.componentInstance.company()).toBe('ACME INDUSTRIAL');
     expect(fixture.componentInstance.initial()).toBe('A');
@@ -142,6 +172,7 @@ describe('ChromeTopbarComponent — nome da empresa (design doc de multi-tenant,
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection(), provideRouter([]),
+        provideHttpClient(withFetch()), provideHttpClientTesting(),
         { provide: AuthService, useValue: authStub }],
     });
     const fixture = TestBed.createComponent(ChromeTopbarComponent);
@@ -149,6 +180,7 @@ describe('ChromeTopbarComponent — nome da empresa (design doc de multi-tenant,
     // empresaNome em branco + cfg.company presente -> usa cfg.company
     fixture.componentRef.setInput('cfg', { company: 'Acme' });
     fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne(`${environment.apiUrl}/notificacoes/contagem-nao-lidas`).flush({ naoLidas: 0 });
     expect(() => fixture.componentInstance.initial()).not.toThrow();
     expect(fixture.componentInstance.initial()).toBe('A');
     expect(fixture.componentInstance.company()).toBe('ACME');

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { environment } from '../../environments/environment';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from './event-source.factory';
-import { Incident, Page } from './incident.models';
+import { Incident, Notificacao, Page } from './incident.models';
 import { IncidentService } from './incident.service';
 
 function incidente(overrides: Partial<Incident> = {}): Incident {
@@ -209,6 +209,46 @@ describe('IncidentService', () => {
       heatmap: [], ultimosSeteDias: [],
     });
   });
+
+  it('naoLidas comeca em zero e loadNaoLidas atualiza a partir do backend', () => {
+    expect(service.naoLidas()).toBe(0);
+
+    service.loadNaoLidas();
+
+    const req = http.expectOne(`${environment.apiUrl}/notificacoes/contagem-nao-lidas`);
+    req.flush({ naoLidas: 5 });
+
+    expect(service.naoLidas()).toBe(5);
+  });
+
+  it('loadNotificacoes busca a lista sem alterar o store de incidentes', () => {
+    let recebidas: Notificacao[] = [];
+    service.loadNotificacoes().subscribe(lista => (recebidas = lista));
+
+    const req = http.expectOne(`${environment.apiUrl}/notificacoes`);
+    req.flush([
+      { id: 1, cameraId: 'CAM-01', type: 'FALL_RISK', severity: 4, nivel: 'ALTO',
+        descricao: 'Queda detectada', detectedAt: '2026-09-07T10:00:00Z', lida: false },
+    ]);
+
+    expect(recebidas).toHaveLength(1);
+    expect(recebidas[0].cameraId).toBe('CAM-01');
+    expect(service.incidents()).toHaveLength(0);
+  });
+
+  it('marcarLidas envia os ids e resincroniza a contagem depois', () => {
+    service.marcarLidas([1, 2]);
+
+    const post = http.expectOne(`${environment.apiUrl}/notificacoes/marcar-lidas`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({ alertaIds: [1, 2] });
+    post.flush(null);
+
+    const contagem = http.expectOne(`${environment.apiUrl}/notificacoes/contagem-nao-lidas`);
+    contagem.flush({ naoLidas: 0 });
+
+    expect(service.naoLidas()).toBe(0);
+  });
 });
 
 class EventSourceFake implements EventSourceLike {
@@ -307,6 +347,18 @@ describe('IncidentService — SSE', () => {
 
     expect(service.incidents().length).toBe(1);
     expect(service.incidents()[0].status).toBe('RESOLVIDO');
+  });
+
+  it('incrementa naoLidas so em incidente novo, nao em atualizacao', () => {
+    service.connect();
+    criados[0].abrir();
+
+    criados[0].emitir('incident', incidente({ id: 9, incidentKey: 'k9' }));
+    expect(service.naoLidas()).toBe(1);
+
+    criados[0].emitir('incident-changed',
+      incidente({ id: 9, incidentKey: 'k9', status: 'RESOLVIDO' }));
+    expect(service.naoLidas()).toBe(1);
   });
 
   it('marca offline quando a conexão cai', () => {
