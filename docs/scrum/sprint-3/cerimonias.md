@@ -307,6 +307,11 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 
 ---
 
+### 2026-09-10 (kickoff da Central de notificações — `cna`/`cnb`)
+- Lucas Grecco — feito: moveu manualmente os cards `cna` (backend) e `cnb` (front) de `Product Backlog` para `Doing`/`Em andamento` no Trello, dando início à execução. Antes do kickoff, encerrados os processos de desenvolvimento local em execução (`ng serve` do `cypher-front`, `mvn spring-boot:run` do backend `cypher` na porta 8081), a pedido do usuário. Branches locais dedicadas criadas a partir dos planos já liberados — `feat/cn-backend-notificacoes` a partir de `main` em `cypher`, `feat/cn-front-notificacoes` a partir de `dev` em `cypher-front` — sem worktree, mesmo padrão das entregas anteriores. Sprint-backlog atualizado (status dos dois cards → `Em andamento`, seção "Execução iniciada"). Próximo: executar `cna`/`cnb` via subagent-driven development, uma sessão por repositório, sem ordem obrigatória entre si. Bloqueio: nenhum.
+
+---
+
 ## 3. Ata do Sprint Review
 
 **Data:** 2026-09-01
