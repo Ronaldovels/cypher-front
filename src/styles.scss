@@ -804,9 +804,10 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .notif-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--line); }
 .notif-head h2 { font-size: 15px; margin: 0; }
 .notif-body { flex: 1; overflow-y: auto; padding: 12px; }
-.notif-empty { color: var(--ink-mute); font-size: 13px; padding: 24px 12px; text-align: center; }
+.notif-body .vazio { padding: 24px 12px; text-align: center; }
 .notif-row { width: 100%; text-align: left; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .notif-row.unread { border-left: 3px solid var(--accent); }
+.notif-row.unread .notif-desc { font-weight: 600; }
 .notif-desc { font-size: 13px; color: var(--ink); }
 .notif-meta { font-size: 11px; color: var(--ink-mute); font-family: var(--mono); }
 

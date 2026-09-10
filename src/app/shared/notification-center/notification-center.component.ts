@@ -16,7 +16,7 @@ import { IncidentService } from '../incident.service';
         </header>
         <div class="notif-body">
           @if (notificacoes().length === 0) {
-            <p class="notif-empty">Nenhuma notificação por aqui.</p>
+            <p class="vazio">Nenhuma notificação por aqui.</p>
           } @else {
             @for (n of notificacoes(); track n.id) {
               <button class="list-row notif-row" [class.unread]="!n.lida" (click)="abrir(n)">
