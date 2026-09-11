@@ -68,6 +68,23 @@ describe('StationsGridComponent', () => {
     expect(fixture.nativeElement.textContent.toLowerCase()).toContain('nenhuma esta');
   });
 
+  it('agrupa as estações por setor, com cabeçalho por grupo', () => {
+    const fixture = montarCom([
+      { id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true, cameras: [] },
+      { id: 'EST-02', nome: 'Prensa', setor: 'montagem', ativa: true, cameras: [] },
+      { id: 'EST-03', nome: 'Expedição', setor: 'logistica', ativa: true, cameras: [] },
+      { id: 'EST-04', nome: 'Doca', setor: null, ativa: true, cameras: [] },
+    ]);
+
+    const cabecalhos = Array.from(fixture.nativeElement.querySelectorAll('.setor-heading'))
+      .map((h: any) => h.textContent.trim());
+    expect(cabecalhos).toEqual(['montagem', 'logistica', 'Sem setor']);
+
+    const grupos = fixture.componentInstance.grupos();
+    expect(grupos.find(g => g.setor === 'montagem')?.stations.length).toBe(2);
+    expect(grupos.find(g => g.setor === null)?.stations.length).toBe(1);
+  });
+
   it('sem sessao GESTOR, nao mostra o dock', () => {
     const fixture = TestBed.createComponent(StationsGridComponent);
     fixture.detectChanges();

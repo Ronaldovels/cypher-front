@@ -767,6 +767,8 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dl-justificativa { font-size:13px; color:var(--ink-2); margin:0; line-height:1.5; }
 @media (max-width: 640px) { .dl-epis { grid-template-columns:1fr; } }
 
+.setor-heading { font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); margin:24px 0 12px; }
+.setor-heading:first-child { margin-top:0; }
 .stations-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
 .station-card { text-decoration:none; color:inherit; min-height:0; cursor:pointer; transition:transform 0.15s; }
 .station-card:hover { transform:translateY(-2px); border-color:var(--line-3); }
