@@ -257,6 +257,20 @@ describe('IncidentTimelineComponent', () => {
     expect(url.searchParams.get('since')).toBe(new Date('2026-09-01T08:00').toISOString());
   });
 
+  it('filtros ficam dentro da filterbar, nao mais do panel vertical antigo', () => {
+    const fixture = montar();
+
+    const filterbar = fixture.nativeElement.querySelector('form.filterbar');
+    expect(filterbar).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.tl-filters')).toBeNull();
+
+    // os campos continuam existindo, com os mesmos ids
+    expect(filterbar.querySelector('#tl-camera')).not.toBeNull();
+    expect(filterbar.querySelector('#tl-severity')).not.toBeNull();
+    expect(filterbar.querySelector('#tl-status')).not.toBeNull();
+    expect(filterbar.querySelector('#tl-since')).not.toBeNull();
+  });
+
   it('urlExportacaoCsv omite parametros nao preenchidos', () => {
     const fixture = montar();
     const comp = fixture.componentInstance;
