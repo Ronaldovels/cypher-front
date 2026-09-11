@@ -93,6 +93,10 @@ input, select, textarea { font-family: inherit; color: inherit; }
 .input:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .input::placeholder { color: var(--ink-ghost); }
 .select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2375787F' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 42px; }
+// O popup nativo do <select> não é estilizável por CSS de forma confiável entre navegadores
+// (Chromium/Firefox aceitam cor de fundo/texto do <option>; Safari ignora e usa o look do SO) —
+// isto é o máximo que dá pra alinhar ao design system sem trocar o <select> por um combobox custom.
+.select option, .fb-select option { background: var(--surface); color: var(--ink); }
 .field-error { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #E14A3B; margin-top: 2px; }
 .field-error::before { content: '✕  '; }
 
@@ -128,9 +132,12 @@ input, select, textarea { font-family: inherit; color: inherit; }
 .swatch.on .tick { opacity: 1; }
 .swatch-custom { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px dashed var(--line-3); border-radius: 10px; color: var(--ink-mute); font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; cursor: pointer; }
 .swatch-custom input[type=color] { width: 24px; height: 24px; border: 0; padding: 0; background: transparent; cursor: pointer; }
-.theme-toggle { display: inline-flex; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); }
-.theme-toggle button { padding: 8px 16px; border: 0; background: transparent; color: var(--ink-mute); border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
-.theme-toggle button.on { background: var(--ink); color: var(--bg); }
+// `.seg-toggle` é o alternador segmentado genérico (2+ opções mutuamente exclusivas,
+// visual de pílula) — nasceu como o toggle Claro/Escuro do tema e é reaproveitado
+// por qualquer alternância do mesmo tipo (ex: visualização "Por setor"/"Grade única").
+.seg-toggle { display: inline-flex; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); }
+.seg-toggle button { padding: 8px 16px; border: 0; background: transparent; color: var(--ink-mute); border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+.seg-toggle button.on { background: var(--ink); color: var(--bg); }
 
 /* ─── RIGHT RAIL ─── */
 .rail-section + .rail-section { margin-top: 36px; }

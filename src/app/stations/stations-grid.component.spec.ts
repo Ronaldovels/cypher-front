@@ -85,6 +85,34 @@ describe('StationsGridComponent', () => {
     expect(grupos.find(g => g.setor === null)?.stations.length).toBe(1);
   });
 
+  it('alternador de visualização começa em "Por setor" (agrupado)', () => {
+    const fixture = montarCom([
+      { id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true, cameras: [] },
+    ]);
+
+    const botoes = fixture.nativeElement.querySelectorAll('.seg-toggle button');
+    expect(botoes[0].textContent.trim()).toBe('Por setor');
+    expect(botoes[0].classList.contains('on')).toBe(true);
+    expect(botoes[1].classList.contains('on')).toBe(false);
+    expect(fixture.nativeElement.querySelector('.setor-heading')).not.toBeNull();
+  });
+
+  it('ao clicar em "Grade única", mostra as estações numa grade só, sem cabeçalho de setor', () => {
+    const fixture = montarCom([
+      { id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true, cameras: [] },
+      { id: 'EST-02', nome: 'Prensa', setor: 'logistica', ativa: true, cameras: [] },
+    ]);
+
+    const botoes = fixture.nativeElement.querySelectorAll('.seg-toggle button');
+    botoes[1].click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.setor-heading')).toBeNull();
+    const cartoes = fixture.nativeElement.querySelectorAll('.station-card');
+    expect(cartoes.length).toBe(2);
+    expect(fixture.nativeElement.querySelector('.seg-toggle button.on').textContent.trim()).toBe('Grade única');
+  });
+
   it('sem sessao GESTOR, nao mostra o dock', () => {
     const fixture = TestBed.createComponent(StationsGridComponent);
     fixture.detectChanges();

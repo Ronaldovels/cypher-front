@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../shared/auth/auth.service';
@@ -11,7 +12,7 @@ import { Camera, Station } from '../shared/incident.models';
 
 @Component({
   selector: 'app-stations-grid',
-  imports: [ChromeTopbarComponent, DockComponent, RouterLink, LiveFeedComponent],
+  imports: [ChromeTopbarComponent, DockComponent, RouterLink, LiveFeedComponent, NgTemplateOutlet],
   templateUrl: './stations-grid.component.html',
 })
 export class StationsGridComponent implements OnInit {
@@ -22,6 +23,9 @@ export class StationsGridComponent implements OnInit {
 
   cfg = this.cfgService.config;
   readonly stations = this.catalogService.stations;
+
+  /** Visualização da grade: agrupada por setor (padrão) ou todas as estações juntas. */
+  readonly agruparPorSetor = signal(true);
 
   ngOnInit(): void {
     this.catalogService.load();

@@ -2,25 +2,51 @@
   <app-chrome-topbar [cfg]="cfg()" page="Estações" subtitle="grade de feeds ao vivo" [live]="true" [shift]="null"/>
 
   <main class="dcontent">
-    @for (grupo of grupos(); track grupo.label) {
-      <h2 class="setor-heading">{{ grupo.label }}</h2>
-      <div class="stations-grid">
-        @for (station of grupo.stations; track station.id) {
-          <a class="panel station-card" [routerLink]="['/estacao', station.id]">
-            <div class="panel-head">
-              <div class="ph-left">
-                <span class="ph-title">{{ station.nome }}</span>
-              </div>
-            </div>
-            <div class="station-feed">
-              <app-live-feed [camera]="primeiraCamera(station)" />
-            </div>
-            <span class="station-cam-count">{{ station.cameras.length }} câmera{{ station.cameras.length === 1 ? '' : 's' }}</span>
-          </a>
-        }
-      </div>
-    } @empty {
+    <ng-template #card let-station>
+      <a class="panel station-card" [routerLink]="['/estacao', station.id]">
+        <div class="panel-head">
+          <div class="ph-left">
+            <span class="ph-title">{{ station.nome }}</span>
+          </div>
+        </div>
+        <div class="station-feed">
+          <app-live-feed [camera]="primeiraCamera(station)" />
+        </div>
+        <span class="station-cam-count">{{ station.cameras.length }} câmera{{ station.cameras.length === 1 ? '' : 's' }}</span>
+      </a>
+    </ng-template>
+
+    @if (stations().length === 0) {
       <div class="panel"><div class="vazio">nenhuma estação cadastrada</div></div>
+    } @else {
+      <div class="panel-head">
+        <div class="ph-left">
+          <span class="ph-title">{{ stations().length }} estaç{{ stations().length === 1 ? 'ão' : 'ões' }}</span>
+        </div>
+        <div class="ph-right">
+          <div class="seg-toggle">
+            <button type="button" [class.on]="agruparPorSetor()" (click)="agruparPorSetor.set(true)">Por setor</button>
+            <button type="button" [class.on]="!agruparPorSetor()" (click)="agruparPorSetor.set(false)">Grade única</button>
+          </div>
+        </div>
+      </div>
+
+      @if (agruparPorSetor()) {
+        @for (grupo of grupos(); track grupo.label) {
+          <h2 class="setor-heading">{{ grupo.label }}</h2>
+          <div class="stations-grid">
+            @for (station of grupo.stations; track station.id) {
+              <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: station }" />
+            }
+          </div>
+        }
+      } @else {
+        <div class="stations-grid">
+          @for (station of stations(); track station.id) {
+            <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: station }" />
+          }
+        </div>
+      }
     }
   </main>
 
