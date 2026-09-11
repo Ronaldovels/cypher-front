@@ -813,3 +813,28 @@ Usuário subiu os dois projetos localmente (backend `cna` na porta 8081, front `
 
 #### Próximos passos
 Mergeado. Cards `cna`/`cnb` movidos para `Concluído` no Trello e neste documento. Spec movida de `planejadas/` para `implementadas/` (`git mv`), roteiro de entregas atualizado (§3 "Entregas planejadas" vazia — nenhuma entrega em aberto no momento).
+
+---
+
+### 3.16 Review — Ajustes visuais pós-review da SPI (`avs`)
+
+**Data:** 2026-09-11
+**Participantes:** `[PREENCHER: nomes presentes]`
+
+#### Entregue
+- **`avs` (front, `cypher-front`)** — 7 tarefas do plano (`plans/ajustes-visuais-spi/2026-09-10-avs-front-ajustes-visuais.md`), cobrindo os 6 achados puramente visuais/IA da review com a SPI (2026-09-08): status Ativo/Inativo com cores binárias verde/vermelho (Estações/Equipes/Webhooks); KPI "Críticos hoje" usando `#EE4242` (mesmo tier de severidade `ALTO`) em vez de `--accent`, com remoção do CSS morto `.ai-badge`/`.insight` e neutralização do ícone de `.temp-insight`; remoção do link morto "Cadastrar" da dock; `.fb-select` reconciliado com o `.select` global (cor/borda, mantendo altura compacta e seta customizada); filtros de Incidentes migrados para o padrão `.filterbar` do Heatmap; agrupamento visual de estações por setor em "Ao Vivo" (`.setor-heading`); revisão de design final (skill `frontend-design`) que ajustou contraste de `.status.on/.off` no tema claro e a robustez de `.filterbar` contra quebra de linha. 9 commits na branch `feat/avs-front-ajustes-visuais` (a partir de `dev`). PR [#14](https://github.com/Ronaldovels/cypher-front/pull/14) **aberto** contra `dev`, aguardando merge.
+- Implementado via subagent-driven development, single-repo (mesmo padrão de `gtq`/`oqa`), um agente implementador por task (haiku para tasks mecânicas de 1 arquivo, sonnet para tasks com coordenação multi-arquivo ou julgamento de design), cada task com revisão dedicada, seguida de revisão final de branch inteira (opus).
+- **Achado real durante a execução, corrigido no próprio fluxo:** o primeiro implementador de cada task não incluía a atribuição `Co-Authored-By: Claude Sonnet 5` exigida pela convenção de sessão (ou incluía com o nome do modelo errado, ex. Haiku); cada commit foi corrigido via `git commit --amend` antes de seguir para a revisão da task — ação administrativa do controlador, não uma correção de finding de revisão.
+- **Achados reais da revisão final de branch inteira (opus), corrigidos antes da abertura do PR:** 3 Important — (1) regressão real de acessibilidade: os filtros de Incidentes perderam o `<label for="...">` na migração para o padrão `.filterbar` (viraram `<span>` sem nome acessível); (2) o input de data dentro da nova `.filterbar` de Incidentes usava o primitivo `.input` de página inteira (altura ~50px contra os 30px do `.fb-select`), desalinhando a barra e colapsando o espaçador que empurra os botões de ação para a direita; (3) a `.filterbar` de Incidentes ficou dentro do `.dcontent` (com padding lateral de 40px) em vez de ser filha direta de `.dash` como no Heatmap, duplicando o padding e fazendo a lista de incidentes rolar visivelmente pelas calhas laterais da barra sticky. 1 fix wave única corrigiu os 3 Important + 2 Minor baratos (CSS morto `.tl-filters`/`.tl-filter-actions`; `station.setor === ''` gerando um cabeçalho de grupo vazio em "Ao Vivo" em vez de cair em "Sem setor"). Suíte: 405/405 antes e depois da fix wave, sem regressão; build de produção confirmado.
+- Cada achado foi tratado como bloqueante do próprio ciclo de revisão (fix dedicado + re-revisão escopada) antes do PR ser aberto.
+
+#### O que não foi concluído / passa para o backlog
+- 3 Minor da revisão final ficaram deferidos como follow-up não bloqueante: margem de `.setor-heading` empilhando com o `gap` do `.dcontent` (cosmético); `.fb-export` como `<a>` sem `text-decoration:none` (pré-existente, não é regressão desta entrega); vermelho `#EE4242` no tema escuro com contraste ~4.1:1 (abaixo do AA para texto pequeno, achado já na Task 7/revisão de design, fora do escopo desta entrega focada no tema claro).
+- Verificação visual manual nos dois temas (claro/escuro) das 4 telas tocadas não foi feita — a revisão de design (Task 7) e a revisão final de branch foram feitas por leitura de código/tokens, sem navegador disponível no ambiente de execução; registrado explicitamente no test plan do PR #14.
+- Os outros 2 cards da review da SPI (`cypher`: rotação de câmera; `cypher-capture`: REBA com câmera angulada, respeitar zona na pipeline) continuam no Product Backlog sem spec.
+
+#### Feedback recebido
+Nenhum registrado ainda (aguardando review do PR #14).
+
+#### Próximos passos
+PR [#14](https://github.com/Ronaldovels/cypher-front/pull/14) aberto contra `dev`, aguardando merge. Card `avs` atualizado no Trello e neste documento para "PR aberto". Após o merge: mover spec de `docs/superpowers/specs/planejadas/` para `implementadas/` (`git mv`), atualizar `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` (mover a linha de `avs` da tabela §3 para §2), e os 3 Minor deferidos ficam como candidatos a um card de follow-up (junto com o contraste do tema escuro).
