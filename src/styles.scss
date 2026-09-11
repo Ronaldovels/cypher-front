@@ -556,7 +556,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .heatpage { min-height:100vh; background: radial-gradient(900px 500px at 30% -100px,var(--accent-soft),transparent 70%), linear-gradient(to bottom,var(--bg-2),var(--bg) 320px); display:flex; flex-direction:column; padding-bottom:140px; }
 
 /* Filter bar */
-.filterbar { position:sticky; top:56px; z-index:20; height:56px; background:var(--surface); border-bottom:1px solid var(--line); padding:0 40px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.filterbar { position:sticky; top:56px; z-index:20; min-height:56px; background:var(--surface); border-bottom:1px solid var(--line); padding:8px 40px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; row-gap:10px; }
 .filterbar .fb-label { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.16em; color:var(--ink-ghost); text-transform:uppercase; margin-right:-8px; }
 .filterbar .fb-group { display:flex; align-items:center; gap:6px; }
 .filterbar .fb-sep { width:1px; height:24px; background:var(--line); }
@@ -711,7 +711,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .theme-light .temp-cell.h0 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
 @media (max-width:1100px) {
   .hp-content { grid-template-columns:1fr; padding:20px; }
-  .filterbar   { padding:0 20px; gap:8px; }
+  .filterbar   { padding:8px 20px; gap:8px; }
   .zone-grid   { grid-template-columns:repeat(4,1fr) !important; }
 }
 
@@ -824,4 +824,12 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .status { display:inline-flex; align-items:center; height:24px; padding:0 10px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-mute); font-size:11px; font-weight:600; letter-spacing:0.04em; font-family:inherit; }
 .status.on { background: rgba(52,208,126,0.14); border-color: #34D07E; color: #34D07E; }
 .status.off { background: rgba(238,66,66,0.14); border-color: #EE4242; color: #EE4242; }
+/* Tema claro: o verde/vermelho puro sobre o fundo rgba(...,0.14) claro cai
+   abaixo de 4.5:1 (verde ~1.7:1, vermelho ~3:1 contra --surface, ainda pior
+   contra --bg-2, fundo real do .list-row onde o status ativo/inativo das
+   telas de config vive) — usamos tons mais escuros só no texto/borda,
+   mantendo o mesmo tint de fundo. Valores conferem >=4.9:1 tanto contra
+   --surface quanto contra --bg-2 no tema claro. */
+.theme-light .status.on { border-color: #1B6B3A; color: #1B6B3A; }
+.theme-light .status.off { border-color: #A62328; color: #A62328; }
 .btn.sm { padding: 6px 12px; font-size: 12px; }
