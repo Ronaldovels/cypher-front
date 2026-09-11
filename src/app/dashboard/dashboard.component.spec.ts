@@ -60,6 +60,21 @@ describe('DashboardComponent', () => {
     expect(fixture.componentInstance.variacaoVsOntem()).toBe('↑ 2 vs ontem');
   });
 
+  it('KPI "Críticos hoje" usa a cor de severidade critica, nao a cor de marca', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    http.match(r => r.url === `${environment.apiUrl}/summary`)[0].flush({
+      incidentesHoje: 10, incidentesOntem: 4, criticosHoje: 3, pendentes: 2,
+      heatmap: [], ultimosSeteDias: [],
+    });
+    fixture.detectChanges();
+
+    const cards = Array.from(fixture.nativeElement.querySelectorAll('.kpi')) as HTMLElement[];
+    const criticos = cards.find(c => c.textContent?.includes('Críticos hoje'));
+    expect(criticos?.getAttribute('style')).toContain('--kpi-color: #EE4242');
+  });
+
   it('lista os incidentes recentes do store', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     const service = TestBed.inject(IncidentService);
