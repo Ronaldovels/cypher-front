@@ -38,7 +38,7 @@ export class StationsGridComponent implements OnInit {
   readonly grupos = computed(() => {
     const porSetor = new Map<string | null, Station[]>();
     for (const station of this.stations()) {
-      const chave = station.setor;
+      const chave = station.setor || null;
       if (!porSetor.has(chave)) porSetor.set(chave, []);
       porSetor.get(chave)!.push(station);
     }

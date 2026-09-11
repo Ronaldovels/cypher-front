@@ -566,6 +566,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .chip.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); font-weight:600; }
 .chip .dotind { width:5px; height:5px; border-radius:50%; background:var(--accent); margin-right:8px; }
 .fb-select { display:inline-flex; align-items:center; height:30px; padding:0 30px 0 12px; border-radius:8px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:12px; font-weight:500; appearance:none; cursor:pointer; font-family:inherit; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2375787F' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
+.filterbar .input { width:auto; height:30px; padding:0 12px; font-size:12px; border-radius:8px; }
 .fb-status { display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; color:#34D07E; letter-spacing:0.08em; padding:0 12px; }
 .fb-status::before { content:''; width:5px; height:5px; border-radius:50%; background:#34D07E; animation:livePulse 1.6s ease-in-out infinite; }
 .fb-export { display:inline-flex; align-items:center; gap:8px; height:30px; padding:0 14px; border-radius:8px; border:1px solid var(--line-2); background:transparent; color:var(--ink-2); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; }
@@ -727,8 +728,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
   font-variant-numeric: tabular-nums slashed-zero lining-nums;
 }
 
-.tl-filters { display:grid; grid-template-columns:repeat(4, 1fr) auto; gap:16px; align-items:end; }
-.tl-filter-actions { display:flex; gap:10px; }
 .tl-row { grid-template-columns:44px 60px 1fr 90px auto auto; cursor:pointer; }
 .tl-status { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); }
 .tl-status[data-status="PENDENTE"] { color:#FFCE38; }
