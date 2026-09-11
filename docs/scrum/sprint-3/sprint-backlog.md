@@ -144,13 +144,23 @@ Nenhuma restante — todo o roteiro original (E1–E6) foi puxado e mergeado. Ve
 
 ### Review com a SPI (2026-09-08) — 3 cards por repositório
 
-Achados de uma sessão de review com o time durante a visita da SPI na terça-feira (2026-09-08), registrados aqui em 2026-09-10. Nenhum destes itens tem spec ou plano de implementação ainda — são achados de review, não uma entrega especificada; cada card entra no Product Backlog e precisa de brainstorming (`superpowers:brainstorming`) antes de virar plano executável.
+Achados de uma sessão de review com o time durante a visita da SPI na terça-feira (2026-09-08), registrados aqui em 2026-09-10. O card do `cypher-front` já virou spec e plano (`avs`, seção logo abaixo); os cards de `cypher`/`cypher-capture` ainda são só achados de review, sem spec — precisam de brainstorming (`superpowers:brainstorming`) antes de virar plano executável.
 
 | Card | Achados da review | Repositório | Status |
 |---|---|---|---|
 | SPI review — backend (`cypher`) | Rotação de câmera personalizável: falta campo `rotacao` na entidade `Camera` e no DTO de config (`CameraConfigClient`/`CameraConfig` hoje só carregam `codigo`/`nome`/`estacaoId`/`fonte`/`streamPort`/`ativa`) — pré-requisito para o `cypher-capture` aplicar a rotação por câmera em vez de via flag `--rotate` na CLI | `cypher` | 🗂️ Product Backlog |
 | SPI review — capture (`cypher-capture`) | (1) REBA com câmeras anguladas na diagonal — `extract_angles`/`trunk_flexion` (`src/pose/angles.py`) assume câmera com roll ≈ 0 (comentário explícito no código), sem correção de perspectiva; (2) respeitar zona na pipeline — hoje `ZoneDetector.check()` só alimenta o classificador de postura com um flag `in_zone`, mas `process_frame` roda pose/REBA/EPI pro frame inteiro, não restrito à zona configurada; (3) aplicar a rotação de câmera (ver card do `cypher`) usando a lógica já existente e testada em `apply_rotation()` (`src/utils/video.py`), hoje só acessível via flag `--rotate` da CLI, precisa ler do `CameraConfigClient` | `cypher-capture` | 🗂️ Product Backlog |
-| SPI review — front (`cypher-front`) | Cores binárias (verde/vermelho) para badges Ativo/Inativo em vez do `--accent` de onboarding (`.status.on` em `styles.scss:828`, hoje reaproveitado em estações/equipes/webhooks); remover o destaque de cor que lembra "gerado por IA" de cards e alertas (mesmo `--accent` em KPIs, `.ai-badge`, `.notif-row.unread`, etc.); segmentar câmeras por estação na tela "Ao Vivo" (`stations-grid`/`station-kiosk` já agrupam por estação no nível superior — validar com a SPI se o pedido é um refinamento dentro da tela ou algo além disso); repensar arquitetura de informação e layout dos filtros de incidentes (`incident-timeline.component.html`, hoje um formulário inline sem hierarquia visual); remover o link morto "Cadastrar" da dock (`dock.component.ts`, item `invite` sem rota); reconciliar inputs/selects soltos (ex: `.fb-select` do Heatmap) com os primitivos globais já existentes (`.field`/`.input`/`.select`) — mesma UI de rotação de câmera do card do `cypher-capture` | `cypher-front` | 🗂️ Product Backlog |
+| ~~SPI review — front (`cypher-front`)~~ | Os 6 achados visuais/IA viraram spec e plano próprios — ver seção "Ajustes visuais pós-review da SPI (`avs`)" logo abaixo | `cypher-front` | ✅ Virou spec+plano (`avs`) |
+
+### Ajustes visuais pós-review da SPI (`avs`) — spec e plano escritos em 2026-09-10, pronta para puxar
+
+Os 6 achados da review da SPI que são só visuais/IA no `cypher-front` (cores binárias Ativo/Inativo, remover o destaque de cor que lembra "IA" de cards/alertas, reforço visual da segmentação por estação em "Ao Vivo", arquitetura de informação dos filtros de Incidentes, remover o link morto "Cadastrar" da dock, reconciliar `.fb-select` com o `.select` global) — usuário pediu explicitamente o mesmo fluxo rigoroso das entregas anteriores (spec → plano → execução), mesmo sendo um lote só de front-end.
+
+| Card | Descrição | Checklist (tasks do plano) | Repositório | Status |
+|---|---|---|---|---|
+| Ajustes visuais pós-SPI (`avs`) | Status binário Ativo/Inativo; KPI "Críticos hoje" e cards/alertas sem destaque de `--accent` (cor fechada: `#EE4242`, mesmo tier de severidade `ALTO`); remove link morto "Cadastrar" da dock; `.fb-select` reconciliado com `.select` global; filtros de Incidentes na filterbar do Heatmap; "Ao Vivo" agrupado por setor; revisão de design final | **7 tarefas** — `plans/ajustes-visuais-spi/2026-09-10-avs-front-ajustes-visuais.md`, branch `feat/avs-front-ajustes-visuais` a partir de `dev` (todas liberadas, sem dependência entre si) | `cypher-front` | 🗂️ Product Backlog — pronto pra puxar |
+
+Spec: `docs/superpowers/specs/planejadas/2026-09-10-ajustes-visuais-spi-design.md`. Single-repo (`cypher-front`), mesmo padrão de `gtq`/`oqa` — código curto `avs`. Não depende de nenhuma outra entrega em andamento. Os outros 2 cards da review da SPI (`cypher`, `cypher-capture` — rotação de câmera, REBA com câmera angulada, respeitar zona na pipeline) continuam no Product Backlog sem spec, na seção acima.
 
 ### Gestão ágil e protótipo (em andamento — objeto real desta Sprint)
 
