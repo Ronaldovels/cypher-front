@@ -63,7 +63,7 @@
         <span>{{ eq.nome }}</span>
         <span class="chip">{{ eq.turno }}</span>
         <span class="ph-meta">{{ eq.estacaoIds.length ? eq.estacaoIds.map(nomeEstacao).join(', ') : 'sem estação' }}</span>
-        <span class="status" [class.on]="eq.ativa">{{ eq.ativa ? 'ativa' : 'inativa' }}</span>
+        <span class="status" [class.on]="eq.ativa" [class.off]="!eq.ativa">{{ eq.ativa ? 'ativa' : 'inativa' }}</span>
         @if (eq.ativa) {
           <button type="button" class="btn ghost sm" (click)="desativar(eq.id)">desativar</button>
         }
