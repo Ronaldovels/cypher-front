@@ -93,6 +93,10 @@ input, select, textarea { font-family: inherit; color: inherit; }
 .input:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .input::placeholder { color: var(--ink-ghost); }
 .select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2375787F' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 42px; }
+// O popup nativo do <select> não é estilizável por CSS de forma confiável entre navegadores
+// (Chromium/Firefox aceitam cor de fundo/texto do <option>; Safari ignora e usa o look do SO) —
+// isto é o máximo que dá pra alinhar ao design system sem trocar o <select> por um combobox custom.
+.select option, .fb-select option { background: var(--surface); color: var(--ink); }
 .field-error { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #E14A3B; margin-top: 2px; }
 .field-error::before { content: '✕  '; }
 
@@ -128,9 +132,12 @@ input, select, textarea { font-family: inherit; color: inherit; }
 .swatch.on .tick { opacity: 1; }
 .swatch-custom { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px dashed var(--line-3); border-radius: 10px; color: var(--ink-mute); font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; cursor: pointer; }
 .swatch-custom input[type=color] { width: 24px; height: 24px; border: 0; padding: 0; background: transparent; cursor: pointer; }
-.theme-toggle { display: inline-flex; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); }
-.theme-toggle button { padding: 8px 16px; border: 0; background: transparent; color: var(--ink-mute); border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
-.theme-toggle button.on { background: var(--ink); color: var(--bg); }
+// `.seg-toggle` é o alternador segmentado genérico (2+ opções mutuamente exclusivas,
+// visual de pílula) — nasceu como o toggle Claro/Escuro do tema e é reaproveitado
+// por qualquer alternância do mesmo tipo (ex: visualização "Por setor"/"Grade única").
+.seg-toggle { display: inline-flex; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); }
+.seg-toggle button { padding: 8px 16px; border: 0; background: transparent; color: var(--ink-mute); border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+.seg-toggle button.on { background: var(--ink); color: var(--bg); }
 
 /* ─── RIGHT RAIL ─── */
 .rail-section + .rail-section { margin-top: 36px; }
@@ -353,7 +360,9 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dtop .avatar { width:32px; height:32px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:0.04em; box-shadow:0 0 0 1px rgba(255,255,255,0.1) inset; }
 
 /* Dashboard content */
-.dcontent { padding:28px 40px 40px 40px; display:flex; flex-direction:column; gap:24px; max-width:1600px; margin:0 auto; width:100%; }
+// Topo alinhado ao mesmo 24px de .hp-content (Heatmap) — as duas ficam sob o mesmo
+// .filterbar/.dtop, então a régua de espaçamento abaixo dele precisa ser a mesma.
+.dcontent { padding:24px 40px 40px 40px; display:flex; flex-direction:column; gap:24px; max-width:1600px; margin:0 auto; width:100%; }
 .greeting { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; }
 .greeting .gtext { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
 .greeting .gtext .hi { font-family: var(--display); font-size:28px; font-weight:800; letter-spacing:-0.035em; }
@@ -373,12 +382,12 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 /* KPI */
 .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .kpi { position:relative; background:var(--surface); border:1px solid var(--line-2); border-radius:14px; padding:22px 24px 20px; min-height:124px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; transition:all 0.2s cubic-bezier(.3,.1,.3,1); cursor:pointer; }
-.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kpi-color,var(--accent)); }
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kpi-color,var(--ink)); }
 .kpi:hover { transform:translateY(-2px); border-color:var(--line-3); box-shadow:0 14px 32px -16px rgba(0,0,0,0.6); }
 .kpi .kpi-row1 { display:flex; align-items:flex-start; justify-content:space-between; }
 .kpi .kpi-label { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-ghost); }
-.kpi .kpi-ico { font-size:18px; opacity:0.28; color:var(--kpi-color,var(--accent)); }
-.kpi .kpi-val { font-family: var(--display); font-size:48px; font-weight:800; line-height:1; letter-spacing:-0.045em; color:var(--kpi-color,var(--accent)); font-variant-numeric:tabular-nums; display:flex; align-items:baseline; gap:12px; }
+.kpi .kpi-ico { font-size:18px; opacity:0.28; color:var(--kpi-color,var(--ink)); }
+.kpi .kpi-val { font-family: var(--display); font-size:48px; font-weight:800; line-height:1; letter-spacing:-0.045em; color:var(--kpi-color,var(--ink)); font-variant-numeric:tabular-nums; display:flex; align-items:baseline; gap:12px; }
 .kpi .kpi-val .denom { font-size:22px; color:var(--ink-mute); font-weight:700; }
 .kpi .kpi-sub { font-size:11px; font-weight:500; color:var(--ink-mute); letter-spacing:-0.005em; display:flex; align-items:center; gap:6px; margin-top:8px; }
 .kpi .kpi-sub.up { color:#EE4242; }
@@ -451,8 +460,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .chart-head .ch-l { display:flex; flex-direction:column; gap:6px; }
 .chart-head .ch-l .t { font-size:14px; font-weight:700; letter-spacing:-0.01em; }
 .chart-head .ch-l .s { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.04em; }
-.ai-badge { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); border:1px solid color-mix(in srgb, var(--accent) 35%, transparent); border-radius:999px; padding:5px 10px; }
-.ai-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); }
 .bars { position:relative; display:grid; grid-template-columns:repeat(7,1fr); gap:18px; align-items:end; height:140px; padding:0 4px; }
 .bar-col { display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; position:relative; }
 .bar-val { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink-2); font-variant-numeric:tabular-nums; }
@@ -464,9 +471,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .bars .mean { position:absolute; left:0; right:0; border-top:1px dashed var(--line-3); pointer-events:none; }
 .bars-axis { display:grid; grid-template-columns:repeat(7,1fr); gap:18px; padding:0 4px; margin-top:8px; }
 .bars-axis .bd { text-align:center; font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-ghost); }
-.insight { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); display:flex; align-items:flex-start; gap:12px; font-size:13px; color:var(--ink-2); font-weight:500; letter-spacing:-0.005em; line-height:1.5; }
-.insight .diam { color:var(--accent); font-size:12px; margin-top:4px; flex-shrink:0; }
-.insight strong { color:var(--ink); font-weight:700; }
 
 /* Dock */
 .dock-wrap { position:fixed; z-index:1000; padding:28px; bottom:0; left:50%; transform:translateX(-50%); }
@@ -561,16 +565,25 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .heatpage { min-height:100vh; background: radial-gradient(900px 500px at 30% -100px,var(--accent-soft),transparent 70%), linear-gradient(to bottom,var(--bg-2),var(--bg) 320px); display:flex; flex-direction:column; padding-bottom:140px; }
 
 /* Filter bar */
-.filterbar { position:sticky; top:56px; z-index:20; height:56px; background:var(--surface); border-bottom:1px solid var(--line); padding:0 40px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.filterbar { position:sticky; top:56px; z-index:20; min-height:56px; background:var(--surface); border-bottom:1px solid var(--line); padding:8px 40px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; row-gap:10px; }
 .filterbar .fb-label { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.16em; color:var(--ink-ghost); text-transform:uppercase; margin-right:-8px; }
 .filterbar .fb-group { display:flex; align-items:center; gap:6px; }
 .filterbar .fb-sep { width:1px; height:24px; background:var(--line); }
+.filterbar .fb-stat { font-size:12px; color:var(--ink-2); font-weight:500; }
 .filterbar .spacer { flex:1; }
 .chip { display:inline-flex; align-items:center; height:30px; padding:0 12px; border-radius:8px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-mute); font-size:12px; font-weight:500; letter-spacing:-0.005em; cursor:pointer; transition:all .15s; font-family:inherit; }
 .chip:hover { background:var(--surface-hi); color:var(--ink-2); }
 .chip.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); font-weight:600; }
 .chip .dotind { width:5px; height:5px; border-radius:50%; background:var(--accent); margin-right:8px; }
-.fb-select { display:inline-flex; align-items:center; height:30px; padding:0 30px 0 12px; border-radius:8px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-2); font-size:12px; font-weight:500; appearance:none; cursor:pointer; font-family:inherit; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2375787F' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
+.fb-select { display:inline-flex; align-items:center; height:30px; padding:0 30px 0 12px; border-radius:8px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:12px; font-weight:500; appearance:none; cursor:pointer; font-family:inherit; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2375787F' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
+.filterbar .input { width:auto; height:30px; padding:0 12px; font-size:12px; border-radius:8px; }
+// `.btn`/`.seg-toggle` têm sua própria escala (pensada pra formulário de página inteira
+// e pra painel de configurações) — 30px é a régua de altura de QUALQUER controle dentro
+// da filterbar (mesma dos selects/chips), senão a barra cresce e destoa entre as telas
+// que a usam (Heatmap/Incidentes/Ao Vivo precisam da mesma altura de topo).
+.filterbar .btn { height:30px; padding:0 16px; font-size:12px; border-radius:8px; }
+.filterbar .seg-toggle { padding:3px; }
+.filterbar .seg-toggle button { height:24px; padding:0 14px; font-size:10px; }
 .fb-status { display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; color:#34D07E; letter-spacing:0.08em; padding:0 12px; }
 .fb-status::before { content:''; width:5px; height:5px; border-radius:50%; background:#34D07E; animation:livePulse 1.6s ease-in-out infinite; }
 .fb-export { display:inline-flex; align-items:center; gap:8px; height:30px; padding:0 14px; border-radius:8px; border:1px solid var(--line-2); background:transparent; color:var(--ink-2); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; }
@@ -680,7 +693,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .ttsmall .l3 { font-family:var(--mono); font-size:10px; color:var(--accent); margin-top:4px; letter-spacing:0.02em; }
 .temp-foot { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:14px; }
 .temp-insight { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; color:var(--ink-2); letter-spacing:0.02em; }
-.temp-insight svg { color:var(--accent); flex-shrink:0; }
+.temp-insight svg { color:var(--ink-2); flex-shrink:0; }
 .temp-insight.quiet { color:var(--ink-ghost); }
 .lh-legend { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; color:var(--ink-ghost); letter-spacing:0.08em; }
 .lh-legend .swatches { display:flex; gap:3px; }
@@ -716,7 +729,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .theme-light .temp-cell.h0 { background:color-mix(in srgb, var(--accent) 12%, transparent); }
 @media (max-width:1100px) {
   .hp-content { grid-template-columns:1fr; padding:20px; }
-  .filterbar   { padding:0 20px; gap:8px; }
+  .filterbar   { padding:8px 20px; gap:8px; }
   .zone-grid   { grid-template-columns:repeat(4,1fr) !important; }
 }
 
@@ -732,8 +745,6 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
   font-variant-numeric: tabular-nums slashed-zero lining-nums;
 }
 
-.tl-filters { display:grid; grid-template-columns:repeat(4, 1fr) auto; gap:16px; align-items:end; }
-.tl-filter-actions { display:flex; gap:10px; }
 .tl-row { grid-template-columns:44px 60px 1fr 90px auto auto; cursor:pointer; }
 .tl-status { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); }
 .tl-status[data-status="PENDENTE"] { color:#FFCE38; }
@@ -772,11 +783,20 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dl-justificativa { font-size:13px; color:var(--ink-2); margin:0; line-height:1.5; }
 @media (max-width: 640px) { .dl-epis { grid-template-columns:1fr; } }
 
+// Divisória real entre grupos (não só espaço) — cada setor é uma seção, não uma legenda
+// solta; o rótulo ganha o mesmo peso/contraste de um título de card (--ink, 700) em vez
+// do cinza apagado que se perdia junto das tags de câmera.
+.setor-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:32px 0 14px; padding-top:22px; border-top:1px solid var(--line); }
+.setor-head:first-child { margin-top:0; padding-top:0; border-top:none; }
+.setor-heading { font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink); margin:0; }
+.setor-count { font-family:var(--mono); font-size:11px; color:var(--ink-mute); letter-spacing:0.06em; white-space:nowrap; }
 .stations-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
 .station-card { text-decoration:none; color:inherit; min-height:0; cursor:pointer; transition:transform 0.15s; }
 .station-card:hover { transform:translateY(-2px); border-color:var(--line-3); }
 .station-feed { min-height:180px; border-radius:10px; overflow:hidden; background:var(--surface-2); margin-bottom:10px; }
 .station-cam-count { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.06em; }
+.station-cams { display:flex; flex-wrap:wrap; gap:6px; }
+.cam-tag { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.04em; padding:3px 8px; border:1px solid var(--line-2); border-radius:999px; }
 
 .dash.kiosk { padding-bottom:40px; } // só aplicada quando a sessão é OPERADOR (sem dock nesse caso — ver station-kiosk.component.html); sessão GESTOR mantém o .dash base com a folga do dock
 .kiosk-feeds { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }
@@ -825,5 +845,14 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .a-station { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink); letter-spacing:0.04em; }
 .ph-meta { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.08em; }
 .status { display:inline-flex; align-items:center; height:24px; padding:0 10px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-mute); font-size:11px; font-weight:600; letter-spacing:0.04em; font-family:inherit; }
-.status.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.status.on { background: rgba(52,208,126,0.14); border-color: #34D07E; color: #34D07E; }
+.status.off { background: rgba(238,66,66,0.14); border-color: #EE4242; color: #EE4242; }
+/* Tema claro: o verde/vermelho puro sobre o fundo rgba(...,0.14) claro cai
+   abaixo de 4.5:1 (verde ~1.7:1, vermelho ~3:1 contra --surface, ainda pior
+   contra --bg-2, fundo real do .list-row onde o status ativo/inativo das
+   telas de config vive) — usamos tons mais escuros só no texto/borda,
+   mantendo o mesmo tint de fundo. Valores conferem >=4.9:1 tanto contra
+   --surface quanto contra --bg-2 no tema claro. */
+.theme-light .status.on { border-color: #1B6B3A; color: #1B6B3A; }
+.theme-light .status.off { border-color: #A62328; color: #A62328; }
 .btn.sm { padding: 6px 12px; font-size: 12px; }

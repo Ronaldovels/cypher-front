@@ -33,7 +33,7 @@
       <div class="list-row">
         <span>{{ w.url }}</span>
         <span class="chip">severidade {{ w.minSeverity }}+</span>
-        <span class="status" [class.on]="w.ativo">{{ w.ativo ? 'ativo' : 'inativo' }}</span>
+        <span class="status" [class.on]="w.ativo" [class.off]="!w.ativo">{{ w.ativo ? 'ativo' : 'inativo' }}</span>
         @if (w.ativo) {
           <button type="button" class="btn ghost sm" (click)="desativar(w.id)">desativar</button>
         }

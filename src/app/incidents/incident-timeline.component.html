@@ -1,54 +1,44 @@
 <div class="dash">
   <app-chrome-topbar [cfg]="cfg()" page="Incidentes" subtitle="timeline com filtros" [live]="false" [shift]="null"/>
 
-  <main class="dcontent">
-    <div class="panel">
-      <div class="panel-head">
-        <div class="ph-left"><span class="ph-title">Filtros</span></div>
-      </div>
-      <form class="tl-filters" (ngSubmit)="aplicarFiltros()">
-        <div class="field">
-          <label for="tl-camera">Câmera</label>
-          <select id="tl-camera" class="select" [(ngModel)]="camera" name="camera">
-            <option value="">Todas</option>
-            @for (cam of cameras(); track cam.id) {
-              <option [value]="cam.id">{{ cam.nome }}</option>
-            }
-          </select>
-        </div>
-        <div class="field">
-          <label for="tl-severity">Severidade mínima</label>
-          <select id="tl-severity" class="select" [ngModel]="severityMin()"
-                  (ngModelChange)="severityMin.set($event === '' ? null : +$event)" name="severityMin">
-            <option value="">Qualquer</option>
-            @for (n of [1, 2, 3, 4]; track n) {
-              <option [value]="n">{{ n }}+</option>
-            }
-          </select>
-        </div>
-        <div class="field">
-          <label for="tl-status">Status</label>
-          <select id="tl-status" class="select" [(ngModel)]="status" name="status">
-            <option value="">Todos</option>
-            <option value="PENDENTE">Pendente</option>
-            <option value="REVISADO">Revisado</option>
-            <option value="RESOLVIDO">Resolvido</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="tl-since">A partir de</label>
-          <input id="tl-since" class="input" type="datetime-local" [(ngModel)]="since" name="since"/>
-        </div>
-        <div class="tl-filter-actions">
-          <button type="submit" class="btn primary">Filtrar</button>
-          <button type="button" class="btn ghost" (click)="limparFiltros()">Limpar</button>
-          <a class="btn ghost" [href]="urlExportacaoCsv()" target="_blank" rel="noopener">
-            exportar CSV
-          </a>
-        </div>
-      </form>
-    </div>
+  <form class="filterbar" (ngSubmit)="aplicarFiltros()">
+    <label class="fb-label" for="tl-camera">Câmera</label>
+    <select id="tl-camera" class="fb-select" [(ngModel)]="camera" name="camera">
+      <option value="">Todas</option>
+      @for (cam of cameras(); track cam.id) {
+        <option [value]="cam.id">{{ cam.nome }}</option>
+      }
+    </select>
+    <div class="fb-sep"></div>
+    <label class="fb-label" for="tl-severity">Severidade mínima</label>
+    <select id="tl-severity" class="fb-select" [ngModel]="severityMin()"
+            (ngModelChange)="severityMin.set($event === '' ? null : +$event)" name="severityMin">
+      <option value="">Qualquer</option>
+      @for (n of [1, 2, 3, 4]; track n) {
+        <option [value]="n">{{ n }}+</option>
+      }
+    </select>
+    <div class="fb-sep"></div>
+    <label class="fb-label" for="tl-status">Status</label>
+    <select id="tl-status" class="fb-select" [(ngModel)]="status" name="status">
+      <option value="">Todos</option>
+      <option value="PENDENTE">Pendente</option>
+      <option value="REVISADO">Revisado</option>
+      <option value="RESOLVIDO">Resolvido</option>
+    </select>
+    <div class="fb-sep"></div>
+    <label class="fb-label" for="tl-since">A partir de</label>
+    <input id="tl-since" class="input" type="datetime-local" [(ngModel)]="since" name="since"/>
+    <div class="spacer"></div>
+    <button type="submit" class="btn primary">Filtrar</button>
+    <button type="button" class="btn ghost" (click)="limparFiltros()">Limpar</button>
+    <a class="fb-export" [href]="urlExportacaoCsv()" target="_blank" rel="noopener">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 12l5 5 5-5M5 20h14"/></svg>
+      exportar CSV
+    </a>
+  </form>
 
+  <main class="dcontent">
     <div class="panel">
       <div class="panel-head">
         <div class="ph-left">

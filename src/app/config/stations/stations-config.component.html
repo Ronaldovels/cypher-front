@@ -73,7 +73,7 @@
           <span class="codigo">{{ e.id }}</span>
           <span class="nome">{{ e.nome }}</span>
           <span class="chip">{{ e.setor || 'sem setor' }}</span>
-          <span class="status" [class.on]="e.ativa">{{ e.ativa ? 'ativa' : 'inativa' }}</span>
+          <span class="status" [class.on]="e.ativa" [class.off]="!e.ativa">{{ e.ativa ? 'ativa' : 'inativa' }}</span>
           <button type="button" class="btn ghost sm" (click)="gerarToken(e.id)">token do kiosk</button>
           @if (e.ativa) {
             <button type="button" class="btn ghost sm" (click)="desativarEstacao(e.id)">desativar</button>

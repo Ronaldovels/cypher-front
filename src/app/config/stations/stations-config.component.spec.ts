@@ -214,4 +214,18 @@ describe('StationsConfigComponent', () => {
     expect(comp.cameraEmEdicaoDeZonas()).toBeNull();
     expect(fixture.nativeElement.querySelector('app-zone-editor')).toBeNull();
   });
+
+  it('estação inativa mostra o status com a classe binária "off", não só neutra', () => {
+    const fixture = TestBed.createComponent(StationsConfigComponent);
+    fixture.detectChanges();
+    http.match(r => r.url === `${environment.apiUrl}/cameras`).forEach(r => r.flush([]));
+    http.match(r => r.url === `${environment.apiUrl}/stations`).forEach(r => r.flush([
+      { id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: false, cameras: [] },
+    ]));
+    fixture.detectChanges();
+
+    const status = fixture.nativeElement.querySelector('.status');
+    expect(status.classList.contains('off')).toBe(true);
+    expect(status.classList.contains('on')).toBe(false);
+  });
 });

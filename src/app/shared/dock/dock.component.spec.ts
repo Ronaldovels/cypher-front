@@ -43,4 +43,11 @@ describe('DockComponent', () => {
     expect(hrefs).toContain('/estacoes');
     expect(hrefs).toContain('/incidentes');
   });
+
+  it('nao tem mais o item morto "Cadastrar" (sem rota, nunca fez nada)', () => {
+    const fixture = TestBed.createComponent(DockComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.items.find(i => i?.key === 'invite')).toBeUndefined();
+  });
 });

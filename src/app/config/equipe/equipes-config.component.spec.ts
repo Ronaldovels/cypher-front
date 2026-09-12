@@ -119,4 +119,18 @@ describe('EquipesConfigComponent', () => {
     http.expectOne(`${environment.apiUrl}/teams`).flush([]);
     http.expectOne(`${environment.apiUrl}/users`).flush([]);
   });
+
+  it('equipe inativa mostra o status com a classe binária "off"', () => {
+    const fixture = TestBed.createComponent(EquipesConfigComponent);
+    fixture.detectChanges();
+    http.expectOne(`${environment.apiUrl}/teams`).flush([
+      { id: 'EQ-01', nome: 'Equipe A', turno: 'MANHA', estacaoIds: [], ativa: false },
+    ]);
+    http.expectOne(`${environment.apiUrl}/users`).flush([]);
+    http.expectOne(`${environment.apiUrl}/stations`).flush([]);
+    fixture.detectChanges();
+
+    const status = fixture.nativeElement.querySelector('.status');
+    expect(status.classList.contains('off')).toBe(true);
+  });
 });

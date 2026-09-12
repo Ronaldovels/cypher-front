@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../../environments/environment';
 import { WebhooksConfigComponent } from './webhooks-config.component';
+import { WebhookService } from '../../shared/webhook.service';
 
 describe('WebhooksConfigComponent — sub-aba Assinantes', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<WebhooksConfigComponent>>;
@@ -59,5 +60,16 @@ describe('WebhooksConfigComponent — sub-aba Assinantes', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
     http.expectOne(`${environment.apiUrl}/webhooks`).flush([]);
+  });
+
+  it('webhook inativo mostra o status com a classe binária "off"', () => {
+    TestBed.inject(WebhookService).load();
+    http.expectOne(`${environment.apiUrl}/webhooks`).flush([
+      { id: 1, url: 'https://x.test/hook', secret: 's', minSeverity: 3, ativo: false },
+    ]);
+    fixture.detectChanges();
+
+    const status = fixture.nativeElement.querySelector('.status');
+    expect(status.classList.contains('off')).toBe(true);
   });
 });
