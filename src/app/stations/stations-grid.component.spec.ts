@@ -113,6 +113,47 @@ describe('StationsGridComponent', () => {
     expect(fixture.nativeElement.querySelector('.seg-toggle button.on').textContent.trim()).toBe('Grade única');
   });
 
+  it('mostra o total de estações e câmeras na filterbar', () => {
+    const fixture = montarCom([
+      { id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true,
+        cameras: [
+          { id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01', streamUrl: 'http://x/1' },
+          { id: 'CAM-02', nome: 'Lateral', estacaoId: 'EST-01', streamUrl: 'http://x/2' },
+        ] },
+      { id: 'EST-02', nome: 'Prensa', setor: 'montagem', ativa: true, cameras: [] },
+    ]);
+
+    const stats = Array.from(fixture.nativeElement.querySelectorAll('.fb-stat'))
+      .map((s: any) => s.textContent.trim());
+    expect(stats).toEqual(['2 estações', '2 câmeras']);
+  });
+
+  it('lista as câmeras de cada estação como tags, em vez de só a contagem', () => {
+    const fixture = montarCom([
+      { id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true,
+        cameras: [
+          { id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01', streamUrl: 'http://x/1' },
+          { id: 'CAM-02', nome: 'Lateral', estacaoId: 'EST-01', streamUrl: 'http://x/2' },
+        ] },
+    ]);
+
+    const tags = Array.from(fixture.nativeElement.querySelectorAll('.cam-tag'))
+      .map((t: any) => t.textContent.trim());
+    expect(tags).toEqual(['Frontal', 'Lateral']);
+  });
+
+  it('cada cabeçalho de setor mostra quantas estações tem no grupo', () => {
+    const fixture = montarCom([
+      { id: 'EST-01', nome: 'Esteira', setor: 'montagem', ativa: true, cameras: [] },
+      { id: 'EST-02', nome: 'Prensa', setor: 'montagem', ativa: true, cameras: [] },
+      { id: 'EST-03', nome: 'Expedição', setor: 'logistica', ativa: true, cameras: [] },
+    ]);
+
+    const contagens = Array.from(fixture.nativeElement.querySelectorAll('.setor-count'))
+      .map((c: any) => c.textContent.trim());
+    expect(contagens).toEqual(['2 estações', '1 estação']);
+  });
+
   it('sem sessao GESTOR, nao mostra o dock', () => {
     const fixture = TestBed.createComponent(StationsGridComponent);
     fixture.detectChanges();

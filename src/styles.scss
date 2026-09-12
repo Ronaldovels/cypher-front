@@ -360,7 +360,9 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dtop .avatar { width:32px; height:32px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:0.04em; box-shadow:0 0 0 1px rgba(255,255,255,0.1) inset; }
 
 /* Dashboard content */
-.dcontent { padding:28px 40px 40px 40px; display:flex; flex-direction:column; gap:24px; max-width:1600px; margin:0 auto; width:100%; }
+// Topo alinhado ao mesmo 24px de .hp-content (Heatmap) — as duas ficam sob o mesmo
+// .filterbar/.dtop, então a régua de espaçamento abaixo dele precisa ser a mesma.
+.dcontent { padding:24px 40px 40px 40px; display:flex; flex-direction:column; gap:24px; max-width:1600px; margin:0 auto; width:100%; }
 .greeting { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; }
 .greeting .gtext { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
 .greeting .gtext .hi { font-family: var(--display); font-size:28px; font-weight:800; letter-spacing:-0.035em; }
@@ -567,6 +569,7 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .filterbar .fb-label { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.16em; color:var(--ink-ghost); text-transform:uppercase; margin-right:-8px; }
 .filterbar .fb-group { display:flex; align-items:center; gap:6px; }
 .filterbar .fb-sep { width:1px; height:24px; background:var(--line); }
+.filterbar .fb-stat { font-size:12px; color:var(--ink-2); font-weight:500; }
 .filterbar .spacer { flex:1; }
 .chip { display:inline-flex; align-items:center; height:30px; padding:0 12px; border-radius:8px; background:var(--surface-2); border:1px solid var(--line-2); color:var(--ink-mute); font-size:12px; font-weight:500; letter-spacing:-0.005em; cursor:pointer; transition:all .15s; font-family:inherit; }
 .chip:hover { background:var(--surface-hi); color:var(--ink-2); }
@@ -773,13 +776,17 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dl-justificativa { font-size:13px; color:var(--ink-2); margin:0; line-height:1.5; }
 @media (max-width: 640px) { .dl-epis { grid-template-columns:1fr; } }
 
-.setor-heading { font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); margin:24px 0 12px; }
-.setor-heading:first-child { margin-top:0; }
+.setor-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:24px 0 12px; }
+.setor-head:first-child { margin-top:0; }
+.setor-heading { font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); margin:0; }
+.setor-count { font-family:var(--mono); font-size:10px; color:var(--ink-ghost); letter-spacing:0.06em; white-space:nowrap; }
 .stations-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
 .station-card { text-decoration:none; color:inherit; min-height:0; cursor:pointer; transition:transform 0.15s; }
 .station-card:hover { transform:translateY(-2px); border-color:var(--line-3); }
 .station-feed { min-height:180px; border-radius:10px; overflow:hidden; background:var(--surface-2); margin-bottom:10px; }
 .station-cam-count { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.06em; }
+.station-cams { display:flex; flex-wrap:wrap; gap:6px; }
+.cam-tag { font-family:var(--mono); font-size:10px; color:var(--ink-mute); letter-spacing:0.04em; padding:3px 8px; border:1px solid var(--line-2); border-radius:999px; }
 
 .dash.kiosk { padding-bottom:40px; } // só aplicada quando a sessão é OPERADOR (sem dock nesse caso — ver station-kiosk.component.html); sessão GESTOR mantém o .dash base com a folga do dock
 .kiosk-feeds { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }

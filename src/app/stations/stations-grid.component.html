@@ -1,6 +1,20 @@
 <div class="dash">
   <app-chrome-topbar [cfg]="cfg()" page="Estações" subtitle="grade de feeds ao vivo" [live]="true" [shift]="null"/>
 
+  <div class="filterbar">
+    <span class="fb-label">Visualização</span>
+    <div class="seg-toggle">
+      <button type="button" [class.on]="agruparPorSetor()" (click)="agruparPorSetor.set(true)">Por setor</button>
+      <button type="button" [class.on]="!agruparPorSetor()" (click)="agruparPorSetor.set(false)">Grade única</button>
+    </div>
+    <div class="fb-sep"></div>
+    <span class="fb-stat">{{ stations().length }} estaç{{ stations().length === 1 ? 'ão' : 'ões' }}</span>
+    <div class="fb-sep"></div>
+    <span class="fb-stat">{{ totalCameras() }} câmera{{ totalCameras() === 1 ? '' : 's' }}</span>
+    <div class="spacer"></div>
+    <app-connection-badge/>
+  </div>
+
   <main class="dcontent">
     <ng-template #card let-station>
       <a class="panel station-card" [routerLink]="['/estacao', station.id]">
@@ -12,41 +26,36 @@
         <div class="station-feed">
           <app-live-feed [camera]="primeiraCamera(station)" />
         </div>
-        <span class="station-cam-count">{{ station.cameras.length }} câmera{{ station.cameras.length === 1 ? '' : 's' }}</span>
+        <div class="station-cams">
+          @for (cam of station.cameras; track cam.id) {
+            <span class="cam-tag">{{ cam.nome }}</span>
+          } @empty {
+            <span class="station-cam-count">sem câmera cadastrada</span>
+          }
+        </div>
       </a>
     </ng-template>
 
     @if (stations().length === 0) {
       <div class="panel"><div class="vazio">nenhuma estação cadastrada</div></div>
-    } @else {
-      <div class="panel-head">
-        <div class="ph-left">
-          <span class="ph-title">{{ stations().length }} estaç{{ stations().length === 1 ? 'ão' : 'ões' }}</span>
-        </div>
-        <div class="ph-right">
-          <div class="seg-toggle">
-            <button type="button" [class.on]="agruparPorSetor()" (click)="agruparPorSetor.set(true)">Por setor</button>
-            <button type="button" [class.on]="!agruparPorSetor()" (click)="agruparPorSetor.set(false)">Grade única</button>
-          </div>
-        </div>
-      </div>
-
-      @if (agruparPorSetor()) {
-        @for (grupo of grupos(); track grupo.label) {
+    } @else if (agruparPorSetor()) {
+      @for (grupo of grupos(); track grupo.label) {
+        <div class="setor-head">
           <h2 class="setor-heading">{{ grupo.label }}</h2>
-          <div class="stations-grid">
-            @for (station of grupo.stations; track station.id) {
-              <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: station }" />
-            }
-          </div>
-        }
-      } @else {
+          <span class="setor-count">{{ grupo.stations.length }} estaç{{ grupo.stations.length === 1 ? 'ão' : 'ões' }}</span>
+        </div>
         <div class="stations-grid">
-          @for (station of stations(); track station.id) {
+          @for (station of grupo.stations; track station.id) {
             <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: station }" />
           }
         </div>
       }
+    } @else {
+      <div class="stations-grid">
+        @for (station of stations(); track station.id) {
+          <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: station }" />
+        }
+      </div>
     }
   </main>
 

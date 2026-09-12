@@ -6,13 +6,14 @@ import { AuthService } from '../shared/auth/auth.service';
 import { CatalogService } from '../shared/catalog.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
 import { ConfigService } from '../shared/config.service';
+import { ConnectionBadgeComponent } from '../shared/connection-badge/connection-badge.component';
 import { DockComponent } from '../shared/dock/dock.component';
 import { LiveFeedComponent } from '../shared/live-feed/live-feed.component';
 import { Camera, Station } from '../shared/incident.models';
 
 @Component({
   selector: 'app-stations-grid',
-  imports: [ChromeTopbarComponent, DockComponent, RouterLink, LiveFeedComponent, NgTemplateOutlet],
+  imports: [ChromeTopbarComponent, DockComponent, RouterLink, LiveFeedComponent, NgTemplateOutlet, ConnectionBadgeComponent],
   templateUrl: './stations-grid.component.html',
 })
 export class StationsGridComponent implements OnInit {
@@ -26,6 +27,9 @@ export class StationsGridComponent implements OnInit {
 
   /** Visualização da grade: agrupada por setor (padrão) ou todas as estações juntas. */
   readonly agruparPorSetor = signal(true);
+
+  readonly totalCameras = computed(() =>
+    this.stations().reduce((total, station) => total + station.cameras.length, 0));
 
   ngOnInit(): void {
     this.catalogService.load();
