@@ -577,6 +577,13 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .chip .dotind { width:5px; height:5px; border-radius:50%; background:var(--accent); margin-right:8px; }
 .fb-select { display:inline-flex; align-items:center; height:30px; padding:0 30px 0 12px; border-radius:8px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:12px; font-weight:500; appearance:none; cursor:pointer; font-family:inherit; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2375787F' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
 .filterbar .input { width:auto; height:30px; padding:0 12px; font-size:12px; border-radius:8px; }
+// `.btn`/`.seg-toggle` têm sua própria escala (pensada pra formulário de página inteira
+// e pra painel de configurações) — 30px é a régua de altura de QUALQUER controle dentro
+// da filterbar (mesma dos selects/chips), senão a barra cresce e destoa entre as telas
+// que a usam (Heatmap/Incidentes/Ao Vivo precisam da mesma altura de topo).
+.filterbar .btn { height:30px; padding:0 16px; font-size:12px; border-radius:8px; }
+.filterbar .seg-toggle { padding:3px; }
+.filterbar .seg-toggle button { height:24px; padding:0 14px; font-size:10px; }
 .fb-status { display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; color:#34D07E; letter-spacing:0.08em; padding:0 12px; }
 .fb-status::before { content:''; width:5px; height:5px; border-radius:50%; background:#34D07E; animation:livePulse 1.6s ease-in-out infinite; }
 .fb-export { display:inline-flex; align-items:center; gap:8px; height:30px; padding:0 14px; border-radius:8px; border:1px solid var(--line-2); background:transparent; color:var(--ink-2); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; }
@@ -776,10 +783,13 @@ app-chrome-topbar { display:block; position:sticky; top:0; z-index:30; }
 .dl-justificativa { font-size:13px; color:var(--ink-2); margin:0; line-height:1.5; }
 @media (max-width: 640px) { .dl-epis { grid-template-columns:1fr; } }
 
-.setor-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:24px 0 12px; }
-.setor-head:first-child { margin-top:0; }
-.setor-heading { font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute); margin:0; }
-.setor-count { font-family:var(--mono); font-size:10px; color:var(--ink-ghost); letter-spacing:0.06em; white-space:nowrap; }
+// Divisória real entre grupos (não só espaço) — cada setor é uma seção, não uma legenda
+// solta; o rótulo ganha o mesmo peso/contraste de um título de card (--ink, 700) em vez
+// do cinza apagado que se perdia junto das tags de câmera.
+.setor-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:32px 0 14px; padding-top:22px; border-top:1px solid var(--line); }
+.setor-head:first-child { margin-top:0; padding-top:0; border-top:none; }
+.setor-heading { font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink); margin:0; }
+.setor-count { font-family:var(--mono); font-size:11px; color:var(--ink-mute); letter-spacing:0.06em; white-space:nowrap; }
 .stations-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
 .station-card { text-decoration:none; color:inherit; min-height:0; cursor:pointer; transition:transform 0.15s; }
 .station-card:hover { transform:translateY(-2px); border-color:var(--line-3); }

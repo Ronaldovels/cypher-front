@@ -8,9 +8,11 @@
       <button type="button" [class.on]="!agruparPorSetor()" (click)="agruparPorSetor.set(false)">Grade única</button>
     </div>
     <div class="fb-sep"></div>
-    <span class="fb-stat">{{ stations().length }} estaç{{ stations().length === 1 ? 'ão' : 'ões' }}</span>
+    <span class="fb-label">Estações</span>
+    <span class="fb-stat">{{ stations().length }}</span>
     <div class="fb-sep"></div>
-    <span class="fb-stat">{{ totalCameras() }} câmera{{ totalCameras() === 1 ? '' : 's' }}</span>
+    <span class="fb-label">Câmeras</span>
+    <span class="fb-stat">{{ totalCameras() }}</span>
     <div class="spacer"></div>
     <app-connection-badge/>
   </div>

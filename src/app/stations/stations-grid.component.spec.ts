@@ -123,9 +123,13 @@ describe('StationsGridComponent', () => {
       { id: 'EST-02', nome: 'Prensa', setor: 'montagem', ativa: true, cameras: [] },
     ]);
 
+    const rotulos = Array.from(fixture.nativeElement.querySelectorAll('.filterbar .fb-label'))
+      .map((s: any) => s.textContent.trim());
+    expect(rotulos).toEqual(['Visualização', 'Estações', 'Câmeras']);
+
     const stats = Array.from(fixture.nativeElement.querySelectorAll('.fb-stat'))
       .map((s: any) => s.textContent.trim());
-    expect(stats).toEqual(['2 estações', '2 câmeras']);
+    expect(stats).toEqual(['2', '2']);
   });
 
   it('lista as câmeras de cada estação como tags, em vez de só a contagem', () => {
