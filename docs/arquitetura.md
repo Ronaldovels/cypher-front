@@ -58,6 +58,10 @@ O backend isola dados por `Empresa` (chave primária prefixada `empresaId:codigo
 
 Pré-requisitos: Java 21, Node 20+/Angular CLI 21, Python 3.11+ com `venv`, GPU CUDA opcional (acelera a inferência do `cypher-capture`, não é obrigatória).
 
+**Caminho rápido:** `scripts/subir-empresa-demo.sh start` (mesmo script, copiado nos 3 repositórios — roda a partir de qualquer um deles) sobe os três processos em sequência, semeia a empresa `demo` na primeira vez e inicia um pipeline na webcam local. `./scripts/subir-empresa-demo.sh stop`/`status`/`logs` gerenciam os processos depois. Ver o cabeçalho do script para variáveis de ambiente (caminhos dos repositórios, senha do gestor, `--orchestrator` para reconciliar o catálogo completo em vez de só a webcam).
+
+**Passo a passo manual** (o que o script acima automatiza):
+
 ```bash
 # 1. Backend
 cd ~/projects/cypher
