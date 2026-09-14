@@ -10,7 +10,7 @@
 
 **Frase de impacto (sugestão):** *"Todo acidente que a gente detecta em tempo real é um acidente que não vira estatística."*
 
-- Identificação do grupo: Cypher — Industrial Vision AI, Challenge SPI/FIAP, squad [PREENCHER: nomes completos + RM de cada integrante].
+- Identificação do grupo: Cypher — Industrial Vision AI, Challenge SPI/FIAP, squad Felipe Wapf Fettback (RM 557217), Lucas Rodrigues Grecco (RM 558261), Monique Ferreira dos Anjos (RM 558262), Ronaldo Veloso Filho (RM 556445), Tiago Brito Nário (RM 558248), Rafael Augusto Oliveira Silva (RM 555154).
 - Fase atual: Entrega E4 concluída (acesso, papéis e equipes) — quarta de uma série de entregas incrementais (E1 notificação de incidentes → E2 cadastro/câmeras → E3 operação/timeline → E4 acesso/equipes).
 - Problema atacado nesta fase: até E3, qualquer pessoa com a URL acessava dashboard, câmeras e dados de incidentes — não havia login, papel ou proteção de endpoint. E4 fecha esse buraco antes de levar o sistema para a Metaindústria.
 

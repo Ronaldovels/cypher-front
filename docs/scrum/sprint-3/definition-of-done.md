@@ -2,12 +2,14 @@
 
 Um item da Sprint Backlog só é considerado **Concluído** quando todas as condições abaixo, aplicáveis ao tipo de item, estão satisfeitas.
 
-## Para telas/fluxos do protótipo Figma
+## Para telas/fluxos do protótipo
 
-- [ ] A tela existe no arquivo Figma do grupo, em alta fidelidade (não wireframe).
-- [ ] Usa a mesma linha de design (paleta, tipografia, componentes) das telas já existentes — nenhuma tela nova introduz um padrão visual próprio.
-- [ ] A mudança está justificada por escrito no README (feedback recebido, requisito não coberto anteriormente, ou melhoria de usabilidade) — não é uma tela "porque sim".
-- [ ] O link do protótipo atualizado foi conferido (abre, mostra a tela nova) antes de ser colado no README.
+Decisão do grupo (2026-09-14): a partir da E4 o projeto passou de prototipação (Figma) para implementação — telas novas nascem direto como código. Os critérios abaixo se aplicam à implementação real, não a um artboard novo no Figma:
+
+- [ ] A tela existe implementada e rodando (`src/app/app.routes.ts` + componente), em alta fidelidade (não mockup).
+- [ ] Usa a mesma linha de design (paleta, tipografia, componentes) das telas já existentes — nenhuma tela nova introduz um padrão visual próprio, salvo exceção documentada.
+- [ ] A mudança está justificada por escrito (`docs/fluxo-de-telas.md` e/ou README) — feedback recebido, requisito não coberto anteriormente, ou melhoria de usabilidade; não é uma tela "porque sim".
+- [ ] A tela foi demonstrada rodando no projeto local (não apenas descrita) antes de ser dada como concluída.
 
 ## Para artefatos Scrum (Backlog, cerimônias)
 
@@ -23,7 +25,7 @@ Um item da Sprint Backlog só é considerado **Concluído** quando todas as cond
 
 ## Para o README
 
-- [ ] Contém o link do Trello, o link do protótipo Figma atualizado e o caminho/link do documento de cerimônias.
+- [ ] Contém o link do Trello, o link do protótipo Figma (telas originais) e do fluxo de telas implementadas (evolução), e o caminho/link do documento de cerimônias.
 - [ ] Nenhum link aponta para um placeholder não resolvido na versão final entregue.
 
 ## Geral (todo item)

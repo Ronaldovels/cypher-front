@@ -1,16 +1,22 @@
 # Cypher Front
 
-🔐 **Cypher** é uma aplicação Angular 21 inovadora que oferece ferramentas avançadas de análise e visualização de dados. O projeto implementa um onboarding interativo, um dashboard dinâmico e um heatmap visual para monitoramento e análise de informações críticas.
+🔐 **Cypher** é um sistema de monitoramento de segurança industrial por visão computacional — detecta em tempo real uso de EPI, postura de risco e quedas, para a Metaindústria (Challenge SPI/FIAP). Este repositório é o frontend (Angular 21) de um sistema com 3 repositórios (ver [Arquitetura](docs/arquitetura.md)).
 
 ## 📋 Sobre o Projeto
 
-Cypher Front é a interface frontend de uma suite de análise desenvolvida com Angular 21, apresentando:
+Cypher Front é a interface de gestão e operação do sistema Cypher, apresentando:
 
-- **Onboarding Interativo**: Experiência de entrada intuitiva e guiada para novos usuários
-- **Dashboard**: Visualização consolidada de métricas e dados em tempo real
-- **Heatmap Dinâmico**: Mapa de calor com paleta de cores personalizável para análise visual
-- **Chrome TopBar**: Componente de navegação integrado ao estilo Chrome
-- **Dock de Navegação**: Interface flutuante para acesso rápido a funcionalidades
+- **Onboarding**: primeira execução — cria o gestor mestre e configura a empresa
+- **Login** (gestor e kiosk de estação): dois fluxos separados por papel, sem JWT — sessão em cookie `HttpOnly`
+- **Dashboard**: KPIs, heatmap mini e alertas em tempo real (SSE)
+- **Heatmap**: mapa de calor por estação/setor, distribuição temporal e histórico anual, com filtros reais (Período/Setor/EPI/Turno)
+- **Incidentes**: timeline, detalhe com análise de risco por LLM (Claude/Gemini) no snapshot
+- **Ao Vivo**: grade de câmeras por estação, agrupada por setor
+- **Placar**: gamificação por equipe (conformidade, cobertura, sequência, ranking)
+- **Config**: cadastro de estações/câmeras, zonas de risco (editor de polígono em canvas), equipes/usuários, webhooks
+- **Central de notificações**: alertas lidos/não-lidos por usuário
+- **Relatórios**: exportação de CSV/PDF
+- **Chrome TopBar / Dock**: navegação persistente, condicionada ao papel da sessão
 
 ## 🚀 Começando
 
@@ -44,15 +50,23 @@ Abra seu navegador e acesse `http://localhost:4200/`. A aplicação recarregará
 
 ```
 src/app/
-├── onboarding/          # Módulo de onboarding com overlay interativo
-├── dashboard/           # Componente do dashboard principal
-├── heatmap/            # Componente de heatmap visual
-├── shared/             # Serviços e componentes compartilhados
-│   ├── chrome-topbar/  # Barra de navegação estilo Chrome
-│   ├── dock/           # Dock de navegação flutuante
-│   └── config.service.ts # Serviço de configuração
-└── Cypher/             # Componentes legacy em JSX
+├── onboarding/          # Primeira execução — cria gestor mestre e empresa
+├── auth/                # Login (gestor / kiosk de estação), guards por papel
+├── dashboard/           # KPIs, heatmap mini, alertas em tempo real
+├── heatmap/             # Heatmap com filtros reais (Período/Setor/EPI/Turno)
+├── incidentes/          # Timeline, detalhe, análise de risco por LLM
+├── ao-vivo/             # Grade de câmeras por estação/setor
+├── placar/              # Gamificação por equipe (E5)
+├── config/              # Estações, câmeras, zonas de risco, equipes/usuários, webhooks
+├── shared/              # Serviços e componentes compartilhados
+│   ├── chrome-topbar/   # Barra de navegação + central de notificações
+│   ├── dock/            # Dock de navegação flutuante
+│   ├── auth/            # AuthService, guards funcionais
+│   └── config.service.ts
+└── Cypher/              # Componentes legacy em JSX
 ```
+
+Design system (tokens, primitivos, convenções): [`docs/design-system.md`](docs/design-system.md), gerado a partir de `src/styles.scss` (fonte única, nenhum token documentado aqui que não esteja implementado).
 
 ## 🛠️ Comandos Principais
 
@@ -94,21 +108,23 @@ ng e2e
 
 ## 🗂️ Gestão Ágil (Sprint 3)
 
-- **Board Trello:** `[PREENCHER: link do board Trello, com permissão de visualização]`
-- **Protótipo Figma (atualizado):** `[PREENCHER: link do protótipo Figma]`
+- **Board Trello:** [trello.com/b/AqgHhHCP/dev4-cypher-challenge](https://trello.com/b/AqgHhHCP/dev4-cypher-challenge) (visualização pública)
+- **Protótipo Figma — Interface (atualizado):** [figma.com/design/kyeXTO2Uw0lkm8DPK2a22v/Interface](https://www.figma.com/design/kyeXTO2Uw0lkm8DPK2a22v/Interface?node-id=48-2)
+- **Figma — Exploração de estilos:** [figma.com/design/nPjn6ULYdgGZDGlrjz5fhG/cypher---rascunhos-de-telas](https://www.figma.com/design/nPjn6ULYdgGZDGlrjz5fhG/cypher---rascunhos-de-telas)
 - **Documento de cerimônias Scrum:** [docs/scrum/sprint-3/cerimonias.md](docs/scrum/sprint-3/cerimonias.md)
 - **Product Backlog / Sprint Backlog / DoD:** [docs/scrum/sprint-3/](docs/scrum/sprint-3/)
+- **Design system:** [docs/design-system.md](docs/design-system.md)
+- **Arquitetura (3 repositórios + como subir localmente):** [docs/arquitetura.md](docs/arquitetura.md)
+- **Fluxo de telas implementadas (evolução do protótipo):** [docs/fluxo-de-telas.md](docs/fluxo-de-telas.md)
 - **Roteiro de apresentação (5 min):** [docs/apresentacao/2026-08-25-roteiro-sprint3.md](docs/apresentacao/2026-08-25-roteiro-sprint3.md)
+
+**As telas são demonstradas rodando no projeto local** (ver [docs/e1-runbook-local.md](docs/e1-runbook-local.md) e [docs/empresa-demo-runbook.md](docs/empresa-demo-runbook.md)), com dado real da empresa `demo` — o Figma documenta o desenho de alta fidelidade das telas originais (Sprints 1–2); a evolução desta Sprint é código real, mapeada em `docs/fluxo-de-telas.md`.
 
 ### Evolução do protótipo nesta Sprint
 
-O protótipo original (Sprints 1–2) cobria onboarding, dashboard e heatmap — nenhuma tela de controle de acesso, porque o produto ainda não tinha login nem papéis. A Entrega E4 introduziu autenticação e permissões, um requisito que simplesmente não existia nas Sprints anteriores; as telas abaixo evoluem o Figma para acompanhar esse código já implementado e mergeado (`cypher-front` PR #4):
+O protótipo em alta fidelidade no Figma (`Interface`) documentou o desenho de Onboarding, Dashboard e Heatmap nas Sprints 1–2. A partir da E4 o projeto entrou em fase de implementação — cada tela nova nasceu direto como componente Angular real (seguindo os primitivos do [design system](docs/design-system.md)), em vez de primeiro virar artboard no Figma. O mapeamento completo do fluxo de telas implementadas, com justificativa por tela, está em **[`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md)** — 6 telas/fluxos novos em relação ao protótipo original: login do gestor, login do kiosk, `/config/equipe`, `/placar` (gamificação), `/config/webhooks` e o editor de zonas de risco.
 
-1. **Tela de login do gestor (`/login`)** — campo de usuário/senha, alternância de tema claro/escuro, e um link de saída ("Entrar como operador de estação →") para o fluxo de kiosk. *Justificativa:* requisito não coberto anteriormente — o protótipo das Sprints 1–2 não tinha nenhuma tela de autenticação, porque o produto ainda não distinguia papéis de usuário.
-2. **Tela de login do kiosk / operador de estação (`/login-estacao`)** — fluxo deliberadamente separado do login de gestor: só um campo de token da estação, sem usuário/senha, porque quem opera o kiosk é o dispositivo fixo da estação, não uma pessoa autenticando-se individualmente. *Justificativa:* melhoria de usabilidade — um único formulário de login para dois públicos diferentes (gestor remoto vs. kiosk fixo na estação) forçaria campos irrelevantes em um dos dois fluxos.
-3. **Tela `/config/equipe` (sub-abas Equipes/Usuários)** — cadastro de equipe com código, nome, turno e as estações cobertas (seleção por chip), mais a sub-aba de usuários do sistema. *Justificativa:* requisito não coberto anteriormente — a gamificação por equipe (E5, já especificada) e a própria E4 exigem que equipes existam como entidade de primeira classe, o que não fazia parte do modelo de dados nem da tela nas Sprints anteriores.
-
-Nenhuma das três introduz um padrão visual novo — todas reaproveitam os mesmos primitivos já usados no restante da aplicação (`.panel`, `.field`, `.input`, `.btn`, `.chip`, `.list-row`, `.status`), consistente com a convenção de design já registrada nas specs do projeto (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §4).
+Nenhuma delas introduz um padrão visual novo — todas reaproveitam os mesmos primitivos já usados no restante da aplicação (`.panel`, `.field`, `.input`, `.btn`, `.chip`, `.list-row`, `.status`), consistente com a convenção de design já registrada nas specs do projeto (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §4) — única exceção documentada é o canvas do editor de zonas de risco.
 
 ## 📁 Branches
 
@@ -131,9 +147,9 @@ Nenhuma das três introduz um padrão visual novo — todas reaproveitam os mesm
 
 ## 📝 Licença
 
-Este projeto é propriedade da Asaas.
+Projeto acadêmico — Challenge SPI/FIAP.
 
 ---
 
-**Versão**: Angular 21.2.11  
-**Última atualização**: 2026-06-24
+**Versão**: Angular 21.2.11
+**Última atualização**: 2026-09-14

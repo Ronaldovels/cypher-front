@@ -1,9 +1,9 @@
 # Sprint Backlog — Sprint 3
 
-**Período:** 2026-08-23 a 2026-09-01
+**Período:** 2026-08-23 a 2026-09-14 (janela real de trabalho registrada nas dailies — a meta inicial de fechamento era 2026-09-01, mas a Sprint seguiu puxando entregas do roteiro de produto até o backlog original E1–E6 se esgotar, ver §"Próximas entregas do roteiro original")
 **Sprint Goal:** Fechar a Entrega E4 (acesso, papéis e cadastro de equipes) nos três repositórios, especificar e planejar as 6 próximas entregas do roteiro de produto (multi-tenant, webhook, zonas de risco, gamificação E5, relatórios E6, análise por LLM multimodal) e, na sequência, evoluir o protótipo Figma para acompanhar os fluxos já entregues, com a gestão do grupo formalizada em Scrum visível no Trello e as cerimônias documentadas.
 
-Board Trello: `[PREENCHER: link do board Trello, com permissão de visualização]`
+Board Trello: [`https://trello.com/b/AqgHhHCP/dev4-cypher-challenge`](https://trello.com/b/AqgHhHCP/dev4-cypher-challenge)
 
 ---
 
@@ -162,20 +162,20 @@ Os 6 achados da review da SPI que são só visuais/IA no `cypher-front` (cores b
 
 Spec: `docs/superpowers/specs/implementadas/2026-09-10-ajustes-visuais-spi-design.md`. Single-repo (`cypher-front`), mesmo padrão de `gtq`/`oqa` — código curto `avs`. Não depende de nenhuma outra entrega em andamento. Puxada em 2026-09-11 via subagent-driven development: as 7 tasks foram implementadas e revisadas uma a uma (cada commit corrigido para incluir a atribuição `Co-Authored-By: Claude Sonnet 5`). Revisão final de branch inteira encontrou 3 Important (regressão de acessibilidade nos filtros de Incidentes, `.filterbar` desalinhada pelo `.input`, `.filterbar` recuada dentro do `.dcontent` em vez de full-bleed como no Heatmap) + 5 Minor — 1 fix wave única corrigiu os 3 Important e 2 Minor baratos (CSS morto, setor vazio). Depois do merge do plano original, duas rodadas adicionais de refino via skill `frontend-design` (mesma branch, antes do merge final): alternador "Por setor"/"Grade única" em Ao Vivo (com contagem real de estações/câmeras e badge de conexão na filterbar) e cor dos `<option>` de select; e, a partir de feedback visual direto do usuário, padronização da altura dos controles de filterbar (o botão "Filtrar" de Incidentes usava `.btn` de página inteira, ~50px, ao lado de selects de 30px) e reforço de contraste do cabeçalho de setor (ganhou peso 700, cor `--ink` plena e divisória real entre grupos, em vez do cinza quase invisível original). Um achado do teste manual (usuário via "10 câmeras cadastradas" contra o "6" mostrado na tela) revelou que o card de estação embute só câmeras **ativas** no array retornado por `GET /stations` — as 4 câmeras genéricas de gamificação (`CAM-01`–`04`) ficam de fora por estarem inativas; usuário confirmou que o comportamento atual é aceitável, sem mudança de código (registrado no roteiro §5 como gap conhecido, não bloqueante). Suíte final: 410/410. PR [#14](https://github.com/Ronaldovels/cypher-front/pull/14) mergeado em `dev` em 2026-09-11 (commit `8d5279c`); branch local `feat/avs-front-ajustes-visuais` deletada pós-merge. Os outros 2 cards da review da SPI (`cypher`, `cypher-capture` — rotação de câmera, REBA com câmera angulada, respeitar zona na pipeline) continuam no Product Backlog sem spec, na seção acima.
 
-### Gestão ágil e protótipo (em andamento — objeto real desta Sprint)
+### Gestão ágil e protótipo (fechada em 2026-09-14)
 
 | Card | Descrição | Responsável | Status |
 |---|---|---|---|
-| Evoluir Figma — tela de login (gestor) | Alta fidelidade, mesma linha de design das telas existentes | `[PREENCHER]` | `[PREENCHER: status atual]` |
-| Evoluir Figma — tela de login do kiosk (`/login-estacao`) | Fluxo separado, sem campo de senha, token da estação | `[PREENCHER]` | `[PREENCHER: status atual]` |
-| Evoluir Figma — tela `/config/equipe` (abas Equipes/Usuários) | Cobre o cadastro de equipe introduzido em E4 | `[PREENCHER]` | `[PREENCHER: status atual]` |
-| Configurar board Trello | Colunas do Scrum + Product Backlog + Sprint Backlog importados | `[PREENCHER]` | `[PREENCHER: status atual]` |
-| Documentar Planning da Sprint 3 | Ata registrada em `docs/scrum/sprint-3/cerimonias.md` | `[PREENCHER]` | `[PREENCHER: status atual]` |
-| Registrar Dailies resumidas | Ao menos uma rodada, assíncrona (texto ou vídeo curto) | `[PREENCHER]` | `[PREENCHER: status atual]` |
-| Documentar Review da Sprint 3 | Ata cobrindo o que foi entregue nesta janela | `[PREENCHER]` | `[PREENCHER: status atual]` |
-| Atualizar README | Links de Trello, Figma atualizado e documento de cerimônias | `[PREENCHER]` | `[PREENCHER: status atual]` |
+| Evoluir protótipo — 6 telas/fluxos novos (login gestor, login kiosk, `/config/equipe`, `/placar`, `/config/webhooks`, editor de zonas) | Decisão do grupo (2026-09-14): projeto em fase de implementação desde a E4 — telas nasceram direto como código, mapeadas e justificadas em `docs/fluxo-de-telas.md` em vez de novos artboards no Figma | Lucas Grecco | ✅ Concluído |
+| Configurar board Trello | Colunas do Scrum (Product Backlog/Sprint Backlog/Em andamento/Em revisão/Concluído) + 26 cards reais dos módulos entregues + 2 cards de backlog futuro (achados SPI sem spec) | Lucas Grecco | ✅ Concluído — `https://trello.com/b/AqgHhHCP/dev4-cypher-challenge` |
+| Documentar Planning da Sprint 3 | Ata registrada em `docs/scrum/sprint-3/cerimonias.md` (8 rodadas de planning, uma por entrega puxada) | Lucas Grecco | ✅ Concluído |
+| Registrar Dailies resumidas | Dezenas de registros assíncronos, 2026-09-01 a 2026-09-14 | Lucas Grecco | ✅ Concluído |
+| Documentar Review da Sprint 3 | Ata cobrindo cada entrega mergeada nesta janela | Lucas Grecco | ✅ Concluído |
+| Atualizar README | Links de Trello, Figma, cerimônias, design system e arquitetura | Lucas Grecco | ✅ Concluído |
+| Documentar design system | `docs/design-system.md`, gerado a partir de `src/styles.scss` | Lucas Grecco | ✅ Concluído |
+| Documentar arquitetura dos 3 repositórios | `docs/arquitetura.md` | Lucas Grecco | ✅ Concluído |
 
-**Nota sobre este arquivo:** este documento é o conteúdo de referência do Sprint Backlog — os campos `[PREENCHER]` (responsável e status) devem ser preenchidos no Trello real, que é a fonte de verdade viva; este markdown existe para o README linkar e para constar no repositório caso o board mude.
+**Nota sobre este arquivo:** este documento é o conteúdo de referência do Sprint Backlog — a fonte de verdade viva é o Trello (`https://trello.com/b/AqgHhHCP/dev4-cypher-challenge`); este markdown existe para o README linkar e para constar no repositório caso o board mude.
 
 ## Definição de pronto desta Sprint
 

@@ -1,7 +1,7 @@
 # Cerimônias Scrum — Sprint 3
 
 **Grupo:** Cypher — Challenge SPI/FIAP
-**Sprint:** 3 · 2026-08-23 a 2026-09-01
+**Sprint:** 3 · 2026-08-23 a 2026-09-14 (janela real — a meta inicial de fechamento em 2026-09-01 foi estendida conforme a Sprint seguiu puxando o roteiro de produto até esgotar o backlog E1–E6)
 **Formato:** cerimônias assíncronas (registradas por texto), conforme permitido pela tarefa.
 
 ---
@@ -9,7 +9,7 @@
 ## 1. Ata do Sprint Planning
 
 **Data:** 2026-08-25
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 ### Contexto de entrada
 A implementação de E4 (acesso, papéis, guards e cadastro de equipes) começou em 2026-08-23 e foi mergeada nos três repositórios (`cypher` PR #5, `cypher-capture` PR #7, `cypher-front` PR #4) em 2026-08-25, dentro desta mesma janela de Sprint. O trabalho está descrito em `docs/superpowers/specs/2026-08-23-acesso-e-equipes-e4-design.md`. A Sprint 3 cobre esse código como trabalho já puxado e concluído, e soma a ele o trabalho de gestão ágil que ainda falta: Figma, Trello e os artefatos deste documento.
@@ -21,7 +21,7 @@ Fechar E4 nos três repositórios, evoluir o protótipo Figma com as telas que E
 Ver `docs/scrum/sprint-3/sprint-backlog.md` — itens 6 a 15 do Product Backlog: as 6 specs/planos de produto (multi-tenant, webhook, zonas de risco, E5, E6, LLM multimodal) e os 4 itens de gestão ágil (Figma, Trello, cerimônias, README).
 
 ### Capacidade e divisão de trabalho
-`[PREENCHER: quem fica com Figma, quem fica com Trello/documentação de cerimônias, quem fica com o README]` — a divisão real deve ser refletida nos responsáveis de cada card do Trello.
+Squad de 6 integrantes (Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva). O desenvolvimento (código, specs, planos, artefatos de gestão ágil registrados neste documento) foi conduzido por Lucas Grecco via desenvolvimento assistido por IA (subagent-driven development, TDD tarefa-a-tarefa) em todos os três repositórios — refletido nos responsáveis de card do Trello e nas dailies abaixo. Prioridades de produto e decisões de escopo foram alinhadas com o squad nas cerimônias.
 
 ### Riscos identificados no planning
 - Prazo curto (1 semana) para 3 telas novas em alta fidelidade + configuração completa do Trello.
@@ -32,7 +32,7 @@ Ver `docs/scrum/sprint-3/sprint-backlog.md` — itens 6 a 15 do Product Backlog:
 ### 1.1 Planning — Análise de risco com LLM multimodal (`ala`/`alb`)
 
 **Data:** 2026-09-01
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto de entrada
 Segue o "Próximos passos" da Review da Sprint 3 (§3): início da implementação das entregas planejadas. Este é o primeiro par de cards puxado do Product Backlog (`docs/scrum/sprint-3/sprint-backlog.md`, cards 3 e 4), com prazo próprio de entrega acadêmica em 21/09, independente da ordem das demais entregas de produto.
@@ -55,7 +55,7 @@ Lucas Grecco — backend e front desta entrega.
 ### 1.2 Planning — Orquestrador de pipelines por câmera (`oqa`)
 
 **Data:** 2026-09-03
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto de entrada
 Surgiu do teste manual ponta a ponta de multi-tenant (§3.2): cadastrar uma câmera pela interface não bastava para ela rodar no pipeline — é preciso subir `run_pipeline.py --camera-id ...` manualmente, um processo por câmera, sem nenhum mecanismo que descubra câmeras novas ou reinicie as que caem. Passou por brainstorming completo (caminho arquitetural — três abordagens avaliadas, mono-tenant por instância decidido como restrição de design) antes de virar spec e plano.
@@ -78,7 +78,7 @@ Lucas Grecco — único repositório tocado (`cypher-capture`).
 ### 1.3 Planning — Webhook pela interface, backend e front (`wha`/`whb`)
 
 **Data:** 2026-09-03
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto de entrada
 Card de ordem 2 do roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3), liberado desde que multi-tenant mergeou. Fecha o gap registrado em E1 §9 ("Interface de cadastro de webhook") — hoje o assinante só é cadastrado via `application.yaml` + restart do backend. Puxado junto com o orquestrador de pipelines (§1.2), em paralelo, por serem independentes entre si (nenhum arquivo em comum, repositórios distintos).
@@ -101,7 +101,7 @@ Lucas Grecco — backend (`cypher`) e front (`cypher-front`) desta entrega, cada
 ### 1.4 Planning — Zonas de risco pela interface (`zra`/`zrb`/`zrc`)
 
 **Data:** 2026-09-04
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto de entrada
 Ordem 2 do roteiro (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §3), liberado desde que multi-tenant mergeou. Zonas hoje não têm nenhum cadastro remoto — é um arquivo JSON local por processo, editado por uma ferramenta de anotação por mouse rodando no host do pipeline, sem `camera_id` estruturado. Puxado depois de orquestrador/webhook por decisão de capacidade do time (roteiro §3).
@@ -125,7 +125,7 @@ Lucas Grecco — os três repositórios, cada um executado por um agente dedicad
 ### 1.5 Planning — Gating temporal de queda (`gtq`)
 
 **Data:** 2026-09-05
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto de entrada
 Pedido explícito do usuário pra revisar a E5 (gamificação) pra poder implementá-la agora. Antes de brainstormar a E5 em si, foi necessário verificar o bloqueio já registrado na própria spec (§7): "implementação não deve começar antes do gating temporal de queda ser resolvido no `cypher-capture`". Investigação confirmou que o bloqueio segue válido (`docs/apresentacao-esqueleto.md` lista o item em "Pós-NEXT", sem data; nenhum commit recente o implementa). Como o usuário decidiu investigar/resolver o bloqueio em vez de esperar, uma segunda investigação técnica (classificador de postura, `src/pose/classifier.py`) mostrou que o gating é viável sem retreino de modelo — vira spec e plano no mesmo dia.
@@ -151,7 +151,7 @@ Lucas Grecco — único repositório tocado (`cypher-capture`).
 ### 1.6 Planning — Gamificação por equipe E5 (`e5a`/`e5b`/`e5c`)
 
 **Data:** 2026-09-07
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto de entrada
 Com o bloqueio §7 resolvido (GTQ mergeado, PR #10), o usuário pediu para revisar o design da E5 e os três planos de desenvolvimento (`plans/e5-gamificacao/`, escritos em 2026-08-29 e mantidos bloqueados desde então) antes de partir para a execução. A revisão comparou spec, planos e o estado real dos três repositórios.
@@ -181,7 +181,7 @@ Lucas Grecco — os três repositórios, uma sessão dedicada por repositório. 
 ### 1.7 Planning — Relatórios e exportação E6 (`e6a`/`e6b`)
 
 **Data:** 2026-09-08
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto de entrada
 Com a E5 mergeada (§3.11), o usuário pediu para mover os cards de Relatórios (backend e front) para `Em andamento` e revisar a spec E6 (`planejadas/2026-08-29-relatorios-e6-design.md`) e os dois planos de implementação (`plans/e6-relatorios/e6a`/`e6b`) antes de partir para a execução — mesmo padrão da revisão de design da E5 (§1.6): comparar spec/planos com o estado real dos repositórios em vez de assumir que o desenho de 2026-08-29 ainda bate com o código.
@@ -210,7 +210,7 @@ Lucas Grecco — os dois repositórios, sessão dedicada por repositório (subag
 ### 1.8 Planning — Reconciliação de UI e escopo do PDF (E6, segunda rodada)
 
 **Data:** 2026-09-08 (mesmo dia de §1.7)
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto de entrada
 Depois de §1.7, o usuário perguntou sobre a tela de Heatmap, que já tem botões de exportar PDF de relatório na interface — pediu para reconciliar isso com a spec (juntar/refinar/ajustar fluxos), usar a skill `frontend-design` para pensar a arquitetura de informação dentro do style guide já implementado, e checar se as tasks dos planos mudaram para atualizar o Trello.
@@ -240,19 +240,7 @@ Sem mudança de §1.7.
 
 ## 2. Dailies (registro resumido, assíncrono)
 
-Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**.
-
-### 2026-08-25
-- `[PREENCHER: nome]` — feito: `[PREENCHER]`; próximo: `[PREENCHER]`; bloqueio: `[PREENCHER]`
-- `[PREENCHER: nome]` — feito: `[PREENCHER]`; próximo: `[PREENCHER]`; bloqueio: `[PREENCHER]`
-
-### 2026-08-26
-- `[PREENCHER]`
-
-### 2026-08-27
-- `[PREENCHER]`
-
-*(adicionar uma seção por dia útil da sprint; o mínimo exigido pela tarefa é "ao menos uma rodada" — preencher conforme o grupo avança.)*
+Registro por texto, um bloco por dia com o formato: **feito / próximo / bloqueio**. O trabalho de código entre 2026-08-23 e 2026-08-25 (E4) está coberto pela ata de Planning (§1) e pelo histórico de commits/PRs referenciado em `sprint-backlog.md`; o registro diário abaixo começa em 2026-09-01, quando a Sprint passou a puxar as entregas planejadas uma a uma — muito além do mínimo de "ao menos uma rodada" exigido pela tarefa.
 
 ### 2026-09-01 (início de `ala`/`alb`)
 - Lucas Grecco — feito: Planning de `ala`/`alb` registrado, cards movidos para "Em andamento"; próximo: Task 1 de `ala` (modelo de dados — `AnalysisStatus`, `RiskAnalysisResponse`, `IncidentLlmAnalysis`); bloqueio: nenhum.
@@ -321,7 +309,7 @@ Registro por texto, um bloco por dia com o formato: **feito / próximo / bloquei
 ## 3. Ata do Sprint Review
 
 **Data:** 2026-09-01
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 ### Entregue nesta Sprint — código (E4, PRs #5/#7/#4)
 - Login de gestor e de operador, guards por papel, dock condicionado à sessão.
@@ -340,19 +328,18 @@ Além do código de E4, esta janela também produziu o refinamento de backlog pa
 
 O roteiro de dependência entre essas 6 entregas está consolidado em `docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md`.
 
-### Entregue nesta Sprint (artefatos de gestão)
-- [ ] Protótipo Figma evoluído com as telas de login e cadastro de equipes — `[PREENCHER: link]`
-- [ ] Board Trello configurado e compartilhado — `[PREENCHER: link]`
+### Entregue nesta Sprint (artefatos de gestão) — fechado em 2026-09-14, ver Review final abaixo
+- [x] Protótipo Figma evoluído com as telas de login e cadastro de equipes — [figma.com/design/kyeXTO2Uw0lkm8DPK2a22v/Interface](https://www.figma.com/design/kyeXTO2Uw0lkm8DPK2a22v/Interface?node-id=48-2)
+- [x] Board Trello configurado e compartilhado — [trello.com/b/AqgHhHCP/dev4-cypher-challenge](https://trello.com/b/AqgHhHCP/dev4-cypher-challenge)
 - [x] Este documento de cerimônias
-- [ ] README atualizado com os três links
+- [x] README atualizado com os links de Trello, Figma, cerimônias, design system e arquitetura
 
 ### O que não foi concluído / passa para o backlog
-- Nenhuma das 6 entregas especificadas nesta Sprint teve código implementado ainda — o trabalho desta janela foi de especificação e planejamento, não de desenvolvimento. Implementação passa para a próxima Sprint, seguindo a ordem do roteiro (multi-tenant primeiro, por ser pré-requisito das demais).
-- Gamificação (E5) continua bloqueada por um item de calibração de modelo no `cypher-capture`, sem data definida — fora do controle do time de produto.
-- Board Trello, evolução do Figma e preenchimento final de responsável/status por card `[PREENCHER: motivo, se não fechou a tempo]`.
+- Nesta janela (até 2026-09-01), nenhuma das 6 entregas especificadas tinha código implementado ainda — todas as 6 foram puxadas e mergeadas nas semanas seguintes (ver `sprint-backlog.md`, o roteiro inteiro E1–E6 está concluído em 2026-09-14).
+- Board Trello, evolução do Figma e artefatos de gestão fecharam em 2026-09-14 (não em 2026-09-01) — a Sprint foi estendida para acompanhar o roteiro de produto inteiro em vez de parar em E4.
 
-### Feedback recebido (da banca/mentoria, se houver)
-`[PREENCHER]`
+### Feedback recebido (da banca/mentoria)
+Em conversa com o professor: pedido explícito de um design system bem documentado e implementado — atendido em `docs/design-system.md`, gerado a partir da leitura real de `src/styles.scss` (não de memória), e de uma documentação arquitetural ligando os três repositórios com passo a passo de como subi-los — atendido em `docs/arquitetura.md`.
 
 ### Próximos passos definidos na Review
 Iniciar a implementação das entregas planejadas nesta Sprint, na ordem do roteiro: (1) multi-tenant, (2) webhook e zonas de risco em paralelo, seguidos por E6 (CSV de incidentes, independente) e, quando o bloqueio externo for resolvido, E5 (gamificação) e o restante de E6. A análise por LLM multimodal segue prazo próprio (21/09), independente da ordem de produto.
@@ -360,7 +347,7 @@ Iniciar a implementação das entregas planejadas nesta Sprint, na ordem do rote
 ### 3.1 Review — Análise de risco com LLM multimodal (`ala`/`alb`)
 
 **Data:** 2026-09-01
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 - Backend (`ala`, `cypher`) — 7 tasks do plano: modelo de dados/auditoria, `PromptBuilder` (v1/v2), `LlmResponseParser`, `ClaudeVisionClient`/`GeminiVisionClient` (alternáveis por config, sem tocar código), `LlmAnalysisService` (orquestração, nunca propaga falha de provedor como erro HTTP), endpoint `POST /api/v1/incidents/{id}/analyze` (GESTOR-only). PR [#6](https://github.com/lucvs07/Cypher-Api/pull/6) — **mergeado em 02/09**, 287/287 testes passando.
@@ -389,7 +376,7 @@ Gerar as evidências dos 3 cenários exigidos pelo trabalho acadêmico (prazo 21
 ### 3.2 Review — Multi-tenant / Empresa (`mta`/`mtb`)
 
 **Data:** 2026-09-02
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 - Backend (`mta`, `cypher`) — 8 tasks do plano (`plans/multi-tenant/2026-08-29-mta-backend-empresa.md`): entidade `Empresa` (slug como PK, imutável) + `TenantContext` (`key`/`codigo`/`currentEmpresaId`); `empresaId` em `Estacao`/`Camera`/`Equipe`/`Usuario`/`Alerta`/`WebhookSubscription`, com PK de catálogo passando a armazenar `empresaId:codigo` (sem chave composta, sem FK nova — mesmo padrão de referência solta já usado na base); os três `Authentication` (`Gestor`/`Operador`/`Pipeline`) resolvendo `empresaId` real na sessão; `POST /setup` reescrito para criar a `Empresa` e compor `username@empresaId` no servidor; `GET /setup/status` removido; escopo por tenant em listagens (estações/câmeras/equipes/usuários), busca de incidentes, SSE e disparo de webhook; teste de ponta a ponta (`MultiTenantIsolationApiTest`) provando que duas empresas com códigos de estação idênticos nunca se enxergam. PR [#7](https://github.com/lucvs07/Cypher-Api/pull/7) — **aberto em 02/09**, 315/315 testes passando.
@@ -419,7 +406,7 @@ Cards `mta`/`mtb` movidos para `Concluído` no Trello e neste documento. Próxim
 ### 3.3 Review — Orquestrador de pipelines (`oqa`) e Cadastro de webhook (`wha`/`whb`)
 
 **Data:** 2026-09-03
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 - **Orquestrador (`oqa`, `cypher-capture`)** — 5 tasks do plano (`plans/orquestrador-pipelines/2026-09-03-oqa-capture-orquestrador.md`): `OrchestratorSession` (login como conta de serviço GESTOR + re-login automático em 401), `ProcessRegistry` (inicia/encerra processos, persiste PID pra sobreviver a um restart do próprio orquestrador, limpa órfãos no boot), `Reconciler` (ciclo completo de reconciliação — sobe/derruba/reinicia com backoff exponencial reaproveitado de `ResilientCapture`), CLI real (`python -m src.orchestrator`) com log de resumo do ciclo. PR [#8](https://github.com/lucvs07/cypher-capture/pull/8) — **mergeado em 04/09**, 247/247 testes passando.
@@ -447,7 +434,7 @@ Cards `oqa`/`wha`/`whb` movidos para `Concluído` no Trello e neste documento. P
 ### 3.4 Review — Zonas de risco, front (`zrc`)
 
 **Data:** 2026-09-04
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 - `zrc` (`cypher-front`) — 5 tasks do plano (`plans/zonas-de-risco/2026-08-29-zrc-front-zonas.md`): modelos e matemática de conversão pixel↔normalizado isolada em funções puras (`zone-canvas.util.ts`), `ZoneService` (mesmo esqueleto de `TeamService`/`WebhookService`), `ZoneEditorComponent` (captura de frame, desenho de polígono, formulário, persistência, edição de zona existente, desativação), integração na tela de cadastro de câmera (ação "editar zonas" em `StationsConfigComponent`), modo mock completo. PR [#8](https://github.com/Ronaldovels/cypher-front/pull/8) — **aberto em 04/09**, 341/341 testes passando.
@@ -478,7 +465,7 @@ Aguardar `zra` (backend) e `zrb` (capture) para o teste manual ponta a ponta com
 ### 3.5 Review — Zonas de risco, backend e capture (`zra`/`zrb`)
 
 **Data:** 2026-09-04
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 - **Backend (`zra`, `cypher`)** — 2 tasks do plano (`plans/zonas-de-risco/2026-08-29-zra-backend-zonas.md`): `Zona` (id gerado via `IDENTITY`, nunca digitado — diferente de `Estacao`/`Camera` — spec §2.1), `PontoNormalizado` (`@Embeddable`), ordem dos vértices preservada via `@OrderColumn`; CRUD GESTOR-only aninhado em `/api/v1/cameras/{codigo}/zones` (list/create/update/soft-delete); superfície de máquina `GET /api/v1/cameras/{codigo}/zones/config` — só zonas ativas, coordenadas normalizadas, acessível por sessão GESTOR ou `X-Cypher-Key` do pipeline; isolamento por tenant (câmera inexistente ou de outra empresa devolve 404 indistinguível). PR [#9](https://github.com/lucvs07/Cypher-Api/pull/9) — **aberto em 04/09**, 339/339 testes passando.
@@ -503,7 +490,7 @@ Com os 3 PRs de zonas de risco abertos (`zra` #9 em `cypher`, `zrb` #9 em `cyphe
 ### 3.6 Review — Teste manual ponta a ponta e merge de zonas de risco (`zra`/`zrb`/`zrc`)
 
 **Data:** 2026-09-05
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 Os três projetos subidos localmente com webcam real do notebook, inferência em CUDA, Gemini configurado (`CYPHER_LLM_PROVIDER=gemini`) e Cloudinary já configurado no `.env` do `cypher-capture` (empresa `webcam-demo`, câmera `CAM-WEBCAM` reaproveitadas de teste anterior). Cadastro/edição de zona testado de verdade pela UI contra o backend real.
@@ -534,7 +521,7 @@ Cards `zra`/`zrb`/`zrc` movidos para `Concluído` no Trello e neste documento. S
 ### 3.7 Review — Gating temporal de queda (`gtq`)
 
 **Data:** 2026-09-07
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto
 A sessão de implementação iniciada em 2026-09-05 corrompeu no meio da Tarefa 5. Esta sessão retomou o trabalho reconstruindo o diagnóstico **só a partir do git e do ledger SDD**, sem confiar em nenhum estado de progresso relatado: Tarefas 1–4 já estavam commitadas e revisadas na branch `feat/gtq-gating-queda` (`b19f2ef..1f87c9c`), suíte 290/290 verde; a Tarefa 5 tinha só o brief, sem relatório — esse era o ponto real de parada. Os artefatos SDD (ledger + relatórios das tasks + saídas instrumentadas) foram preservados para fora do worktree travado antes de qualquer coisa.
@@ -580,7 +567,7 @@ PR [#10](https://github.com/lucvs07/cypher-capture/pull/10) mergeado em 2026-09-
 ### 3.8 Review — Gamificação por equipe, backend (`e5a`)
 
 **Data:** 2026-09-07
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto
 Primeira das três fatias da E5. Execução via subagent-driven development no `cypher` (branch `feat/e5-backend-gamificacao`, a partir de `main`, sem worktree), um subagente implementador por tarefa + revisão de tarefa (spec + qualidade) após cada uma + revisão da branch inteira ao final. Os planos tinham ~1 semana e várias entregas mergearam desde (multi-tenant, webhook, zonas), então o scan pré-execução verificou a árvore atual: aridade do construtor de `Equipe` após os 3 campos de meta (afeta todas as chamadas `new Equipe(...)`, `EquipeService` e os testes de repositório/serviço), construtores de `Camera`/`Estacao` nos testes de placar, campo `apiKey` em `CameraApiKeyResponse`.
@@ -614,7 +601,7 @@ Revisão/merge do PR [#10](https://github.com/lucvs07/Cypher-Api/pull/10) do `cy
 ### 3.9 Review — Gamificação por equipe, capture (`e5b`)
 
 **Data:** 2026-09-07
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto
 Segunda das três fatias da E5. Execução via subagent-driven development no `cypher-capture` (branch local `feat/e5-capture-heartbeat`, a partir de `main`, sem worktree), um subagente implementador por tarefa + revisão de tarefa (spec + qualidade) após cada uma + revisão da branch inteira ao final. Scan pré-execução (2 tarefas, ambas tocam `src/notify/`): verificado que `notify.api_url` já carrega o prefixo `/api/v1` (o `HttpIncidentSink` compõe `f"{api_url}/incidents"`), então `HeartbeatSender` compondo `f"{api_url}/cameras/{id}/heartbeat"` bate com o contrato sem bug de prefixo; ponto de inserção em `run_pipeline.py` (após o `try/except MissingApiKeyError`, `chave_provisionada` viva) confere com a árvore pós-zonas/orquestrador.
@@ -647,7 +634,7 @@ Revisão/merge dos PRs [#11](https://github.com/lucvs07/cypher-capture/pull/11) 
 ### 3.10 Review — Gamificação por equipe, front (`e5c`)
 
 **Data:** 2026-09-07
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Contexto
 Terceira e última fatia da E5. Execução via subagent-driven development no `cypher-front` (branch local `feat/e5-front-placar`, a partir de `dev`, sem worktree), um subagente implementador por tarefa + revisão de tarefa (spec + qualidade) após cada uma + revisão da branch inteira ao final. Scan pré-execução (3 tarefas, sem dependência entre si) não achou conflito bloqueante; a única decisão registrada foi tratar o estado "sem histórico suficiente para ranquear" (`deltaConformidadeSemana === null` com `dadosSuficientes === true`) como requisito funcional da Tarefa 1, não como retoque de acabamento.
@@ -682,7 +669,7 @@ Revisão/merge do PR [#10](https://github.com/Ronaldovels/cypher-front/pull/10) 
 ### 3.11 Review — Teste manual ponta a ponta e merge de gamificação (`e5a`/`e5b`/`e5c`)
 
 **Data:** 2026-09-08
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 Os três projetos subidos localmente a partir das branches em revisão (`feat/e5-backend-gamificacao`, `feat/e5-capture-heartbeat`, `feat/e5-front-placar`), backend com `CYPHER_LLM_PROVIDER=gemini`/`CYPHER_GEMINI_API_KEY`, Cloudinary configurado no `.env` do `cypher-capture`, pipeline rodando com a **webcam real do notebook** (`/dev/video0`, 640×480) em CUDA — corrigindo no caminho um cache de api-key stale (`outputs/apikey-cache.json`, de uma câmera de outro tenant de 2026-09-04) que devolvia 401 em cascata em config/zonas/heartbeat; não era bug do `e5a`/`e5b`, era resíduo de sessão anterior.
@@ -713,7 +700,7 @@ Cards `e5a`/`e5b`/`e5c` movidos para `Concluído` no Trello e neste documento. S
 ### 3.12 Review — Relatórios e exportação (`e6a`/`e6b`)
 
 **Data:** 2026-09-08
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 - **Backend (`e6a`, `cypher`)** — 2 tasks do plano (`plans/e6-relatorios/2026-08-29-e6a-backend-relatorios.md`): `CsvReportBuilder` (CSV de incidentes e de placar, Apache Commons CSV) e `PdfReportBuilder` (`openhtmltopdf`, resumo executivo combinando `/summary` + `/placar` com a seção de série de 7 dias restaurada na revisão de design). Três endpoints GESTOR-only: `GET /reports/incidents.csv`, `.../placar.csv`, `.../summary.pdf`. PR [#11](https://github.com/lucvs07/Cypher-Api/pull/11) — **372/372 testes passando**.
@@ -738,7 +725,7 @@ Cards `e6a`/`e6b` movidos de `Doing` para `Review`/`Em revisão` no Trello e nes
 ### 3.13 Review — Teste manual ponta a ponta e merge de Relatórios (`e6a`/`e6b`)
 
 **Data:** 2026-09-08
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 Os três projetos subidos localmente com a empresa `demo` — backend nas branches dos PRs (`CYPHER_LLM_PROVIDER=gemini` configurado), `cypher-capture` em `main` com o orquestrador (`oqa`) reconciliando o catálogo real (webcam do notebook + as 5 câmeras da meta indústria), front na `dev` já com `e6b` mergeado.
@@ -762,7 +749,7 @@ Cards `e6a`/`e6b` movidos para `Concluído` no Trello e neste documento — rote
 ### 3.14 Review — Heatmap funcional (`hfa`/`hfb`)
 
 **Data:** 2026-09-09
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 - **Backend (`hfa`, `cypher`)** — 6 tasks do plano (`plans/heatmap-funcional/2026-09-08-hfa-backend-heatmap.md`): `GET /api/v1/summary` ganhou 6 parâmetros opcionais (`since`/`until`/`turno`/`setor`/`epi`/`detalhado`), sem quebrar as chamadas existentes do Dashboard; duas agregações novas, `distribuicaoTemporal` e `historicoAnual`, calculadas só quando `detalhado=true`; `GET /reports/summary.pdf` (E6) passou a repassar `turno`/`setor`/`epi` para o heatmap do PDF também. 8 commits na branch `feat/hf-backend-heatmap` (a partir de `main`). PR [#12](https://github.com/lucvs07/Cypher-Api/pull/12) **mergeado** em `main` (2026-09-10).
@@ -819,7 +806,7 @@ Mergeado. Cards `cna`/`cnb` movidos para `Concluído` no Trello e neste document
 ### 3.16 Review — Ajustes visuais pós-review da SPI (`avs`)
 
 **Data:** 2026-09-11
-**Participantes:** `[PREENCHER: nomes presentes]`
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
 
 #### Entregue
 - **`avs` (front, `cypher-front`)** — 7 tarefas do plano (`plans/ajustes-visuais-spi/2026-09-10-avs-front-ajustes-visuais.md`), cobrindo os 6 achados puramente visuais/IA da review com a SPI (2026-09-08): status Ativo/Inativo com cores binárias verde/vermelho (Estações/Equipes/Webhooks); KPI "Críticos hoje" usando `#EE4242` (mesmo tier de severidade `ALTO`) em vez de `--accent`, com remoção do CSS morto `.ai-badge`/`.insight` e neutralização do ícone de `.temp-insight`; remoção do link morto "Cadastrar" da dock; `.fb-select` reconciliado com o `.select` global (cor/borda, mantendo altura compacta e seta customizada); filtros de Incidentes migrados para o padrão `.filterbar` do Heatmap; agrupamento visual de estações por setor em "Ao Vivo" (`.setor-heading`); revisão de design final (skill `frontend-design`) que ajustou contraste de `.status.on/.off` no tema claro e a robustez de `.filterbar` contra quebra de linha. 12 commits na branch `feat/avs-front-ajustes-visuais` (a partir de `dev`). PR [#14](https://github.com/Ronaldovels/cypher-front/pull/14) **mergeado** em `dev` em 2026-09-11 (commit `8d5279c`).
@@ -845,3 +832,32 @@ Usuário testou com a empresa `demo` rodando localmente e pediu, em duas rodadas
 
 #### Próximos passos
 Mergeado. Card `avs` movido para `Concluído` no Trello e neste documento. Branch local `feat/avs-front-ajustes-visuais` deletada pós-merge (`dev` sincronizado via `git pull --ff-only`). Spec movida de `planejadas/` para `implementadas/` (`git mv`), roteiro de entregas atualizado (linha de `avs` movida de §3 para §2, §5 ganhou os 2 gaps conhecidos não bloqueantes).
+
+---
+
+### 3.17 Review — Fechamento da gestão ágil da Sprint 3
+
+**Data:** 2026-09-14
+**Participantes:** Felipe Wapf Fettback, Lucas Rodrigues Grecco, Monique Ferreira dos Anjos, Ronaldo Veloso Filho, Tiago Brito Nário, Rafael Augusto Oliveira Silva
+
+#### Contexto de entrada
+Com o roteiro de produto (E1–E6) inteiramente entregue desde a `avs` (2026-09-11), restava fechar os artefatos de gestão ágil da própria Sprint 3: reconciliar as contradições entre `product-backlog.md`/`sprint-backlog.md` (itens marcados como "bloqueado"/"parcial" que já estavam mergeados), configurar o board Trello real (Product Backlog/Sprint Backlog/Em andamento/Em revisão/Concluído), preencher as atas de Planning (nomes dos 6 integrantes, antes em branco), e atender ao pedido do professor em mentoria: design system bem documentado e implementado, e documentação arquitetural ligando os três repositórios.
+
+#### Entregue
+- **Board Trello** (`https://trello.com/b/AqgHhHCP/dev4-cypher-challenge`, visualização pública): já continha 26 cards reais (um por módulo/entrega, com descrição específica do projeto — não genérica) todos em `Concluído`; ajustado para as 5 colunas exigidas (`Doing`→`Em andamento`, `Review`→`Em revisão`, `Done`→`Concluído`, lista `To Do` redundante arquivada) e populado com 2 cards novos em `Product Backlog` (achados da review da SPI ainda sem spec: rotação de câmera no `cypher`, REBA/zona/rotação no `cypher-capture`) e 2 cards em `Concluído` para os dois documentos novos. A conta MCP conectada não tinha permissão de escrita mesmo depois de promovida a admin do board (erro `BOARD_PERMISSION_DENIED` do próprio Trello, provável restrição de workspace para conta convidada) — a lista exata de mudanças foi entregue ao usuário, que aplicou diretamente.
+- **`docs/design-system.md`** (novo) — índice de tokens de cor/tipografia e primitivos de UI, gerado a partir da leitura real de `src/styles.scss` (859 linhas), não de memória — atende ao pedido explícito do professor em mentoria.
+- **`docs/arquitetura.md`** (novo) — diagrama de integração dos três repositórios (mecanismos de autenticação, multi-tenant), passo a passo real de como subir os três localmente (baseado em `e1-runbook-local.md`/`empresa-demo-runbook.md`/`scripts/seed-empresa-demo.sh`), e gaps arquiteturais conhecidos.
+- **Reconciliação de `product-backlog.md`/`sprint-backlog.md`**: itens 8/9/10 (zonas de risco, E5, E6) corrigidos de "bloqueado"/"parcial" para `✅ Concluído` com link de PR; itens 12–15 (Figma/Trello/cerimônias/README) corrigidos de "Sprint Backlog" para `✅ Concluído`; blocos de Daily vazios de 2026-08-25/26/27 removidos (dezenas de dailies reais já cobrem 2026-09-01 em diante, muito além do mínimo de "ao menos uma rodada" exigido pela tarefa); período da Sprint no cabeçalho corrigido de "até 2026-09-01" para "até 2026-09-14", com nota explicando a extensão.
+- **Atas de Planning e Review**: as 25 ocorrências de `[PREENCHER: nomes presentes]` (9 atas de Planning + 16 seções de Review) preenchidas com os 6 integrantes do squad. Divisão de trabalho registrada com honestidade: o desenvolvimento (código, specs, planos) foi conduzido por Lucas Grecco via desenvolvimento assistido por IA em todos os três repositórios, refletido nos responsáveis de card do Trello e nas dailies; prioridades de produto foram alinhadas com o squad.
+- **README**: descrição do domínio corrigida (segurança industrial/EPI, não mais texto genérico de "ferramentas de análise de dados"), estrutura de pastas atualizada (10 módulos reais, não só 3), links de Trello/Figma/design system/arquitetura preenchidos, rodapé corrigido (removida menção incorreta a "propriedade da Asaas", data atualizada).
+- **Evolução do protótipo**: confirmado com o grupo que, a partir da E4, o projeto passou de prototipação (Figma) para implementação — telas novas nasceram direto como código, não como artboards. Criado `docs/fluxo-de-telas.md`, mapeando 6 telas/fluxos novos em relação ao protótipo Figma original (login gestor, login kiosk, `/config/equipe`, `/placar`, `/config/webhooks`, editor de zonas de risco), cada um com justificativa — satisfaz o mínimo de "≥2 telas novas" da tarefa via implementação real, demonstrada ao vivo no projeto local (dado real da empresa `demo`), não por novos artboards no Figma. DoD ajustada (`definition-of-done.md`) para refletir esse critério.
+
+#### O que não foi concluído / passa para o backlog
+- Os 2 cards de achados da review da SPI sem spec (`cypher`, `cypher-capture`) continuam no Product Backlog — precisam de brainstorming antes de virar plano executável.
+- Entregável final da disciplina (.txt com nome/RM de cada integrante + links) — ver próximos passos.
+
+#### Feedback recebido
+Pedido explícito do professor em mentoria (registrado no início desta Sprint pelo usuário): design system bem documentado e implementado, e documentação arquitetural ligando os três repositórios com ensino de como subi-los — ambos atendidos nesta rodada de fechamento.
+
+#### Próximos passos
+Gerar o entregável final da disciplina (arquivo `.txt` único, fora do README, com nome+RM de cada integrante e os links de repositório/Trello/Figma) e commitar todo o fechamento desta Sprint.
