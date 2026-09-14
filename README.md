@@ -135,7 +135,7 @@ ng e2e
 
 ### 🎥 Vídeo de demonstração
 
-**Link:** `[PREENCHER: link do vídeo]`
+https://github.com/user-attachments/assets/da582c0c-9bc6-4ca3-9de6-844e875141b9
 
 Vídeo curto (gravado com os 3 projetos rodando localmente — ver [`scripts/subir-empresa-demo.sh`](scripts/subir-empresa-demo.sh)) navegando pelas principais telas do sistema, com dado real da empresa `demo`. Roteiro sugerido (ver [`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md) para o mapa completo):
 
