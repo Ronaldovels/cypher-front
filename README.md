@@ -38,13 +38,26 @@ npm install
 
 ### Servidor de Desenvolvimento
 
-Inicie o servidor local:
+Inicie o servidor local (só o front, precisa do backend rodando à parte para dado real):
 
 ```bash
 ng serve
 ```
 
 Abra seu navegador e acesse `http://localhost:4200/`. A aplicação recarregará automaticamente quando você modificar os arquivos.
+
+### Subindo os 3 projetos juntos (backend + front + captura)
+
+Este repositório é um dos três que compõem o sistema (ver [Arquitetura](docs/arquitetura.md)). Para rodar tudo com dado real da empresa de demonstração, use o script `scripts/subir-empresa-demo.sh` (presente também nos outros dois repositórios — pode rodar a partir de qualquer um deles):
+
+```bash
+./scripts/subir-empresa-demo.sh start   # sobe backend, semeia a empresa demo, sobe o front e a webcam
+./scripts/subir-empresa-demo.sh status  # o que está no ar
+./scripts/subir-empresa-demo.sh logs    # acompanha os 3 logs
+./scripts/subir-empresa-demo.sh stop    # derruba tudo
+```
+
+Por padrão ele assume os repositórios em `~/projects/cypher`, `~/projects/challenge/cypher-front` e `~/projects/challenge/cypher-capture` (configurável por variável de ambiente — ver o cabeçalho do script). Passo a passo manual e detalhes de cada etapa: [`docs/arquitetura.md`](docs/arquitetura.md) §4, [`docs/e1-runbook-local.md`](docs/e1-runbook-local.md) e [`docs/empresa-demo-runbook.md`](docs/empresa-demo-runbook.md).
 
 ## 🏗️ Estrutura do Projeto
 
