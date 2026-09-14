@@ -133,6 +133,21 @@ ng e2e
 
 **As telas são demonstradas rodando no projeto local** (ver [docs/e1-runbook-local.md](docs/e1-runbook-local.md) e [docs/empresa-demo-runbook.md](docs/empresa-demo-runbook.md)), com dado real da empresa `demo` — o Figma documenta o desenho de alta fidelidade das telas originais (Sprints 1–2); a evolução desta Sprint é código real, mapeada em `docs/fluxo-de-telas.md`.
 
+### 🎥 Vídeo de demonstração
+
+**Link:** `[PREENCHER: link do vídeo]`
+
+Vídeo curto (gravado com os 3 projetos rodando localmente — ver [`scripts/subir-empresa-demo.sh`](scripts/subir-empresa-demo.sh)) navegando pelas principais telas do sistema, com dado real da empresa `demo`. Roteiro sugerido (ver [`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md) para o mapa completo):
+
+- [ ] Login do gestor (`/login`) → Dashboard (KPIs, heatmap mini, alertas em tempo real)
+- [ ] Heatmap (`/heatmap`) — filtros por Período/Setor/EPI/Turno, painéis Temporal e Anual
+- [ ] Incidentes (`/incidentes`) — timeline, detalhe de um incidente, análise de risco por IA
+- [ ] Ao Vivo (`/estacoes`) — grade de câmeras agrupada por setor
+- [ ] Placar (`/placar`) — gamificação por equipe
+- [ ] Config — zonas de risco (editor de polígono), equipes/usuários, webhooks
+- [ ] Central de notificações (sino no topbar)
+- [ ] Login do kiosk (`/login-estacao`) → operação de estação, sem acesso ao dashboard do gestor
+
 ### Evolução do protótipo nesta Sprint
 
 O protótipo em alta fidelidade no Figma (`Interface`) documentou o desenho de Onboarding, Dashboard e Heatmap nas Sprints 1–2. A partir da E4 o projeto entrou em fase de implementação — cada tela nova nasceu direto como componente Angular real (seguindo os primitivos do [design system](docs/design-system.md)), em vez de primeiro virar artboard no Figma. O mapeamento completo do fluxo de telas implementadas, com justificativa por tela, está em **[`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md)** — 6 telas/fluxos novos em relação ao protótipo original: login do gestor, login do kiosk, `/config/equipe`, `/placar` (gamificação), `/config/webhooks` e o editor de zonas de risco.
