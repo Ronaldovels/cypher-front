@@ -161,6 +161,8 @@ export function resetMockCatalog(): void {
     ...c,
     fonte: `rtsp://\${${c.id.replace('-', '_')}_USER}@10.0.0.7/stream`,
     ativa: true,
+    rotacao: 0,
+    anguloCameraGraus: 0,
   }));
 }
 

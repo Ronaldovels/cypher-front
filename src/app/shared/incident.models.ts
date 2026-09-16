@@ -82,6 +82,8 @@ export interface Station {
 export interface CameraAdmin extends Camera {
   fonte: string | null;
   ativa: boolean;
+  rotacao: number;
+  anguloCameraGraus: number;
 }
 
 /**
@@ -112,6 +114,8 @@ export interface CameraPayload {
   streamUrl: string;
   fonte: string | null;
   ativa?: boolean;
+  rotacao: number;
+  anguloCameraGraus: number;
 }
 
 /** Mesmo padrão que o backend valida (spec §4): 4 a 19 caracteres. */

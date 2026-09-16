@@ -7,11 +7,13 @@ import { ZoneEditorComponent } from '../zones/zone-editor.component';
 interface FormEstacao { id: string; nome: string; setor: string; }
 interface FormCamera {
   id: string; nome: string; estacaoId: string; streamUrl: string; fonte: string;
+  rotacao: number; anguloCameraGraus: number;
 }
 
 const ESTACAO_VAZIA: FormEstacao = { id: '', nome: '', setor: '' };
 const CAMERA_VAZIA: FormCamera = {
   id: '', nome: '', estacaoId: '', streamUrl: '', fonte: '',
+  rotacao: 0, anguloCameraGraus: 0,
 };
 
 /**
@@ -118,6 +120,8 @@ export class StationsConfigComponent implements OnInit {
       estacaoId: form.estacaoId,
       streamUrl: form.streamUrl.trim(),
       fonte: form.fonte.trim() || null,
+      rotacao: form.rotacao,
+      anguloCameraGraus: form.anguloCameraGraus,
     }).subscribe({
       next: () => {
         this.novaCamera.set({ ...CAMERA_VAZIA });
