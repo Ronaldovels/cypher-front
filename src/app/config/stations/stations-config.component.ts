@@ -8,12 +8,33 @@ interface FormEstacao { id: string; nome: string; setor: string; }
 interface FormCamera {
   id: string; nome: string; estacaoId: string; streamUrl: string; fonte: string;
   rotacao: number; anguloCameraGraus: number;
+  /**
+   * Ajuste fino de queda (achado SPI 2026-09-16, cameras com pitch quase
+   * vertical). `quedaCustomizada` falso envia null nos 4 campos — "usa o
+   * default do YAML do pipeline". Os 3 numeros so viram override de verdade
+   * quando o gestor liga o toggle: nao existe "0" seguro pra esses limiares.
+   */
+  quedaCustomizada: boolean;
+  fallenAspectRatio: number;
+  fallenVerticalExtent: number;
+  trunkRotationMax: number;
+  fallRequireCorroboration: boolean;
 }
+
+/** Defaults do YAML do pipeline (config/pose_config.yaml) — só placeholder inicial do form. */
+const QUEDA_DEFAULT_ASPECT_RATIO = 1.3;
+const QUEDA_DEFAULT_VERTICAL_EXTENT = 0.4;
+const QUEDA_DEFAULT_TRUNK_ROTATION_MAX = 0.35;
 
 const ESTACAO_VAZIA: FormEstacao = { id: '', nome: '', setor: '' };
 const CAMERA_VAZIA: FormCamera = {
   id: '', nome: '', estacaoId: '', streamUrl: '', fonte: '',
   rotacao: 0, anguloCameraGraus: 0,
+  quedaCustomizada: false,
+  fallenAspectRatio: QUEDA_DEFAULT_ASPECT_RATIO,
+  fallenVerticalExtent: QUEDA_DEFAULT_VERTICAL_EXTENT,
+  trunkRotationMax: QUEDA_DEFAULT_TRUNK_ROTATION_MAX,
+  fallRequireCorroboration: false,
 };
 
 /**
@@ -122,6 +143,10 @@ export class StationsConfigComponent implements OnInit {
       fonte: form.fonte.trim() || null,
       rotacao: form.rotacao,
       anguloCameraGraus: form.anguloCameraGraus,
+      fallenAspectRatio: form.quedaCustomizada ? form.fallenAspectRatio : null,
+      fallenVerticalExtent: form.quedaCustomizada ? form.fallenVerticalExtent : null,
+      trunkRotationMax: form.quedaCustomizada ? form.trunkRotationMax : null,
+      fallRequireCorroboration: form.quedaCustomizada ? form.fallRequireCorroboration : null,
     }).subscribe({
       next: () => {
         this.novaCamera.set({ ...CAMERA_VAZIA });

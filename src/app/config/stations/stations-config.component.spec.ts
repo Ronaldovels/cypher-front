@@ -141,6 +141,8 @@ describe('StationsConfigComponent', () => {
       id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
       streamUrl: 'http://127.0.0.1/stream', fonte: '',
       rotacao: 0, anguloCameraGraus: 0,
+      quedaCustomizada: false, fallenAspectRatio: 1.3, fallenVerticalExtent: 0.4,
+      trunkRotationMax: 0.35, fallRequireCorroboration: false,
     });
     componente.salvarCamera();
 
@@ -156,12 +158,62 @@ describe('StationsConfigComponent', () => {
       id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
       streamUrl: 'http://127.0.0.1:8090/stream', fonte: '',
       rotacao: 0, anguloCameraGraus: 0,
+      quedaCustomizada: false, fallenAspectRatio: 1.3, fallenVerticalExtent: 0.4,
+      trunkRotationMax: 0.35, fallRequireCorroboration: false,
     });
     componente.salvarCamera();
 
     const req = http.expectOne(
       r => r.method === 'POST' && r.url === `${environment.apiUrl}/cameras`);
     expect((req.request.body as { fonte: string | null }).fonte).toBeNull();
+    req.flush({});
+    http.match(() => true).forEach(r => r.flush([]));
+  });
+
+  it('sem personalizar queda, envia null nos 4 campos de tuning', () => {
+    const fixture = montar();
+    const componente = fixture.componentInstance;
+
+    componente.novaCamera.set({
+      id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
+      streamUrl: 'http://127.0.0.1:8090/stream', fonte: '',
+      rotacao: 0, anguloCameraGraus: 0,
+      quedaCustomizada: false, fallenAspectRatio: 2.2, fallenVerticalExtent: 0.15,
+      trunkRotationMax: 0.6, fallRequireCorroboration: true,
+    });
+    componente.salvarCamera();
+
+    const req = http.expectOne(
+      r => r.method === 'POST' && r.url === `${environment.apiUrl}/cameras`);
+    const body = req.request.body as Record<string, unknown>;
+    expect(body['fallenAspectRatio']).toBeNull();
+    expect(body['fallenVerticalExtent']).toBeNull();
+    expect(body['trunkRotationMax']).toBeNull();
+    expect(body['fallRequireCorroboration']).toBeNull();
+    req.flush({});
+    http.match(() => true).forEach(r => r.flush([]));
+  });
+
+  it('personalizando queda, envia os 4 valores do form', () => {
+    const fixture = montar();
+    const componente = fixture.componentInstance;
+
+    componente.novaCamera.set({
+      id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
+      streamUrl: 'http://127.0.0.1:8090/stream', fonte: '',
+      rotacao: 0, anguloCameraGraus: 0,
+      quedaCustomizada: true, fallenAspectRatio: 2.2, fallenVerticalExtent: 0.15,
+      trunkRotationMax: 0.6, fallRequireCorroboration: true,
+    });
+    componente.salvarCamera();
+
+    const req = http.expectOne(
+      r => r.method === 'POST' && r.url === `${environment.apiUrl}/cameras`);
+    const body = req.request.body as Record<string, unknown>;
+    expect(body['fallenAspectRatio']).toBe(2.2);
+    expect(body['fallenVerticalExtent']).toBe(0.15);
+    expect(body['trunkRotationMax']).toBe(0.6);
+    expect(body['fallRequireCorroboration']).toBe(true);
     req.flush({});
     http.match(() => true).forEach(r => r.flush([]));
   });

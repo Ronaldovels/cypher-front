@@ -163,6 +163,10 @@ export function resetMockCatalog(): void {
     ativa: true,
     rotacao: 0,
     anguloCameraGraus: 0,
+    fallenAspectRatio: null,
+    fallenVerticalExtent: null,
+    trunkRotationMax: null,
+    fallRequireCorroboration: null,
   }));
 }
 

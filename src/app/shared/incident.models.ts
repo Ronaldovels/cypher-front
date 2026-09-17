@@ -84,6 +84,15 @@ export interface CameraAdmin extends Camera {
   ativa: boolean;
   rotacao: number;
   anguloCameraGraus: number;
+  /**
+   * Overrides por câmera dos limiares de detecção de queda (achado SPI
+   * 2026-09-16 — câmera com pitch quase vertical gerava falso `person_fallen`
+   * em quem só se debruça). `null` = usa o default do YAML do pipeline.
+   */
+  fallenAspectRatio: number | null;
+  fallenVerticalExtent: number | null;
+  trunkRotationMax: number | null;
+  fallRequireCorroboration: boolean | null;
 }
 
 /**
@@ -116,6 +125,10 @@ export interface CameraPayload {
   ativa?: boolean;
   rotacao: number;
   anguloCameraGraus: number;
+  fallenAspectRatio?: number | null;
+  fallenVerticalExtent?: number | null;
+  trunkRotationMax?: number | null;
+  fallRequireCorroboration?: boolean | null;
 }
 
 /** Mesmo padrão que o backend valida (spec §4): 4 a 19 caracteres. */
