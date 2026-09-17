@@ -268,6 +268,17 @@ describe('StationKioskComponent', () => {
       expect(audio.vezesTocado).toBeGreaterThan(0);
     });
 
+    it('incidente novo desta estacao tambem dispara o flash visual (complemento do som)', async () => {
+      const harness = await montarComCamera();
+      const componente = harness.routeDebugElement!.componentInstance as StationKioskComponent;
+
+      sse.emitirIncidente(incidente({ id: 9, incidentKey: 'novo-3', cameraId: 'CAM-01' }));
+      harness.detectChanges();
+
+      expect(componente.flashVisual()).toBe(true);
+      expect(harness.routeNativeElement?.querySelector('.dash.kiosk-alert-flash')).not.toBeNull();
+    });
+
     it('incidente de camera de OUTRA estacao nao toca o alerta', async () => {
       const harness = await montarComCamera();
 

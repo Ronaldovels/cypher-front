@@ -55,12 +55,15 @@
         </div>
       </div>
       <div class="field">
-        <label>
+        <label class="toggle-row">
           <input type="checkbox" [checked]="form().delimitaAvaliacao"
                  (change)="alternarDelimitaAvaliacao()" />
-          Esta zona delimita a área de trabalho
+          <span class="toggle-track"></span>
+          <span class="toggle-text">
+            <span class="t-title">Delimita a área de trabalho</span>
+            <span class="t-desc">Avalia EPI e postura só de quem está dentro desta zona. Sem nenhuma zona marcada assim, avalia todo mundo.</span>
+          </span>
         </label>
-        <small>Quando marcado, EPI e postura só são avaliados para quem está dentro desta zona. Sem nenhuma zona marcada assim, avalia todo mundo (comportamento padrão).</small>
       </div>
       <div style="display:flex;gap:12px">
         <button type="submit" class="btn primary" [disabled]="salvando()">
@@ -78,7 +81,7 @@
         <span class="chip">{{ z.zoneType }}</span>
         <span class="chip">severidade {{ z.severity }}</span>
         @if (z.delimitaAvaliacao) {
-          <span class="chip">área de trabalho</span>
+          <span class="chip on">área de trabalho</span>
         }
         <button type="button" class="btn ghost sm" (click)="editar(z)">editar</button>
         <button type="button" class="btn ghost sm" (click)="desativar(z.id)">desativar</button>

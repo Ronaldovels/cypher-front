@@ -1,4 +1,4 @@
-<div class="dash" [class.kiosk]="auth.role() !== 'GESTOR'">
+<div class="dash" [class.kiosk]="auth.role() !== 'GESTOR'" [class.kiosk-alert-flash]="flashVisual()">
   <app-chrome-topbar [cfg]="cfg()" [page]="station()?.nome ?? 'Estação'" subtitle="kiosk do operador" [live]="true" [shift]="null"/>
 
   <main class="dcontent">

@@ -83,42 +83,47 @@
         </p>
       </div>
       <div class="field">
-        <label>
+        <label class="toggle-row">
           <input type="checkbox" [checked]="novaCamera().quedaCustomizada"
                  (change)="novaCamera.set({ ...novaCamera(), quedaCustomizada: $any($event.target).checked })" />
-          Personalizar limiares de detecção de queda nesta câmera
+          <span class="toggle-track"></span>
+          <span class="toggle-text">
+            <span class="t-title">Ajustar limiares de detecção de queda</span>
+            <span class="t-desc">Câmeras montadas quase na vertical podem confundir alguém debruçado com uma queda. Sem marcar, usa o mesmo limiar de todas as câmeras.</span>
+          </span>
         </label>
-        <p class="ajuda">
-          Achado de campo: câmeras montadas quase na vertical (olhando de cima) podem gerar falso
-          alerta de queda numa pessoa só debruçada. Sem marcar, usa o mesmo default de todas as câmeras.
-        </p>
       </div>
       @if (novaCamera().quedaCustomizada) {
-        <div class="field">
-          <label>Aspect ratio (largura/altura do bbox acima disto = pessoa deitada)</label>
-          <input class="input" type="number" step="0.1" min="0"
-                 [value]="novaCamera().fallenAspectRatio"
-                 (input)="novaCamera.set({ ...novaCamera(), fallenAspectRatio: +$any($event.target).value })" />
-        </div>
-        <div class="field">
-          <label>Extensão vertical (nariz→pé abaixo disto = corpo não ereto)</label>
-          <input class="input" type="number" step="0.01" min="0" max="1"
-                 [value]="novaCamera().fallenVerticalExtent"
-                 (input)="novaCamera.set({ ...novaCamera(), fallenVerticalExtent: +$any($event.target).value })" />
-        </div>
-        <div class="field">
-          <label>Rotação máxima de tronco (instabilidade)</label>
-          <input class="input" type="number" step="0.01" min="0"
-                 [value]="novaCamera().trunkRotationMax"
-                 (input)="novaCamera.set({ ...novaCamera(), trunkRotationMax: +$any($event.target).value })" />
-        </div>
-        <div class="field">
-          <label>
-            <input type="checkbox" [checked]="novaCamera().fallRequireCorroboration"
-                   (change)="novaCamera.set({ ...novaCamera(), fallRequireCorroboration: $any($event.target).checked })" />
-            Exigir 2 evidências concordando antes de disparar queda
-          </label>
-          <p class="ajuda">Troca recall por precisão: reduz falso alerta, mas pode demorar mais para confirmar uma queda real.</p>
+        <div class="subpanel">
+          <div class="field">
+            <label>Proporção do corpo deitado (largura ÷ altura da caixa)</label>
+            <input class="input" type="number" step="0.1" min="0"
+                   [value]="novaCamera().fallenAspectRatio"
+                   (input)="novaCamera.set({ ...novaCamera(), fallenAspectRatio: +$any($event.target).value })" />
+          </div>
+          <div class="field">
+            <label>Extensão vertical mínima (nariz até o pé, fração da altura do corpo)</label>
+            <input class="input" type="number" step="0.01" min="0" max="1"
+                   [value]="novaCamera().fallenVerticalExtent"
+                   (input)="novaCamera.set({ ...novaCamera(), fallenVerticalExtent: +$any($event.target).value })" />
+          </div>
+          <div class="field">
+            <label>Rotação máxima de tronco antes de considerar instável</label>
+            <input class="input" type="number" step="0.01" min="0"
+                   [value]="novaCamera().trunkRotationMax"
+                   (input)="novaCamera.set({ ...novaCamera(), trunkRotationMax: +$any($event.target).value })" />
+          </div>
+          <div class="field">
+            <label class="toggle-row">
+              <input type="checkbox" [checked]="novaCamera().fallRequireCorroboration"
+                     (change)="novaCamera.set({ ...novaCamera(), fallRequireCorroboration: $any($event.target).checked })" />
+              <span class="toggle-track"></span>
+              <span class="toggle-text">
+                <span class="t-title">Exigir 2 evidências concordando</span>
+                <span class="t-desc">Troca recall por precisão: reduz falso alerta, mas pode demorar mais para confirmar uma queda real.</span>
+              </span>
+            </label>
+          </div>
         </div>
       }
       <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar câmera</button>
