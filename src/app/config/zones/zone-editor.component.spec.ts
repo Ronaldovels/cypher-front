@@ -133,7 +133,7 @@ describe('ZoneEditorComponent — captura de frame e desenho', () => {
     comp.vertices.set([{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 2, y: 2 }]);
     comp.poligonoFechado.set(true);
     comp.editandoId.set(7);
-    comp.form.set({ nome: 'Área da prensa', zoneType: 'RESTRICTED', severity: 4, requiredPpe: ['capacete'] });
+    comp.form.set({ nome: 'Área da prensa', zoneType: 'RESTRICTED', severity: 4, requiredPpe: ['capacete'], delimitaAvaliacao: false });
     comp.erro.set('algum erro anterior');
 
     fixture.componentRef.setInput('codigo', 'CAM-02');
@@ -147,7 +147,7 @@ describe('ZoneEditorComponent — captura de frame e desenho', () => {
     expect(comp.frameCapturado()).toBe(false);
     expect(comp.poligonoFechado()).toBe(false);
     expect(comp.editandoId()).toBeNull();
-    expect(comp.form()).toEqual({ nome: '', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [] });
+    expect(comp.form()).toEqual({ nome: '', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [], delimitaAvaliacao: false });
     expect(comp.erro()).toBe('');
   });
 });
@@ -170,7 +170,7 @@ describe('ZoneEditorComponent — formulário e persistência', () => {
   it('salvar sem frame capturado mostra erro, sem chamar o backend', () => {
     const comp = fixture.componentInstance;
     comp.vertices.set([{ x: 100, y: 100 }, { x: 200, y: 100 }, { x: 200, y: 200 }]);
-    comp.form.set({ nome: 'Área da prensa', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [] });
+    comp.form.set({ nome: 'Área da prensa', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [], delimitaAvaliacao: false });
 
     comp.salvar();
 
@@ -184,7 +184,7 @@ describe('ZoneEditorComponent — formulário e persistência', () => {
     comp.editar({
       id: 7, cameraId: 'CAM-01', nome: 'Existente', zoneType: 'ATTENTION',
       polygon: [{ x: 0.25, y: 0.25 }, { x: 0.75, y: 0.25 }, { x: 0.75, y: 0.75 }],
-      severity: 2, requiredPpe: [], ativa: true,
+      severity: 2, requiredPpe: [], delimitaAvaliacao: false, ativa: true,
     });
 
     expect(comp.editandoId()).toBeNull();
@@ -198,7 +198,7 @@ describe('ZoneEditorComponent — formulário e persistência', () => {
     comp.canvasWidth.set(1280);
     comp.canvasHeight.set(720);
     comp.vertices.set([{ x: 100, y: 100 }, { x: 200, y: 100 }, { x: 200, y: 200 }]);
-    comp.form.set({ nome: '', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [] });
+    comp.form.set({ nome: '', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [], delimitaAvaliacao: false });
 
     comp.salvar();
 
@@ -211,7 +211,7 @@ describe('ZoneEditorComponent — formulário e persistência', () => {
     comp.canvasWidth.set(1280);
     comp.canvasHeight.set(720);
     comp.vertices.set([{ x: 320, y: 180 }, { x: 960, y: 180 }, { x: 960, y: 540 }]);
-    comp.form.set({ nome: 'Área da prensa', zoneType: 'RESTRICTED', severity: 4, requiredPpe: ['capacete'] });
+    comp.form.set({ nome: 'Área da prensa', zoneType: 'RESTRICTED', severity: 4, requiredPpe: ['capacete'], delimitaAvaliacao: false });
 
     comp.salvar();
 
@@ -219,7 +219,26 @@ describe('ZoneEditorComponent — formulário e persistência', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body.polygon).toEqual([{ x: 0.25, y: 0.25 }, { x: 0.75, y: 0.25 }, { x: 0.75, y: 0.75 }]);
     req.flush({ id: 1, cameraId: 'CAM-01', nome: 'Área da prensa', zoneType: 'RESTRICTED',
-      polygon: req.request.body.polygon, severity: 4, requiredPpe: ['capacete'], ativa: true });
+      polygon: req.request.body.polygon, severity: 4, requiredPpe: ['capacete'], delimitaAvaliacao: false, ativa: true });
+    http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones`).flush([]);
+  });
+
+  it('alternarDelimitaAvaliacao liga/desliga o campo e vai no payload de salvar', () => {
+    const comp = fixture.componentInstance;
+    comp.canvasWidth.set(1280);
+    comp.canvasHeight.set(720);
+    comp.vertices.set([{ x: 100, y: 100 }, { x: 200, y: 100 }, { x: 200, y: 200 }]);
+    comp.form.set({ nome: 'Bancada', zoneType: 'ATTENTION', severity: 1, requiredPpe: [], delimitaAvaliacao: false });
+
+    comp.alternarDelimitaAvaliacao();
+    expect(comp.form().delimitaAvaliacao).toBe(true);
+
+    comp.salvar();
+
+    const req = http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones`);
+    expect(req.request.body.delimitaAvaliacao).toBe(true);
+    req.flush({ id: 2, cameraId: 'CAM-01', nome: 'Bancada', zoneType: 'ATTENTION',
+      polygon: req.request.body.polygon, severity: 1, requiredPpe: [], delimitaAvaliacao: true, ativa: true });
     http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones`).flush([]);
   });
 
@@ -231,13 +250,13 @@ describe('ZoneEditorComponent — formulário e persistência', () => {
     comp.editar({
       id: 7, cameraId: 'CAM-01', nome: 'Existente', zoneType: 'ATTENTION',
       polygon: [{ x: 0.25, y: 0.25 }, { x: 0.75, y: 0.25 }, { x: 0.75, y: 0.75 }],
-      severity: 2, requiredPpe: [], ativa: true,
+      severity: 2, requiredPpe: [], delimitaAvaliacao: false, ativa: true,
     });
 
     expect(comp.editandoId()).toBe(7);
     expect(comp.vertices()).toEqual([{ x: 320, y: 180 }, { x: 960, y: 180 }, { x: 960, y: 540 }]);
     expect(comp.poligonoFechado()).toBe(true);
-    expect(comp.form()).toEqual({ nome: 'Existente', zoneType: 'ATTENTION', severity: 2, requiredPpe: [] });
+    expect(comp.form()).toEqual({ nome: 'Existente', zoneType: 'ATTENTION', severity: 2, requiredPpe: [], delimitaAvaliacao: false });
   });
 
   it('editar seguido de salvar faz PUT, nao POST', () => {
@@ -247,7 +266,7 @@ describe('ZoneEditorComponent — formulário e persistência', () => {
     comp.editar({
       id: 7, cameraId: 'CAM-01', nome: 'Existente', zoneType: 'ATTENTION',
       polygon: [{ x: 0.1, y: 0.1 }, { x: 0.2, y: 0.1 }, { x: 0.2, y: 0.2 }],
-      severity: 2, requiredPpe: [], ativa: true,
+      severity: 2, requiredPpe: [], delimitaAvaliacao: false, ativa: true,
     });
 
     comp.salvar();
@@ -255,7 +274,7 @@ describe('ZoneEditorComponent — formulário e persistência', () => {
     const req = http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones/7`);
     expect(req.request.method).toBe('PUT');
     req.flush({ id: 7, cameraId: 'CAM-01', nome: 'Existente', zoneType: 'ATTENTION',
-      polygon: req.request.body.polygon, severity: 2, requiredPpe: [], ativa: true });
+      polygon: req.request.body.polygon, severity: 2, requiredPpe: [], delimitaAvaliacao: false, ativa: true });
     http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones`).flush([]);
   });
 

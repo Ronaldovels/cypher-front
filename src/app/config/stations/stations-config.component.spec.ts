@@ -140,6 +140,7 @@ describe('StationsConfigComponent', () => {
     componente.novaCamera.set({
       id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
       streamUrl: 'http://127.0.0.1/stream', fonte: '',
+      rotacao: 0, anguloCameraGraus: 0,
     });
     componente.salvarCamera();
 
@@ -154,6 +155,7 @@ describe('StationsConfigComponent', () => {
     componente.novaCamera.set({
       id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
       streamUrl: 'http://127.0.0.1:8090/stream', fonte: '',
+      rotacao: 0, anguloCameraGraus: 0,
     });
     componente.salvarCamera();
 

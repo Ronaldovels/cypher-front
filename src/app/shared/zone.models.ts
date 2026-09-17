@@ -16,6 +16,12 @@ export interface Zone {
   polygon: Ponto[];
   severity: number;
   requiredPpe: string[];
+  /**
+   * Quando verdadeiro, esta zona e a area de trabalho: EPI e pose so sao
+   * avaliados para quem esta dentro dela (achado SPI 2026-09-16). Default
+   * falso — zona continua sendo so "zona de perigo" a menos que marcada.
+   */
+  delimitaAvaliacao: boolean;
   ativa: boolean;
 }
 
@@ -25,4 +31,5 @@ export interface ZonePayload {
   polygon: Ponto[];
   severity: number;
   requiredPpe: string[];
+  delimitaAvaliacao: boolean;
 }

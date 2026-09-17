@@ -134,6 +134,7 @@ describe('CatalogService — escrita', () => {
       id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
       streamUrl: 'http://127.0.0.1:8090/stream',
       fonte: 'rtsp://${CAM01_USER}:${CAM01_PASS}@10.0.0.7/stream',
+      rotacao: 0, anguloCameraGraus: 0,
     }).subscribe();
 
     const req = http.expectOne(`${environment.apiUrl}/cameras`);

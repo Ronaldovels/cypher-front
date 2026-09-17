@@ -6,8 +6,13 @@ import { PixelPonto, paraNormalizado, paraPixel } from '../../shared/zone-canvas
 import { Zone, ZonePayload, ZoneType } from '../../shared/zone.models';
 import { ZoneService } from '../../shared/zone.service';
 
-interface FormZona { nome: string; zoneType: ZoneType; severity: number; requiredPpe: string[]; }
-const FORM_VAZIO: FormZona = { nome: '', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [] };
+interface FormZona {
+  nome: string; zoneType: ZoneType; severity: number; requiredPpe: string[];
+  delimitaAvaliacao: boolean;
+}
+const FORM_VAZIO: FormZona = {
+  nome: '', zoneType: 'RESTRICTED', severity: 3, requiredPpe: [], delimitaAvaliacao: false,
+};
 
 /**
  * Editor de zonas de risco (design doc de zonas de risco, §4.2/§4.3): congela
@@ -212,6 +217,7 @@ export class ZoneEditorComponent {
       polygon: paraNormalizado(this.vertices(), this.canvasWidth(), this.canvasHeight()),
       severity: f.severity,
       requiredPpe: f.requiredPpe,
+      delimitaAvaliacao: f.delimitaAvaliacao,
     };
 
     this.erro.set('');
@@ -241,6 +247,7 @@ export class ZoneEditorComponent {
     this.editandoId.set(zona.id);
     this.form.set({
       nome: zona.nome, zoneType: zona.zoneType, severity: zona.severity, requiredPpe: [...zona.requiredPpe],
+      delimitaAvaliacao: zona.delimitaAvaliacao,
     });
     this.vertices.set(paraPixel(zona.polygon, this.canvasWidth(), this.canvasHeight()));
     this.poligonoFechado.set(true);
@@ -249,6 +256,10 @@ export class ZoneEditorComponent {
 
   desativar(id: number): void {
     this.zoneService.deactivate(this.codigo(), id).subscribe({ error: e => this.erro.set(mensagemDeErro(e)) });
+  }
+
+  alternarDelimitaAvaliacao(): void {
+    this.form.update(f => ({ ...f, delimitaAvaliacao: !f.delimitaAvaliacao }));
   }
 
   alternarPpe(epi: string): void {
