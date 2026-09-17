@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
@@ -9,6 +9,7 @@ import { ConfigService } from '../shared/config.service';
 import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
 import { LiveFeedComponent } from '../shared/live-feed/live-feed.component';
+import { SoundAlertService } from '../shared/sound-alert.service';
 import { Incident, dicaDe, formatTime, incidentLabel } from '../shared/incident.models';
 
 const EVENTOS_POR_CAMERA = 10;
@@ -25,12 +26,13 @@ const EVENTOS_EXIBIDOS = 10;
   imports: [ChromeTopbarComponent, LiveFeedComponent, DockComponent],
   templateUrl: './station-kiosk.component.html',
 })
-export class StationKioskComponent implements OnInit {
+export class StationKioskComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private catalogService = inject(CatalogService);
   private incidentService = inject(IncidentService);
   private cfgService = inject(ConfigService);
   private authService = inject(AuthService);
+  private soundAlertService = inject(SoundAlertService);
   readonly auth = this.authService;
 
   cfg = this.cfgService.config;
@@ -51,6 +53,17 @@ export class StationKioskComponent implements OnInit {
 
   private eventosBuscados = false;
 
+  /**
+   * Chave do incidente mais recente já visto pelo alerta sonoro, lida de
+   * forma síncrona na construção (não dentro do `effect` — se lida lá, um
+   * store vazio no primeiro run faria o próprio primeiro incidente real
+   * virar "base" em vez de tocar). `null` cobre tanto "nada no store ainda"
+   * quanto qualquer item pré-existente (ex.: dashboard visitado antes de
+   * abrir este kiosk) — em ambos os casos, só um incidente novo *depois*
+   * deste ponto deve disparar o bipe.
+   */
+  private ultimaChaveVista: string | null = this.incidentService.incidents()[0]?.incidentKey ?? null;
+
   constructor() {
     effect(() => {
       const estacao = this.station();
@@ -60,10 +73,34 @@ export class StationKioskComponent implements OnInit {
       this.eventosBuscados = true;
       this.buscarEventosRecentes(estacao.cameras.map(c => c.id));
     });
+
+    /**
+     * Alerta sonoro (achado SPI 2026-09-17): quem está com o kiosk de uma
+     * estação aberto na tela precisa notar uma infração sem depender de
+     * estar lendo o texto — som toca só para incidentes das câmeras desta
+     * estação, não de qualquer câmera do sistema.
+     */
+    effect(() => {
+      const estacao = this.station();
+      const maisRecente = this.incidentService.incidents()[0];
+      if (!estacao || !maisRecente || maisRecente.incidentKey === this.ultimaChaveVista) {
+        return;
+      }
+      this.ultimaChaveVista = maisRecente.incidentKey;
+      const cameraIds = new Set(estacao.cameras.map(c => c.id));
+      if (cameraIds.has(maisRecente.cameraId)) {
+        this.soundAlertService.tocar(maisRecente.severity);
+      }
+    });
   }
 
   ngOnInit(): void {
     this.catalogService.load();
+    this.incidentService.connect();
+  }
+
+  ngOnDestroy(): void {
+    this.incidentService.disconnect();
   }
 
   private buscarEventosRecentes(cameraIds: string[]): void {

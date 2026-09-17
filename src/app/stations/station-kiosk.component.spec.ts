@@ -8,8 +8,49 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../environments/environment';
 import { ConfigService } from '../shared/config.service';
+import { AUDIO_CONTEXT_FACTORY, AudioContextLike } from '../shared/sound-alert.service';
+import { EVENT_SOURCE_FACTORY, EventSourceLike } from '../shared/event-source.factory';
+import { IncidentService } from '../shared/incident.service';
 import { Incident } from '../shared/incident.models';
 import { StationKioskComponent } from './station-kiosk.component';
+
+/** EventSource falso que guarda os listeners e deixa o teste empurrar eventos. */
+class SseFake implements EventSourceLike {
+  onopen: ((event: Event) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+  private listeners = new Map<string, (event: MessageEvent) => void>();
+
+  addEventListener(type: string, listener: (event: MessageEvent) => void): void {
+    this.listeners.set(type, listener);
+  }
+  close(): void { }
+  emitirIncidente(incidente: Incident): void {
+    this.listeners.get('incident')?.({ data: JSON.stringify(incidente) } as MessageEvent);
+  }
+}
+
+/** AudioContext falso que só conta quantas vezes um oscilador tocou. */
+class AudioContextContadorFake implements AudioContextLike {
+  currentTime = 0;
+  state = 'running';
+  destination = {} as AudioDestinationNode;
+  vezesTocado = 0;
+
+  createOscillator(): OscillatorNode {
+    this.vezesTocado++;
+    return {
+      frequency: { value: 0 },
+      connect: () => { },
+      start: () => { },
+      stop: () => { },
+    } as unknown as OscillatorNode;
+  }
+  createGain(): GainNode {
+    return { gain: { value: 0 }, connect: () => { } } as unknown as GainNode;
+  }
+  resume(): Promise<void> { return Promise.resolve(); }
+  close(): Promise<void> { return Promise.resolve(); }
+}
 
 function incidente(overrides: Partial<Incident> = {}): Incident {
   return {
@@ -26,15 +67,21 @@ function incidente(overrides: Partial<Incident> = {}): Incident {
 
 describe('StationKioskComponent', () => {
   let http: HttpTestingController;
+  let sse: SseFake;
+  let audio: AudioContextContadorFake;
 
   beforeEach(() => {
     localStorage.clear();
+    sse = new SseFake();
+    audio = new AudioContextContadorFake();
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([{ path: 'estacao/:id', component: StationKioskComponent }]),
         provideHttpClient(withFetch()),
         provideHttpClientTesting(),
+        { provide: EVENT_SOURCE_FACTORY, useValue: () => sse },
+        { provide: AUDIO_CONTEXT_FACTORY, useValue: () => audio },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -190,5 +237,73 @@ describe('StationKioskComponent', () => {
 
     http.expectNone(r => r.url === `${environment.apiUrl}/incidents`);
     expect(harness.routeNativeElement?.textContent).toContain('nenhuma câmera cadastrada');
+  });
+
+  describe('alerta sonoro', () => {
+    async function montarComCamera(): Promise<RouterTestingHarness> {
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/estacao/EST-01', StationKioskComponent);
+      http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+      http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([
+        { id: 'EST-01', nome: 'Esteira', setor: null, ativa: true, cameras: [
+          { id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01', streamUrl: 'http://x/1' },
+        ] },
+      ]);
+      harness.detectChanges();
+      http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+        .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+      harness.detectChanges();
+      http.expectOne(r => r.url === `${environment.apiUrl}/incidents` && r.params.get('camera') === 'CAM-01')
+        .flush({ content: [], totalElements: 0, totalPages: 1, number: 0, size: 10 });
+      harness.detectChanges();
+      return harness;
+    }
+
+    it('incidente novo de uma camera desta estacao toca o alerta', async () => {
+      const harness = await montarComCamera();
+
+      sse.emitirIncidente(incidente({ id: 9, incidentKey: 'novo-1', cameraId: 'CAM-01' }));
+      harness.detectChanges();
+
+      expect(audio.vezesTocado).toBeGreaterThan(0);
+    });
+
+    it('incidente de camera de OUTRA estacao nao toca o alerta', async () => {
+      const harness = await montarComCamera();
+
+      sse.emitirIncidente(incidente({ id: 9, incidentKey: 'novo-2', cameraId: 'CAM-99' }));
+      harness.detectChanges();
+
+      expect(audio.vezesTocado).toBe(0);
+    });
+
+    it('nao toca para o historico que ja existia antes de montar o kiosk', async () => {
+      // O primeiro incidente observado no signal compartilhado define a
+      // base, sem tocar — só um incidente novo *depois* de montar dispara o
+      // bipe. Conecta o SSE cedo (mesma instancia singleton do servico) e
+      // empurra um incidente antes do kiosk sequer existir, simulando quem
+      // visitou o dashboard antes de abrir o kiosk desta estacao.
+      const incidentService = TestBed.inject(IncidentService);
+      incidentService.connect();
+      sse.emitirIncidente(incidente({ id: 1, incidentKey: 'ja-existia', cameraId: 'CAM-01' }));
+
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/estacao/EST-01', StationKioskComponent);
+      http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+      http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([
+        { id: 'EST-01', nome: 'Esteira', setor: null, ativa: true, cameras: [
+          { id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01', streamUrl: 'http://x/1' },
+        ] },
+      ]);
+      harness.detectChanges();
+      http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+        .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+      harness.detectChanges();
+      http.expectOne(r => r.url === `${environment.apiUrl}/incidents` && r.params.get('camera') === 'CAM-01')
+        .flush({ content: [], totalElements: 0, totalPages: 1, number: 0, size: 10 });
+      harness.detectChanges();
+
+      expect(audio.vezesTocado).toBe(0);
+    });
   });
 });
