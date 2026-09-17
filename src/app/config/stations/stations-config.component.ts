@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { CatalogService } from '../../shared/catalog.service';
-import { CODIGO_PADRAO, Camera, mensagemDeErro } from '../../shared/incident.models';
+import { CODIGO_PADRAO, Camera, CameraAdmin, mensagemDeErro } from '../../shared/incident.models';
 import { ZoneEditorComponent } from '../zones/zone-editor.component';
 
 interface FormEstacao { id: string; nome: string; setor: string; }
@@ -58,6 +58,10 @@ export class StationsConfigComponent implements OnInit {
 
   readonly novaEstacao = signal<FormEstacao>({ ...ESTACAO_VAZIA });
   readonly novaCamera = signal<FormCamera>({ ...CAMERA_VAZIA });
+
+  /** Código da câmera sendo editada no formulário acima, ou null em modo de cadastro. */
+  readonly editandoCameraId = signal<string | null>(null);
+  readonly carregandoCamera = signal(false);
 
   /**
    * Último token visto — de um cadastro/edição de estação ou de uma
@@ -133,9 +137,7 @@ export class StationsConfigComponent implements OnInit {
       return;
     }
 
-    this.erro.set('');
-    this.salvando.set(true);
-    this.catalog.createCamera({
+    const payload = {
       id: form.id,
       nome: form.nome.trim(),
       estacaoId: form.estacaoId,
@@ -147,9 +149,18 @@ export class StationsConfigComponent implements OnInit {
       fallenVerticalExtent: form.quedaCustomizada ? form.fallenVerticalExtent : null,
       trunkRotationMax: form.quedaCustomizada ? form.trunkRotationMax : null,
       fallRequireCorroboration: form.quedaCustomizada ? form.fallRequireCorroboration : null,
-    }).subscribe({
+    };
+
+    this.erro.set('');
+    this.salvando.set(true);
+    const editandoId = this.editandoCameraId();
+    const acao = editandoId != null
+      ? this.catalog.updateCamera(editandoId, payload)
+      : this.catalog.createCamera(payload);
+    acao.subscribe({
       next: () => {
         this.novaCamera.set({ ...CAMERA_VAZIA });
+        this.editandoCameraId.set(null);
         this.salvando.set(false);
       },
       error: e => {
@@ -157,6 +168,42 @@ export class StationsConfigComponent implements OnInit {
         this.salvando.set(false);
       },
     });
+  }
+
+  /** Busca os dados completos (inclusive `fonte`, que a lista de navegação omite) e abre em modo de edição. */
+  editarCamera(id: string): void {
+    this.erro.set('');
+    this.carregandoCamera.set(true);
+    this.catalog.camera(id).subscribe({
+      next: (c: CameraAdmin) => {
+        this.editandoCameraId.set(c.id);
+        this.novaCamera.set({
+          id: c.id,
+          nome: c.nome,
+          estacaoId: c.estacaoId,
+          streamUrl: c.streamUrl ?? '',
+          fonte: c.fonte ?? '',
+          rotacao: c.rotacao,
+          anguloCameraGraus: c.anguloCameraGraus,
+          quedaCustomizada: c.fallenAspectRatio !== null,
+          fallenAspectRatio: c.fallenAspectRatio ?? QUEDA_DEFAULT_ASPECT_RATIO,
+          fallenVerticalExtent: c.fallenVerticalExtent ?? QUEDA_DEFAULT_VERTICAL_EXTENT,
+          trunkRotationMax: c.trunkRotationMax ?? QUEDA_DEFAULT_TRUNK_ROTATION_MAX,
+          fallRequireCorroboration: c.fallRequireCorroboration ?? false,
+        });
+        this.carregandoCamera.set(false);
+      },
+      error: e => {
+        this.erro.set(mensagemDeErro(e));
+        this.carregandoCamera.set(false);
+      },
+    });
+  }
+
+  cancelarEdicaoCamera(): void {
+    this.editandoCameraId.set(null);
+    this.novaCamera.set({ ...CAMERA_VAZIA });
+    this.erro.set('');
   }
 
   desativarEstacao(id: string): void {

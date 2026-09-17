@@ -25,10 +25,13 @@
     </form>
 
     <form class="cardform" (submit)="$event.preventDefault(); salvarCamera()">
-      <h3 class="cardform-title">Nova câmera</h3>
+      <h3 class="cardform-title">{{ editandoCameraId() != null ? 'Editar câmera ' + editandoCameraId() : 'Nova câmera' }}</h3>
+      @if (carregandoCamera()) {
+        <p class="ajuda">carregando dados da câmera…</p>
+      }
       <div class="field">
         <label>Código</label>
-        <input class="input" [value]="novaCamera().id" placeholder="CAM-01"
+        <input class="input" [value]="novaCamera().id" placeholder="CAM-01" [disabled]="editandoCameraId() != null"
                (input)="novaCamera.set({ ...novaCamera(), id: ($any($event.target).value || '').toUpperCase() })" />
       </div>
       <div class="field">
@@ -126,7 +129,14 @@
           </div>
         </div>
       }
-      <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar câmera</button>
+      <div style="display:flex;gap:12px">
+        <button type="submit" class="btn primary" [disabled]="salvando()">
+          {{ editandoCameraId() != null ? 'Salvar edição' : 'Cadastrar câmera' }}
+        </button>
+        @if (editandoCameraId() != null) {
+          <button type="button" class="btn ghost" (click)="cancelarEdicaoCamera()">cancelar</button>
+        }
+      </div>
     </form>
   </div>
 
@@ -156,6 +166,7 @@
           <div class="camera-row">
             <span class="codigo">{{ c.id }}</span>
             <span class="nome">{{ c.nome }}</span>
+            <button type="button" class="btn ghost sm" (click)="editarCamera(c.id)">editar</button>
             <button type="button" class="btn ghost sm" (click)="editarZonasDe(c)">editar zonas</button>
             <button type="button" class="btn ghost sm" (click)="desativarCamera(c.id)">desativar</button>
           </div>
