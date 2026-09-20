@@ -5,12 +5,16 @@
     <p class="sub" style="font-size:14px;margin-top:6px">Selecione o equipamento de proteção individual que será detectado pela visão computacional.</p>
   </div>
   <div class="save-bar">
-    @if (salvo() && !sujo()) {
+    @if (erro()) {
+      <span class="field-error">{{ erro() }}</span>
+    } @else if (salvo() && !sujo()) {
       <span class="save-status ok">salvo</span>
     } @else if (sujo()) {
       <span class="save-status">alterações não salvas</span>
     }
-    <button class="btn primary" [disabled]="!sujo()" (click)="salvar()">Salvar</button>
+    <button class="btn primary" [disabled]="!sujo() || salvando()" (click)="salvar()">
+      {{ salvando() ? 'Salvando...' : 'Salvar' }}
+    </button>
   </div>
 </div>
 
@@ -23,7 +27,7 @@
     <span>{{ kitStatus() }}</span>
   </div>
 
-  <div class="kicker" style="position:absolute;bottom:14px;left:18px;z-index:3">{{ count() }} de 8</div>
+  <div class="kicker" style="position:absolute;bottom:14px;left:18px;z-index:3">{{ count() }} de {{ epiList.length }}</div>
 
   <div class="kicker" style="position:absolute;bottom:14px;right:18px;z-index:3"
        [style.color]="count() ? 'var(--accent)' : 'var(--ink-mute)'">
@@ -50,7 +54,7 @@
       </div>
       <div>
         <div class="name">{{ e.name }}</div>
-        <div class="nrm">{{ e.nrm }}</div>
+        <div class="nrm">{{ e.nrm }}{{ semDeteccaoAutomatica.has(e.key) ? ' · sem detecção automática' : '' }}</div>
       </div>
       <div class="check">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">

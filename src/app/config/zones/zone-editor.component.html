@@ -47,12 +47,16 @@
       </div>
       <div class="field">
         <label>EPIs obrigatórios nesta zona</label>
-        <div class="subtabs">
-          @for (epi of episDisponiveis(); track epi) {
-            <button type="button" class="chip" [class.on]="form().requiredPpe.includes(epi)"
-                    (click)="alternarPpe(epi)">{{ epi }}</button>
-          }
-        </div>
+        @if (episDisponiveis().length) {
+          <div class="subtabs">
+            @for (epi of episDisponiveis(); track epi) {
+              <button type="button" class="chip" [class.on]="form().requiredPpe.includes(epi)"
+                      (click)="alternarPpe(epi)">{{ epiLabel(epi) }}</button>
+            }
+          </div>
+        } @else {
+          <p class="vazio">Nenhum EPI monitorado ainda — cadastre em Configurações › EPIs.</p>
+        }
       </div>
       <div class="field">
         <label class="toggle-row">

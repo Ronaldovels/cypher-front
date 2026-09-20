@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../shared/auth/auth.service';
 import { ChromeTopbarComponent } from '../shared/chrome-topbar/chrome-topbar.component';
 import { ConfigService } from '../shared/config.service';
+import { epiFieldLabel } from '../shared/epi-catalog';
 import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
 import {
@@ -45,6 +46,10 @@ export class IncidentDetailComponent implements OnInit {
 
   hora = formatDateTime;
   rotulo = incidentLabel;
+
+  epiLista(itens: string[]): string {
+    return itens.map(epiFieldLabel).join(', ') || '—';
+  }
 
   ngOnInit(): void {
     this.incidentService.getById(this.id).subscribe({

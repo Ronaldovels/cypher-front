@@ -1,6 +1,7 @@
 import { Component, ElementRef, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 
-import { ConfigService } from '../../shared/config.service';
+import { epiTipoLabel } from '../../shared/epi-catalog';
+import { EpiChecklistService } from '../../shared/epi-checklist.service';
 import { mensagemDeErro } from '../../shared/incident.models';
 import { PixelPonto, paraNormalizado, paraPixel } from '../../shared/zone-canvas.util';
 import { Zone, ZonePayload, ZoneType } from '../../shared/zone.models';
@@ -33,10 +34,11 @@ export class ZoneEditorComponent {
   readonly streamUrl = input<string | null>(null);
 
   private zoneService = inject(ZoneService);
-  private configService = inject(ConfigService);
+  private checklistService = inject(EpiChecklistService);
 
   readonly zonas = this.zoneService.zonas;
-  readonly episDisponiveis = computed(() => this.configService.config()?.epis ?? []);
+  readonly episDisponiveis = this.checklistService.epis;
+  readonly epiLabel = epiTipoLabel;
 
   readonly imgRef = viewChild<ElementRef<HTMLImageElement>>('liveImg');
   readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
@@ -73,6 +75,7 @@ export class ZoneEditorComponent {
     this.form.set({ ...FORM_VAZIO });
     this.erro.set('');
     this.zoneService.load(codigo);
+    this.checklistService.load();
   });
 
   capturarFrame(): void {
