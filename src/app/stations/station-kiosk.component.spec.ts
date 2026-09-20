@@ -268,15 +268,45 @@ describe('StationKioskComponent', () => {
       expect(audio.vezesTocado).toBeGreaterThan(0);
     });
 
-    it('incidente novo desta estacao tambem dispara o flash visual (complemento do som)', async () => {
+    it('incidente novo desta estacao tambem acende o glow no painel da camera (complemento do som)', async () => {
       const harness = await montarComCamera();
       const componente = harness.routeDebugElement!.componentInstance as StationKioskComponent;
 
-      sse.emitirIncidente(incidente({ id: 9, incidentKey: 'novo-3', cameraId: 'CAM-01' }));
+      sse.emitirIncidente(incidente({ id: 9, incidentKey: 'novo-3', cameraId: 'CAM-01', severity: 4 }));
       harness.detectChanges();
 
-      expect(componente.flashVisual()).toBe(true);
-      expect(harness.routeNativeElement?.querySelector('.dash.kiosk-alert-flash')).not.toBeNull();
+      expect(componente.alertasPorCamera().get('CAM-01')).toBe(4);
+      expect(componente.corDoGlow('CAM-01')).toBe('rgba(238,66,66,0.8)');
+      const painel = harness.routeNativeElement?.querySelector('.kiosk-cam-panel');
+      expect(painel?.classList.contains('cam-glow')).toBe(true);
+    });
+
+    it('glow so acende no painel da camera que teve o incidente, nao nas outras da mesma estacao', async () => {
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/estacao/EST-01', StationKioskComponent);
+      http.expectOne(r => r.url === `${environment.apiUrl}/cameras`).flush([]);
+      http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([
+        { id: 'EST-01', nome: 'Esteira', setor: null, ativa: true, cameras: [
+          { id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01', streamUrl: 'http://x/1' },
+          { id: 'CAM-02', nome: 'Lateral', estacaoId: 'EST-01', streamUrl: 'http://x/2' },
+        ] },
+      ]);
+      harness.detectChanges();
+      http.expectOne(r => r.url === `${environment.apiUrl}/auth/me`)
+        .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+      harness.detectChanges();
+      http.expectOne(r => r.url === `${environment.apiUrl}/incidents` && r.params.get('camera') === 'CAM-01')
+        .flush({ content: [], totalElements: 0, totalPages: 1, number: 0, size: 10 });
+      http.expectOne(r => r.url === `${environment.apiUrl}/incidents` && r.params.get('camera') === 'CAM-02')
+        .flush({ content: [], totalElements: 0, totalPages: 1, number: 0, size: 10 });
+      harness.detectChanges();
+
+      sse.emitirIncidente(incidente({ id: 9, incidentKey: 'novo-4', cameraId: 'CAM-02' }));
+      harness.detectChanges();
+
+      const componente = harness.routeDebugElement!.componentInstance as StationKioskComponent;
+      expect(componente.alertasPorCamera().has('CAM-01')).toBe(false);
+      expect(componente.alertasPorCamera().has('CAM-02')).toBe(true);
     });
 
     it('incidente de camera de OUTRA estacao nao toca o alerta', async () => {

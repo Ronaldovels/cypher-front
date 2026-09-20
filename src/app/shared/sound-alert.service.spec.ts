@@ -55,16 +55,28 @@ describe('SoundAlertService', () => {
     });
   });
 
-  it('toca dois tons distintos usando o AudioContext injetado', () => {
+  it('severidade baixa toca 3 repeticoes do par de tons alternados', () => {
     const service = TestBed.inject(SoundAlertService);
 
     service.tocar(2);
 
-    expect(ultimaFake.osciladores).toHaveLength(2);
-    expect(ultimaFake.osciladores[0].frequency.value).toBe(880);
-    expect(ultimaFake.osciladores[1].frequency.value).toBe(1108);
-    expect(ultimaFake.osciladores[0].started).toEqual([10]);
-    expect(ultimaFake.osciladores[1].started).toEqual([10.18]);
+    // 3 repeticoes x 2 tons cada = 6 osciladores, alternando 880/1108 Hz.
+    expect(ultimaFake.osciladores).toHaveLength(6);
+    const frequencias = ultimaFake.osciladores.map(o => o.frequency.value);
+    expect(frequencias).toEqual([880, 1108, 880, 1108, 880, 1108]);
+    // Cada par comeca 0.56s depois do anterior (2 tons x 0.28s de intervalo).
+    expect(ultimaFake.osciladores[0].started[0]).toBeCloseTo(10);
+    expect(ultimaFake.osciladores[2].started[0]).toBeCloseTo(10.56);
+    expect(ultimaFake.osciladores[4].started[0]).toBeCloseTo(11.12);
+  });
+
+  it('severidade alta (>=3) repete mais vezes que severidade baixa (mais prolongado)', () => {
+    const service = TestBed.inject(SoundAlertService);
+
+    service.tocar(4);
+
+    // 4 repeticoes x 2 tons = 8 osciladores, contra 6 de uma severidade baixa.
+    expect(ultimaFake.osciladores).toHaveLength(8);
   });
 
   it('severidade alta (>=3) usa volume maior que severidade baixa', () => {

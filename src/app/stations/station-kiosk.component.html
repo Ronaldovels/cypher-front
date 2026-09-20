@@ -1,11 +1,12 @@
-<div class="dash" [class.kiosk]="auth.role() !== 'GESTOR'" [class.kiosk-alert-flash]="flashVisual()">
+<div class="dash" [class.kiosk]="auth.role() !== 'GESTOR'">
   <app-chrome-topbar [cfg]="cfg()" [page]="station()?.nome ?? 'Estação'" subtitle="kiosk do operador" [live]="true" [shift]="null"/>
 
   <main class="dcontent">
     @if (station(); as estacao) {
       <div class="kiosk-feeds">
         @for (cam of estacao.cameras; track cam.id) {
-          <div class="panel">
+          <div class="panel kiosk-cam-panel" [class.cam-glow]="alertasPorCamera().has(cam.id)"
+               [style.--glow-color]="corDoGlow(cam.id)">
             <div class="panel-head"><div class="ph-left"><span class="ph-title">{{ cam.nome }}</span></div></div>
             <div class="kiosk-feed"><app-live-feed [camera]="cam" /></div>
           </div>

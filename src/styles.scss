@@ -219,11 +219,22 @@ input, select, textarea { font-family: inherit; color: inherit; }
 
 /* ─── ALERTA SONORO DO KIOSK: complemento visual (spec: som sozinho falha com
    dispositivo mudo, ambiente barulhento de fábrica ou operador com deficiência
-   auditiva) — anel na borda da tela, sincronizado com o bipe, some sozinho. ─── */
-.kiosk-alert-flash::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; box-shadow: inset 0 0 0 6px var(--accent); animation: kioskAlertFlash 1.1s ease-out; }
-@keyframes kioskAlertFlash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+   auditiva) — glow ao redor do painel da câmera que teve o incidente, na cor
+   da severidade (mesma paleta de .heat-tile/.alert-row), crescendo e
+   diminuindo — aponta qual câmera, não só "algo aconteceu". Cresce/diminui
+   2x em ~3.2s pra dar tempo de notar mesmo olhando pra outro canto do kiosk
+   no instante do incidente (achado de campo 2026-09-20). ─── */
+.kiosk-cam-panel.cam-glow { animation: kioskCamGlow 3.2s ease-out; }
+@keyframes kioskCamGlow {
+  0%   { box-shadow: 0 0 0 0 var(--glow-color, transparent); }
+  20%  { box-shadow: 0 0 56px 16px var(--glow-color, transparent); }
+  40%  { box-shadow: 0 0 16px 3px var(--glow-color, transparent); }
+  60%  { box-shadow: 0 0 56px 16px var(--glow-color, transparent); }
+  80%  { box-shadow: 0 0 16px 3px var(--glow-color, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .kiosk-alert-flash::after { animation: none; opacity: 0.85; }
+  .kiosk-cam-panel.cam-glow { animation: none; box-shadow: 0 0 32px 8px var(--glow-color, transparent); }
 }
 
 /* ─── LAUNCH OVERLAY ─── */

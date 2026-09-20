@@ -10,10 +10,24 @@ import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
 import { LiveFeedComponent } from '../shared/live-feed/live-feed.component';
 import { SoundAlertService } from '../shared/sound-alert.service';
-import { Incident, dicaDe, formatTime, incidentLabel } from '../shared/incident.models';
+import { Incident, dicaDe, formatTime, incidentLabel, severityClass } from '../shared/incident.models';
 
 const EVENTOS_POR_CAMERA = 10;
 const EVENTOS_EXIBIDOS = 10;
+
+/** Duração do glow ao redor do painel da câmera — mesmo espírito "mais
+ * prolongado" do bipe (achado de campo 2026-09-20): 3.2s dá tempo de notar
+ * mesmo olhando pra outro canto do kiosk no instante do incidente. */
+const DURACAO_GLOW_MS = 3200;
+
+/** Cor do glow por faixa de severidade — mesma paleta de .heat-tile/.alert-row
+ * (styles.scss), pra não inventar uma terceira linguagem de cor de risco. */
+const COR_GLOW: Record<ReturnType<typeof severityClass>, string> = {
+  ok: 'rgba(52,208,126,0.65)',
+  low: 'rgba(255,206,56,0.7)',
+  mid: 'rgba(255,140,30,0.75)',
+  hi: 'rgba(238,66,66,0.8)',
+};
 
 /**
  * Dock por papel, não por rota (design doc de E4, §4.1): para o OPERADOR o
@@ -90,38 +104,57 @@ export class StationKioskComponent implements OnInit, OnDestroy {
       const cameraIds = new Set(estacao.cameras.map(c => c.id));
       if (cameraIds.has(maisRecente.cameraId)) {
         this.soundAlertService.tocar(maisRecente.severity);
-        this.dispararFlashVisual();
+        this.dispararGlowDaCamera(maisRecente.cameraId, maisRecente.severity);
       }
     });
   }
 
   /**
    * Complemento visual do bipe (som sozinho falha com dispositivo mudo,
-   * chão de fábrica barulhento ou operador com deficiência auditiva): anel
-   * na borda da tela por ~1s.
+   * chão de fábrica barulhento ou operador com deficiência auditiva):
+   * glow ao redor do painel da câmera que teve o incidente, na cor da
+   * severidade — aponta qual câmera, não só "algo aconteceu em algum lugar"
+   * (achado de campo 2026-09-20, kiosk com várias câmeras na grade).
    */
-  readonly flashVisual = signal(false);
-  private flashTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly _alertasPorCamera = signal<ReadonlyMap<string, number>>(new Map());
+  readonly alertasPorCamera = this._alertasPorCamera.asReadonly();
+  private timeoutsPorCamera = new Map<string, ReturnType<typeof setTimeout>>();
 
-  private dispararFlashVisual(): void {
-    if (this.flashTimeout !== null) {
-      // Ja tem um flash rodando: reaplica no proximo frame — sem isso, um
-      // segundo incidente durante a animacao do primeiro nao reinicia o CSS
-      // (a classe nunca deixou de estar presente pro browser notar a troca).
-      clearTimeout(this.flashTimeout);
-      this.flashVisual.set(false);
-      requestAnimationFrame(() => this.iniciarFlash());
-      return;
-    }
-    this.iniciarFlash();
+  corDoGlow(cameraId: string): string {
+    const severidade = this.alertasPorCamera().get(cameraId);
+    return severidade === undefined ? 'transparent' : COR_GLOW[severityClass(severidade)];
   }
 
-  private iniciarFlash(): void {
-    this.flashVisual.set(true);
-    this.flashTimeout = setTimeout(() => {
-      this.flashVisual.set(false);
-      this.flashTimeout = null;
-    }, 1100);
+  private dispararGlowDaCamera(cameraId: string, severidade: number): void {
+    const timeoutAnterior = this.timeoutsPorCamera.get(cameraId);
+    if (timeoutAnterior !== undefined) {
+      // Ja tem um glow rodando nesta camera: reaplica no proximo frame —
+      // sem isso, um segundo incidente durante a animacao do primeiro nao
+      // reinicia o CSS (a classe nunca deixou de estar presente pro
+      // browser notar a troca).
+      clearTimeout(timeoutAnterior);
+      this._alertasPorCamera.update(m => {
+        const novo = new Map(m);
+        novo.delete(cameraId);
+        return novo;
+      });
+      requestAnimationFrame(() => this.iniciarGlow(cameraId, severidade));
+      return;
+    }
+    this.iniciarGlow(cameraId, severidade);
+  }
+
+  private iniciarGlow(cameraId: string, severidade: number): void {
+    this._alertasPorCamera.update(m => new Map(m).set(cameraId, severidade));
+    const timeout = setTimeout(() => {
+      this._alertasPorCamera.update(m => {
+        const novo = new Map(m);
+        novo.delete(cameraId);
+        return novo;
+      });
+      this.timeoutsPorCamera.delete(cameraId);
+    }, DURACAO_GLOW_MS);
+    this.timeoutsPorCamera.set(cameraId, timeout);
   }
 
   ngOnInit(): void {
@@ -131,9 +164,7 @@ export class StationKioskComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.incidentService.disconnect();
-    if (this.flashTimeout !== null) {
-      clearTimeout(this.flashTimeout);
-    }
+    this.timeoutsPorCamera.forEach(t => clearTimeout(t));
   }
 
   private buscarEventosRecentes(cameraIds: string[]): void {

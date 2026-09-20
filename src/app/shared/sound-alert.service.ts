@@ -26,6 +26,9 @@ export const AUDIO_CONTEXT_FACTORY = new InjectionToken<() => AudioContextLike>(
   },
 );
 
+const DURACAO_TOM_S = 0.22;
+const INTERVALO_ENTRE_TONS_S = 0.28;
+
 /**
  * Alerta sonoro de incidente (spec: operador/gestor olhando a tela de uma
  * estação precisa notar uma infração sem depender de estar olhando pro
@@ -38,9 +41,10 @@ export class SoundAlertService {
   private audioContextFactory = inject(AUDIO_CONTEXT_FACTORY);
 
   /**
-   * Toca um bipe curto e agudo (dois tons, ~300ms). `severidade` alta soa
-   * mais forte/urgente — usa o mesmo tom pra não construir uma escala sonora
-   * inteira sem pedido explícito, só ajusta o ganho.
+   * Toca uma sirene curta (dois tons alternados, repetidos) — achado de
+   * campo 2026-09-20: o bipe único original passava despercebido no chão de
+   * fábrica. `severidade` alta soa mais alto e repete mais vezes, mas o tom
+   * em si não muda (nao existe pedido por uma escala sonora inteira).
    */
   tocar(severidade: number): void {
     let ctx: AudioContextLike;
@@ -52,13 +56,19 @@ export class SoundAlertService {
       return;
     }
 
-    const volume = severidade >= 3 ? 0.35 : 0.2;
-    this.bipe(ctx, 880, 0, 0.15, volume);
-    this.bipe(ctx, 1108, 0.18, 0.15, volume);
+    const volume = severidade >= 3 ? 0.55 : 0.4;
+    const repeticoes = severidade >= 3 ? 4 : 3;
 
+    for (let i = 0; i < repeticoes; i++) {
+      const inicioDoPar = i * INTERVALO_ENTRE_TONS_S * 2;
+      this.bipe(ctx, 880, inicioDoPar, DURACAO_TOM_S, volume);
+      this.bipe(ctx, 1108, inicioDoPar + INTERVALO_ENTRE_TONS_S, DURACAO_TOM_S, volume);
+    }
+
+    const duracaoTotalS = repeticoes * INTERVALO_ENTRE_TONS_S * 2;
     setTimeout(() => {
       ctx.close().catch(() => {});
-    }, 400);
+    }, duracaoTotalS * 1000 + 300);
   }
 
   private bipe(ctx: AudioContextLike, frequenciaHz: number, atrasoS: number,
