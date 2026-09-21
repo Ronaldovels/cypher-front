@@ -25,10 +25,13 @@
     </form>
 
     <form class="cardform" (submit)="$event.preventDefault(); salvarCamera()">
-      <h3 class="cardform-title">Nova câmera</h3>
+      <h3 class="cardform-title">{{ editandoCameraId() != null ? 'Editar câmera ' + editandoCameraId() : 'Nova câmera' }}</h3>
+      @if (carregandoCamera()) {
+        <p class="ajuda">carregando dados da câmera…</p>
+      }
       <div class="field">
         <label>Código</label>
-        <input class="input" [value]="novaCamera().id" placeholder="CAM-01"
+        <input class="input" [value]="novaCamera().id" placeholder="CAM-01" [disabled]="editandoCameraId() != null"
                (input)="novaCamera.set({ ...novaCamera(), id: ($any($event.target).value || '').toUpperCase() })" />
       </div>
       <div class="field">
@@ -61,7 +64,79 @@
         Use <code>&#36;&#123;VARIAVEL&#125;</code> para usuário e senha. O valor é lido do ambiente
         do computador que roda o pipeline — a senha nunca é gravada no servidor.
       </p>
-      <button type="submit" class="btn primary" [disabled]="salvando()">Cadastrar câmera</button>
+      <div class="field">
+        <label>Rotação da câmera</label>
+        <select class="select" [value]="novaCamera().rotacao"
+                (change)="novaCamera.set({ ...novaCamera(), rotacao: +$any($event.target).value })">
+          <option value="0">0° (sem rotação)</option>
+          <option value="90">90°</option>
+          <option value="180">180°</option>
+          <option value="270">270°</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ângulo de inclinação (roll)</label>
+        <input class="input" type="number" min="-45" max="45"
+               [value]="novaCamera().anguloCameraGraus"
+               (input)="novaCamera.set({ ...novaCamera(), anguloCameraGraus: +$any($event.target).value })" />
+        <p class="ajuda">
+          Graus de inclinação lateral da câmera (-45 a 45). Corrige o cálculo de postura
+          quando a câmera não está perfeitamente nivelada. Meça no local e ajuste até o
+          REBA exibido bater com uma pessoa em pé.
+        </p>
+      </div>
+      <div class="field">
+        <label class="toggle-row">
+          <input type="checkbox" [checked]="novaCamera().quedaCustomizada"
+                 (change)="novaCamera.set({ ...novaCamera(), quedaCustomizada: $any($event.target).checked })" />
+          <span class="toggle-track"></span>
+          <span class="toggle-text">
+            <span class="t-title">Ajustar limiares de detecção de queda</span>
+            <span class="t-desc">Câmeras montadas quase na vertical podem confundir alguém debruçado com uma queda. Sem marcar, usa o mesmo limiar de todas as câmeras.</span>
+          </span>
+        </label>
+      </div>
+      @if (novaCamera().quedaCustomizada) {
+        <div class="subpanel">
+          <div class="field">
+            <label>Proporção do corpo deitado (largura ÷ altura da caixa)</label>
+            <input class="input" type="number" step="0.1" min="0"
+                   [value]="novaCamera().fallenAspectRatio"
+                   (input)="novaCamera.set({ ...novaCamera(), fallenAspectRatio: +$any($event.target).value })" />
+          </div>
+          <div class="field">
+            <label>Extensão vertical mínima (nariz até o pé, fração da altura do corpo)</label>
+            <input class="input" type="number" step="0.01" min="0" max="1"
+                   [value]="novaCamera().fallenVerticalExtent"
+                   (input)="novaCamera.set({ ...novaCamera(), fallenVerticalExtent: +$any($event.target).value })" />
+          </div>
+          <div class="field">
+            <label>Rotação máxima de tronco antes de considerar instável</label>
+            <input class="input" type="number" step="0.01" min="0"
+                   [value]="novaCamera().trunkRotationMax"
+                   (input)="novaCamera.set({ ...novaCamera(), trunkRotationMax: +$any($event.target).value })" />
+          </div>
+          <div class="field">
+            <label class="toggle-row">
+              <input type="checkbox" [checked]="novaCamera().fallRequireCorroboration"
+                     (change)="novaCamera.set({ ...novaCamera(), fallRequireCorroboration: $any($event.target).checked })" />
+              <span class="toggle-track"></span>
+              <span class="toggle-text">
+                <span class="t-title">Exigir 2 evidências concordando</span>
+                <span class="t-desc">Troca recall por precisão: reduz falso alerta, mas pode demorar mais para confirmar uma queda real.</span>
+              </span>
+            </label>
+          </div>
+        </div>
+      }
+      <div style="display:flex;gap:12px">
+        <button type="submit" class="btn primary" [disabled]="salvando()">
+          {{ editandoCameraId() != null ? 'Salvar edição' : 'Cadastrar câmera' }}
+        </button>
+        @if (editandoCameraId() != null) {
+          <button type="button" class="btn ghost" (click)="cancelarEdicaoCamera()">cancelar</button>
+        }
+      </div>
     </form>
   </div>
 
@@ -91,6 +166,7 @@
           <div class="camera-row">
             <span class="codigo">{{ c.id }}</span>
             <span class="nome">{{ c.nome }}</span>
+            <button type="button" class="btn ghost sm" (click)="editarCamera(c.id)">editar</button>
             <button type="button" class="btn ghost sm" (click)="editarZonasDe(c)">editar zonas</button>
             <button type="button" class="btn ghost sm" (click)="desativarCamera(c.id)">desativar</button>
           </div>

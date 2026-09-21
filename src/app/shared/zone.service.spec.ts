@@ -23,29 +23,29 @@ describe('ZoneService (design doc de zonas de risco, §4.4)', () => {
     service.load('CAM-01');
     http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones`).flush([
       { id: 1, cameraId: 'CAM-01', nome: 'Área da prensa', zoneType: 'RESTRICTED',
-        polygon: [{ x: 0.2, y: 0.2 }], severity: 4, requiredPpe: [], ativa: true },
+        polygon: [{ x: 0.2, y: 0.2 }], severity: 4, requiredPpe: [], delimitaAvaliacao: false, ativa: true },
     ]);
 
     expect(service.zonas()).toHaveLength(1);
   });
 
   it('create() faz POST e recarrega', () => {
-    service.create('CAM-01', { nome: 'x', zoneType: 'RESTRICTED', polygon: [], severity: 2, requiredPpe: [] })
+    service.create('CAM-01', { nome: 'x', zoneType: 'RESTRICTED', polygon: [], severity: 2, requiredPpe: [], delimitaAvaliacao: false })
       .subscribe();
 
     const req = http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones`);
     expect(req.request.method).toBe('POST');
-    req.flush({ id: 1, cameraId: 'CAM-01', nome: 'x', zoneType: 'RESTRICTED', polygon: [], severity: 2, requiredPpe: [], ativa: true });
+    req.flush({ id: 1, cameraId: 'CAM-01', nome: 'x', zoneType: 'RESTRICTED', polygon: [], severity: 2, requiredPpe: [], delimitaAvaliacao: false, ativa: true });
     http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones`).flush([]);
   });
 
   it('update() faz PUT em /cameras/:id/zones/:zoneId', () => {
-    service.update('CAM-01', 1, { nome: 'y', zoneType: 'ATTENTION', polygon: [], severity: 1, requiredPpe: [] })
+    service.update('CAM-01', 1, { nome: 'y', zoneType: 'ATTENTION', polygon: [], severity: 1, requiredPpe: [], delimitaAvaliacao: false })
       .subscribe();
 
     const req = http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones/1`);
     expect(req.request.method).toBe('PUT');
-    req.flush({ id: 1, cameraId: 'CAM-01', nome: 'y', zoneType: 'ATTENTION', polygon: [], severity: 1, requiredPpe: [], ativa: true });
+    req.flush({ id: 1, cameraId: 'CAM-01', nome: 'y', zoneType: 'ATTENTION', polygon: [], severity: 1, requiredPpe: [], delimitaAvaliacao: false, ativa: true });
     http.expectOne(`${environment.apiUrl}/cameras/CAM-01/zones`).flush([]);
   });
 

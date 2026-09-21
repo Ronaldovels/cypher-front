@@ -100,6 +100,21 @@ input, select, textarea { font-family: inherit; color: inherit; }
 .field-error { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #E14A3B; margin-top: 2px; }
 .field-error::before { content: '✕  '; }
 
+/* ─── TOGGLE (liga/desliga um comportamento — distinto de .chip, que filtra/seleciona) ─── */
+.toggle-row { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; }
+.toggle-row input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle-track { flex-shrink: 0; width: 40px; height: 24px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line-2); position: relative; transition: background 0.15s, border-color 0.15s; margin-top: 2px; }
+.toggle-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink-mute); transition: transform 0.18s cubic-bezier(.3,.1,.3,1), background 0.15s; }
+.toggle-row input:checked + .toggle-track { background: var(--accent-soft); border-color: var(--accent); }
+.toggle-row input:checked + .toggle-track::after { transform: translateX(16px); background: var(--accent); }
+.toggle-row input:focus-visible + .toggle-track { box-shadow: 0 0 0 3px var(--accent-soft); }
+.toggle-text { display: flex; flex-direction: column; gap: 2px; }
+.toggle-text .t-title { color: var(--ink); font-size: 14px; font-weight: 500; }
+.toggle-text .t-desc { color: var(--ink-mute); font-size: 13px; line-height: 1.5; max-width: 52ch; }
+
+/* ─── SUBPANEL (campos revelados por um toggle acima — agrupamento visual, não so mais .field soltos) ─── */
+.subpanel { display: flex; flex-direction: column; gap: 16px; padding: 18px 20px; margin-top: -4px; background: var(--bg-2); border: 1px solid var(--line); border-left: 2px solid var(--accent); border-radius: 0 10px 10px 0; }
+
 /* ─── BUTTONS ─── */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 22px; border-radius: 10px; border: 1px solid var(--line-2); background: transparent; color: var(--ink); font-size: 15px; font-weight: 500; letter-spacing: -0.005em; transition: all 0.15s ease; }
 .btn:hover { background: var(--surface-2); border-color: var(--line-3); }
@@ -201,6 +216,26 @@ input, select, textarea { font-family: inherit; color: inherit; }
 @keyframes slideInBack { 0% { opacity: 0; transform: translateX(-28px); } 100% { opacity: 1; transform: translateX(0); } }
 @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft); } 50% { box-shadow: 0 0 0 18px transparent; } }
 .pulsing { animation: pulse 1.4s ease-in-out infinite; }
+
+/* ─── ALERTA SONORO DO KIOSK: complemento visual (spec: som sozinho falha com
+   dispositivo mudo, ambiente barulhento de fábrica ou operador com deficiência
+   auditiva) — glow ao redor do painel da câmera que teve o incidente, na cor
+   da severidade (mesma paleta de .heat-tile/.alert-row), crescendo e
+   diminuindo — aponta qual câmera, não só "algo aconteceu". Cresce/diminui
+   2x em ~3.2s pra dar tempo de notar mesmo olhando pra outro canto do kiosk
+   no instante do incidente (achado de campo 2026-09-20). ─── */
+.kiosk-cam-panel.cam-glow { animation: kioskCamGlow 3.2s ease-out; }
+@keyframes kioskCamGlow {
+  0%   { box-shadow: 0 0 0 0 var(--glow-color, transparent); }
+  20%  { box-shadow: 0 0 56px 16px var(--glow-color, transparent); }
+  40%  { box-shadow: 0 0 16px 3px var(--glow-color, transparent); }
+  60%  { box-shadow: 0 0 56px 16px var(--glow-color, transparent); }
+  80%  { box-shadow: 0 0 16px 3px var(--glow-color, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-cam-panel.cam-glow { animation: none; box-shadow: 0 0 32px 8px var(--glow-color, transparent); }
+}
 
 /* ─── LAUNCH OVERLAY ─── */
 .launch-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 100; flex-direction: column; gap: 28px; animation: fadeIn 0.5s ease both; }

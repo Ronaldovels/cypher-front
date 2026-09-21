@@ -79,8 +79,8 @@
           <div class="detail-field"><span class="detail-label">Severidade</span><span class="detail-value">{{ inc.severity }} · {{ inc.nivel }}</span></div>
           <div class="detail-field"><span class="detail-label">REBA</span><span class="detail-value">{{ inc.rebaScore }} (ação {{ inc.actionLevel }})</span></div>
           <div class="detail-field"><span class="detail-label">Zona</span><span class="detail-value">{{ inc.zoneName ?? ('sem zona (' + inc.zoneStatus + ')') }}</span></div>
-          <div class="detail-field"><span class="detail-label">EPIs presentes</span><span class="detail-value">{{ inc.epiPresent.join(', ') || '—' }}</span></div>
-          <div class="detail-field"><span class="detail-label">EPIs ausentes</span><span class="detail-value">{{ inc.epiMissing.join(', ') || '—' }}</span></div>
+          <div class="detail-field"><span class="detail-label">EPIs presentes</span><span class="detail-value">{{ epiLista(inc.epiPresent) }}</span></div>
+          <div class="detail-field"><span class="detail-label">EPIs ausentes</span><span class="detail-value">{{ epiLista(inc.epiMissing) }}</span></div>
           @if (inc.durationSeconds !== null) {
             <div class="detail-field"><span class="detail-label">Duração</span><span class="detail-value">{{ inc.durationSeconds }}s · pico {{ inc.peakSeverity }}</span></div>
           }

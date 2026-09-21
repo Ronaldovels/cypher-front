@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
@@ -9,10 +9,25 @@ import { ConfigService } from '../shared/config.service';
 import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
 import { LiveFeedComponent } from '../shared/live-feed/live-feed.component';
-import { Incident, dicaDe, formatTime, incidentLabel } from '../shared/incident.models';
+import { SoundAlertService } from '../shared/sound-alert.service';
+import { Incident, dicaDe, formatTime, incidentLabel, severityClass } from '../shared/incident.models';
 
 const EVENTOS_POR_CAMERA = 10;
 const EVENTOS_EXIBIDOS = 10;
+
+/** Duração do glow ao redor do painel da câmera — mesmo espírito "mais
+ * prolongado" do bipe (achado de campo 2026-09-20): 3.2s dá tempo de notar
+ * mesmo olhando pra outro canto do kiosk no instante do incidente. */
+const DURACAO_GLOW_MS = 3200;
+
+/** Cor do glow por faixa de severidade — mesma paleta de .heat-tile/.alert-row
+ * (styles.scss), pra não inventar uma terceira linguagem de cor de risco. */
+const COR_GLOW: Record<ReturnType<typeof severityClass>, string> = {
+  ok: 'rgba(52,208,126,0.65)',
+  low: 'rgba(255,206,56,0.7)',
+  mid: 'rgba(255,140,30,0.75)',
+  hi: 'rgba(238,66,66,0.8)',
+};
 
 /**
  * Dock por papel, não por rota (design doc de E4, §4.1): para o OPERADOR o
@@ -25,12 +40,13 @@ const EVENTOS_EXIBIDOS = 10;
   imports: [ChromeTopbarComponent, LiveFeedComponent, DockComponent],
   templateUrl: './station-kiosk.component.html',
 })
-export class StationKioskComponent implements OnInit {
+export class StationKioskComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private catalogService = inject(CatalogService);
   private incidentService = inject(IncidentService);
   private cfgService = inject(ConfigService);
   private authService = inject(AuthService);
+  private soundAlertService = inject(SoundAlertService);
   readonly auth = this.authService;
 
   cfg = this.cfgService.config;
@@ -51,6 +67,17 @@ export class StationKioskComponent implements OnInit {
 
   private eventosBuscados = false;
 
+  /**
+   * Chave do incidente mais recente já visto pelo alerta sonoro, lida de
+   * forma síncrona na construção (não dentro do `effect` — se lida lá, um
+   * store vazio no primeiro run faria o próprio primeiro incidente real
+   * virar "base" em vez de tocar). `null` cobre tanto "nada no store ainda"
+   * quanto qualquer item pré-existente (ex.: dashboard visitado antes de
+   * abrir este kiosk) — em ambos os casos, só um incidente novo *depois*
+   * deste ponto deve disparar o bipe.
+   */
+  private ultimaChaveVista: string | null = this.incidentService.incidents()[0]?.incidentKey ?? null;
+
   constructor() {
     effect(() => {
       const estacao = this.station();
@@ -60,10 +87,84 @@ export class StationKioskComponent implements OnInit {
       this.eventosBuscados = true;
       this.buscarEventosRecentes(estacao.cameras.map(c => c.id));
     });
+
+    /**
+     * Alerta sonoro (achado SPI 2026-09-17): quem está com o kiosk de uma
+     * estação aberto na tela precisa notar uma infração sem depender de
+     * estar lendo o texto — som toca só para incidentes das câmeras desta
+     * estação, não de qualquer câmera do sistema.
+     */
+    effect(() => {
+      const estacao = this.station();
+      const maisRecente = this.incidentService.incidents()[0];
+      if (!estacao || !maisRecente || maisRecente.incidentKey === this.ultimaChaveVista) {
+        return;
+      }
+      this.ultimaChaveVista = maisRecente.incidentKey;
+      const cameraIds = new Set(estacao.cameras.map(c => c.id));
+      if (cameraIds.has(maisRecente.cameraId)) {
+        this.soundAlertService.tocar(maisRecente.severity);
+        this.dispararGlowDaCamera(maisRecente.cameraId, maisRecente.severity);
+      }
+    });
+  }
+
+  /**
+   * Complemento visual do bipe (som sozinho falha com dispositivo mudo,
+   * chão de fábrica barulhento ou operador com deficiência auditiva):
+   * glow ao redor do painel da câmera que teve o incidente, na cor da
+   * severidade — aponta qual câmera, não só "algo aconteceu em algum lugar"
+   * (achado de campo 2026-09-20, kiosk com várias câmeras na grade).
+   */
+  private readonly _alertasPorCamera = signal<ReadonlyMap<string, number>>(new Map());
+  readonly alertasPorCamera = this._alertasPorCamera.asReadonly();
+  private timeoutsPorCamera = new Map<string, ReturnType<typeof setTimeout>>();
+
+  corDoGlow(cameraId: string): string {
+    const severidade = this.alertasPorCamera().get(cameraId);
+    return severidade === undefined ? 'transparent' : COR_GLOW[severityClass(severidade)];
+  }
+
+  private dispararGlowDaCamera(cameraId: string, severidade: number): void {
+    const timeoutAnterior = this.timeoutsPorCamera.get(cameraId);
+    if (timeoutAnterior !== undefined) {
+      // Ja tem um glow rodando nesta camera: reaplica no proximo frame —
+      // sem isso, um segundo incidente durante a animacao do primeiro nao
+      // reinicia o CSS (a classe nunca deixou de estar presente pro
+      // browser notar a troca).
+      clearTimeout(timeoutAnterior);
+      this._alertasPorCamera.update(m => {
+        const novo = new Map(m);
+        novo.delete(cameraId);
+        return novo;
+      });
+      requestAnimationFrame(() => this.iniciarGlow(cameraId, severidade));
+      return;
+    }
+    this.iniciarGlow(cameraId, severidade);
+  }
+
+  private iniciarGlow(cameraId: string, severidade: number): void {
+    this._alertasPorCamera.update(m => new Map(m).set(cameraId, severidade));
+    const timeout = setTimeout(() => {
+      this._alertasPorCamera.update(m => {
+        const novo = new Map(m);
+        novo.delete(cameraId);
+        return novo;
+      });
+      this.timeoutsPorCamera.delete(cameraId);
+    }, DURACAO_GLOW_MS);
+    this.timeoutsPorCamera.set(cameraId, timeout);
   }
 
   ngOnInit(): void {
     this.catalogService.load();
+    this.incidentService.connect();
+  }
+
+  ngOnDestroy(): void {
+    this.incidentService.disconnect();
+    this.timeoutsPorCamera.forEach(t => clearTimeout(t));
   }
 
   private buscarEventosRecentes(cameraIds: string[]): void {

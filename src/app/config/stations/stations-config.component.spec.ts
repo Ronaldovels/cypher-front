@@ -140,6 +140,9 @@ describe('StationsConfigComponent', () => {
     componente.novaCamera.set({
       id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
       streamUrl: 'http://127.0.0.1/stream', fonte: '',
+      rotacao: 0, anguloCameraGraus: 0,
+      quedaCustomizada: false, fallenAspectRatio: 1.3, fallenVerticalExtent: 0.4,
+      trunkRotationMax: 0.35, fallRequireCorroboration: false,
     });
     componente.salvarCamera();
 
@@ -154,12 +157,63 @@ describe('StationsConfigComponent', () => {
     componente.novaCamera.set({
       id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
       streamUrl: 'http://127.0.0.1:8090/stream', fonte: '',
+      rotacao: 0, anguloCameraGraus: 0,
+      quedaCustomizada: false, fallenAspectRatio: 1.3, fallenVerticalExtent: 0.4,
+      trunkRotationMax: 0.35, fallRequireCorroboration: false,
     });
     componente.salvarCamera();
 
     const req = http.expectOne(
       r => r.method === 'POST' && r.url === `${environment.apiUrl}/cameras`);
     expect((req.request.body as { fonte: string | null }).fonte).toBeNull();
+    req.flush({});
+    http.match(() => true).forEach(r => r.flush([]));
+  });
+
+  it('sem personalizar queda, envia null nos 4 campos de tuning', () => {
+    const fixture = montar();
+    const componente = fixture.componentInstance;
+
+    componente.novaCamera.set({
+      id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
+      streamUrl: 'http://127.0.0.1:8090/stream', fonte: '',
+      rotacao: 0, anguloCameraGraus: 0,
+      quedaCustomizada: false, fallenAspectRatio: 2.2, fallenVerticalExtent: 0.15,
+      trunkRotationMax: 0.6, fallRequireCorroboration: true,
+    });
+    componente.salvarCamera();
+
+    const req = http.expectOne(
+      r => r.method === 'POST' && r.url === `${environment.apiUrl}/cameras`);
+    const body = req.request.body as Record<string, unknown>;
+    expect(body['fallenAspectRatio']).toBeNull();
+    expect(body['fallenVerticalExtent']).toBeNull();
+    expect(body['trunkRotationMax']).toBeNull();
+    expect(body['fallRequireCorroboration']).toBeNull();
+    req.flush({});
+    http.match(() => true).forEach(r => r.flush([]));
+  });
+
+  it('personalizando queda, envia os 4 valores do form', () => {
+    const fixture = montar();
+    const componente = fixture.componentInstance;
+
+    componente.novaCamera.set({
+      id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
+      streamUrl: 'http://127.0.0.1:8090/stream', fonte: '',
+      rotacao: 0, anguloCameraGraus: 0,
+      quedaCustomizada: true, fallenAspectRatio: 2.2, fallenVerticalExtent: 0.15,
+      trunkRotationMax: 0.6, fallRequireCorroboration: true,
+    });
+    componente.salvarCamera();
+
+    const req = http.expectOne(
+      r => r.method === 'POST' && r.url === `${environment.apiUrl}/cameras`);
+    const body = req.request.body as Record<string, unknown>;
+    expect(body['fallenAspectRatio']).toBe(2.2);
+    expect(body['fallenVerticalExtent']).toBe(0.15);
+    expect(body['trunkRotationMax']).toBe(0.6);
+    expect(body['fallRequireCorroboration']).toBe(true);
     req.flush({});
     http.match(() => true).forEach(r => r.flush([]));
   });
@@ -227,5 +281,83 @@ describe('StationsConfigComponent', () => {
     const status = fixture.nativeElement.querySelector('.status');
     expect(status.classList.contains('off')).toBe(true);
     expect(status.classList.contains('on')).toBe(false);
+  });
+
+  describe('edição de câmera', () => {
+    function camera(overrides: Record<string, unknown> = {}) {
+      return {
+        id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
+        streamUrl: 'http://127.0.0.1:8090/stream',
+        fonte: 'rtsp://${CAM01_USER}:${CAM01_PASS}@10.0.0.7/stream',
+        ativa: true, rotacao: 90, anguloCameraGraus: -5,
+        fallenAspectRatio: null, fallenVerticalExtent: null,
+        trunkRotationMax: null, fallRequireCorroboration: null,
+        ...overrides,
+      };
+    }
+
+    it('editarCamera busca o item completo e preenche o formulario', () => {
+      const fixture = montar();
+      const comp = fixture.componentInstance;
+
+      comp.editarCamera('CAM-01');
+      http.expectOne(`${environment.apiUrl}/cameras/CAM-01`).flush(camera());
+
+      expect(comp.editandoCameraId()).toBe('CAM-01');
+      expect(comp.novaCamera()).toMatchObject({
+        id: 'CAM-01', nome: 'Frontal', estacaoId: 'EST-01',
+        streamUrl: 'http://127.0.0.1:8090/stream',
+        fonte: 'rtsp://${CAM01_USER}:${CAM01_PASS}@10.0.0.7/stream',
+        rotacao: 90, anguloCameraGraus: -5, quedaCustomizada: false,
+      });
+    });
+
+    it('camera com overrides de queda entra com quedaCustomizada ligado e os valores reais', () => {
+      const fixture = montar();
+      const comp = fixture.componentInstance;
+
+      comp.editarCamera('CAM-02');
+      http.expectOne(`${environment.apiUrl}/cameras/CAM-02`).flush(camera({
+        id: 'CAM-02', fallenAspectRatio: 2.2, fallenVerticalExtent: 0.15,
+        trunkRotationMax: 0.6, fallRequireCorroboration: true,
+      }));
+
+      expect(comp.novaCamera().quedaCustomizada).toBe(true);
+      expect(comp.novaCamera().fallenAspectRatio).toBe(2.2);
+      expect(comp.novaCamera().fallRequireCorroboration).toBe(true);
+    });
+
+    it('salvar em modo de edicao faz PUT no id sendo editado, nao POST', () => {
+      const fixture = montar();
+      const comp = fixture.componentInstance;
+
+      comp.editarCamera('CAM-01');
+      http.expectOne(`${environment.apiUrl}/cameras/CAM-01`).flush(camera());
+      comp.novaCamera.set({ ...comp.novaCamera(), nome: 'Frontal renomeada' });
+
+      comp.salvarCamera();
+
+      const req = http.expectOne(`${environment.apiUrl}/cameras/CAM-01`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body.nome).toBe('Frontal renomeada');
+      req.flush(camera({ nome: 'Frontal renomeada' }));
+      http.match(() => true).forEach(r => r.flush([]));
+
+      expect(comp.editandoCameraId()).toBeNull();
+    });
+
+    it('cancelarEdicaoCamera limpa o formulario sem chamar a API', () => {
+      const fixture = montar();
+      const comp = fixture.componentInstance;
+
+      comp.editarCamera('CAM-01');
+      http.expectOne(`${environment.apiUrl}/cameras/CAM-01`).flush(camera());
+
+      comp.cancelarEdicaoCamera();
+
+      expect(comp.editandoCameraId()).toBeNull();
+      expect(comp.novaCamera().id).toBe('');
+      http.expectNone(r => r.method === 'PUT' || r.method === 'POST');
+    });
   });
 });
