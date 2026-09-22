@@ -12,6 +12,17 @@ export interface CypherConfig {
   cas: Record<string, any>;
 }
 
+/**
+ * Identidade visual e EPIs do onboarding, guardados no `localStorage`.
+ *
+ * Fica de fora da limpeza por troca de sessão (`TrocaDeSessao`) de
+ * propósito, como o `ThemeService`: é configuração do navegador, não dado da
+ * sessão. O design doc de multi-tenant (§9) deixou o branding por empresa
+ * fora de escopo — os campos do onboarding "continuam como estão", no
+ * `localStorage`. Consequência conhecida: dois gestores de empresas
+ * diferentes no mesmo navegador compartilham nome, logo e cor. Quando o
+ * branding por empresa entrar, a chave passa a ser por `empresaId`.
+ */
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
   private readonly KEY = 'cypher.config';
