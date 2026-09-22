@@ -28,7 +28,7 @@ export const canActivateOperador: CanActivateFn = (route: ActivatedRouteSnapshot
   );
 };
 
-/** Qualquer papel autenticado — não ligada a nenhuma rota nesta entrega, existe por simetria (design doc §4.3). */
+/** Qualquer papel autenticado (design doc §4.3) — `/incidentes`, `/incidentes/:id` e `/estacoes`. */
 export const canActivateAutenticado: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

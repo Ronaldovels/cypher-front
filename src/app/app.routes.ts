@@ -18,7 +18,7 @@ import { StationsTabComponent } from './config/stations/stations-tab.component';
 import { EquipeUsuariosTabComponent } from './config/equipe/equipe-usuarios-tab.component';
 import { WebhooksTabComponent } from './config/webhooks/webhooks-tab.component';
 import {
-  canActivateGestor, canActivateOperadorOuGestor,
+  canActivateAutenticado, canActivateGestor, canActivateOperadorOuGestor,
 } from './shared/auth/auth.guards';
 
 export const routes: Routes = [
@@ -29,9 +29,12 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [canActivateGestor] },
   { path: 'heatmap', component: HeatmapComponent, canActivate: [canActivateGestor] },
   { path: 'placar', component: PlacarComponent, canActivate: [canActivateGestor] },
-  { path: 'incidentes', component: IncidentTimelineComponent },
-  { path: 'incidentes/:id', component: IncidentDetailComponent },
-  { path: 'estacoes', component: StationsGridComponent },
+  // Qualquer papel autenticado: o backend serve incidentes/câmeras a GESTOR e
+  // OPERADOR. Sem guard, quem não estava logado via a tela vazia com erros de
+  // 401 em vez de ir para o login.
+  { path: 'incidentes', component: IncidentTimelineComponent, canActivate: [canActivateAutenticado] },
+  { path: 'incidentes/:id', component: IncidentDetailComponent, canActivate: [canActivateAutenticado] },
+  { path: 'estacoes', component: StationsGridComponent, canActivate: [canActivateAutenticado] },
   { path: 'estacao/:id', component: StationKioskComponent, canActivate: [canActivateOperadorOuGestor] },
   {
     path: 'config',
