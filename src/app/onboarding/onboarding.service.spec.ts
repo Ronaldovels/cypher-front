@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { environment } from '../../environments/environment';
 import { OnboardingService } from './onboarding.service';
+import { AuthService } from '../shared/auth/auth.service';
 import { ThemeService } from '../shared/theme.service';
 import { STEPS } from './models/onboarding.models';
 
@@ -213,6 +214,33 @@ describe('OnboardingService — bootstrap do gestor mestre no launch() (design d
 
     vi.advanceTimersByTime(2400);
     expect(navegar).toHaveBeenCalledWith(['/dashboard']);
+  });
+
+  it('setup concluido apaga a senha do gestor mestre da memoria, mas mantem o resto do formulario', () => {
+    service.launch();
+    http.expectOne(`${environment.apiUrl}/setup`).flush({ papel: 'GESTOR', username: 'admin', empresaId: 'acme' });
+
+    // /onboarding não tem guard e o campo de senha é preenchido a partir de data().
+    expect(service.data().masterPassword).toBe('');
+    expect(service.data().masterUsername).toBe('admin');
+
+    vi.advanceTimersByTime(900);
+    expect(JSON.parse(localStorage.getItem('cypher.config')!).company).toBe('Acme');
+  });
+
+  it('409 no setup mantem a senha, para a pessoa tentar de novo', () => {
+    service.launch();
+    http.expectOne(`${environment.apiUrl}/setup`)
+      .flush({ erro: 'Setup já concluído' }, { status: 409, statusText: 'Conflict' });
+
+    expect(service.data().masterPassword).toBe('senhaAdmin1');
+  });
+
+  it('logout na mesma aba apaga a senha digitada no onboarding', () => {
+    TestBed.inject(AuthService).logout();
+    http.expectOne(`${environment.apiUrl}/auth/logout`).flush(null);
+
+    expect(service.data().masterPassword).toBe('');
   });
 
   it('bootstrap com 409 (setup ja concluido) mantem no passo de confirmacao, com erro visivel, sem navegar', () => {

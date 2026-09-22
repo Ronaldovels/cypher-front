@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, takeUntil, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { TrocaDeSessao } from './auth/troca-de-sessao';
 import { Page } from './incident.models';
 import { Webhook, WebhookDelivery, WebhookPayload } from './webhook.models';
 
@@ -16,12 +17,24 @@ import { Webhook, WebhookDelivery, WebhookPayload } from './webhook.models';
 @Injectable({ providedIn: 'root' })
 export class WebhookService {
   private http = inject(HttpClient);
+  /** Leituras passam `takeUntil` aqui: resposta da sessão anterior não repovoa o store (ver `TrocaDeSessao`). */
+  private trocaDeSessao$ = inject(TrocaDeSessao).troca$;
 
   private readonly _assinantes = signal<Webhook[]>([]);
   readonly assinantes = this._assinantes.asReadonly();
 
+  constructor() {
+    this.trocaDeSessao$.subscribe(() => this.reset());
+  }
+
+  /** Esquece os dados da sessão — chamado a cada troca de sessão. */
+  reset(): void {
+    this._assinantes.set([]);
+  }
+
   load(): void {
     this.http.get<Webhook[]>(`${environment.apiUrl}/webhooks`, { withCredentials: true })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({ next: w => this._assinantes.set(w), error: () => { } });
   }
 

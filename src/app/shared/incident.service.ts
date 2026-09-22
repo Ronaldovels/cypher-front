@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, takeUntil, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { TrocaDeSessao } from './auth/troca-de-sessao';
 import { EVENT_SOURCE_FACTORY, EventSourceLike } from './event-source.factory';
 import { AlertaStatus, ConnectionState, Incident, IncidentSearchFilters, Notificacao, Page, Summary, SummaryFiltros } from './incident.models';
 
@@ -17,6 +18,8 @@ export class IncidentService {
   static readonly MAX_IN_MEMORY = 100;
 
   private http = inject(HttpClient);
+  /** Leituras passam `takeUntil` aqui: resposta da sessão anterior não repovoa o store (ver `TrocaDeSessao`). */
+  private trocaDeSessao$ = inject(TrocaDeSessao).troca$;
   private readonly _incidents = signal<Incident[]>([]);
 
   readonly incidents = this._incidents.asReadonly();
@@ -55,6 +58,7 @@ export class IncidentService {
       }
     }
     this.http.get<Summary>(`${environment.apiUrl}/summary`, { withCredentials: true, params })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({ next: s => this._summary.set(s), error: () => { } });
   }
 
@@ -81,6 +85,7 @@ export class IncidentService {
 
   loadNaoLidas(): void {
     this.http.get<{ naoLidas: number }>(`${environment.apiUrl}/notificacoes/contagem-nao-lidas`, { withCredentials: true })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({ next: r => this._naoLidas.set(r.naoLidas), error: () => { } });
   }
 
@@ -106,6 +111,7 @@ export class IncidentService {
         params,
         withCredentials: true,
       })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({
         next: page => page.content.forEach(incident => this.upsert(incident)),
         error: () => { /* o badge de conexão já comunica a falha */ },
@@ -126,6 +132,7 @@ export class IncidentService {
     this.http
       .put<Incident>(`${environment.apiUrl}/incidents/${id}/status`, { status },
         { withCredentials: true })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({
         next: atualizado => this.upsert(atualizado),
         error: () => { /* mantém o estado anterior; nada é inventado na tela */ },
@@ -136,7 +143,7 @@ export class IncidentService {
   getById(id: number): Observable<Incident> {
     return this.http
       .get<Incident>(`${environment.apiUrl}/incidents/${id}`, { withCredentials: true })
-      .pipe(tap(incident => this.upsert(incident)));
+      .pipe(takeUntil(this.trocaDeSessao$), tap(incident => this.upsert(incident)));
   }
 
   /**
@@ -192,6 +199,29 @@ export class IncidentService {
     this.stream?.close();
     this.stream = null;
     this._connection.set('offline');
+  }
+
+  constructor() {
+    this.trocaDeSessao$.subscribe(() => this.reset());
+  }
+
+  /**
+   * Esquece tudo da sessão — chamado a cada troca de sessão.
+   *
+   * O serviço é singleton de raiz: sem isto, quem entrasse depois na mesma
+   * aba (outro gestor, outra empresa, ou um operador no kiosk) via até 100
+   * incidentes, o resumo e o contador de não lidas de quem saiu.
+   */
+  reset(): void {
+    this.disconnect();
+    if (this.summaryTimer !== null) {
+      clearTimeout(this.summaryTimer);
+      this.summaryTimer = null;
+    }
+    this.ultimoFiltros = undefined;
+    this._incidents.set([]);
+    this._summary.set(null);
+    this._naoLidas.set(0);
   }
 
   private receber(event: MessageEvent, novo: boolean): void {

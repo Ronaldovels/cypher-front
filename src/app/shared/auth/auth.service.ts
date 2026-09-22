@@ -4,6 +4,7 @@ import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { LoginEstacaoResponse, LoginResponse, MeResponse, Papel } from './auth.models';
+import { TrocaDeSessao } from './troca-de-sessao';
 
 /**
  * Sessão do usuário (cookie `JSESSIONID`, `HttpOnly` — este serviço nunca vê
@@ -15,6 +16,7 @@ import { LoginEstacaoResponse, LoginResponse, MeResponse, Papel } from './auth.m
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
+  private trocaDeSessao = inject(TrocaDeSessao);
 
   private readonly _role = signal<Papel | null>(null);
   private readonly _estacaoId = signal<string | null>(null);
@@ -71,6 +73,7 @@ export class AuthService {
       .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { username, password },
         { withCredentials: true })
       .pipe(tap(resp => {
+        this.limparDadosDaSessao();
         this._role.set(resp.papel);
         this._estacaoId.set(resp.estacaoId ?? null);
         this._empresaId.set(resp.empresaId);
@@ -83,6 +86,7 @@ export class AuthService {
       .post<LoginEstacaoResponse>(`${environment.apiUrl}/auth/login-estacao`, { token },
         { withCredentials: true })
       .pipe(tap(resp => {
+        this.limparDadosDaSessao();
         this._role.set(resp.papel);
         this._estacaoId.set(resp.estacaoId);
         this._empresaId.set(resp.empresaId);
@@ -92,6 +96,7 @@ export class AuthService {
 
   /** Limpa a sessão local de imediato — não trava a navegação numa rede lenta numa ação de saída. */
   logout(): void {
+    this.limparDadosDaSessao();
     this._role.set(null);
     this._estacaoId.set(null);
     this._empresaId.set(null);
@@ -110,10 +115,16 @@ export class AuthService {
       .post<LoginResponse>(`${environment.apiUrl}/setup`, { username, password, empresaId, empresaNome },
         { withCredentials: true })
       .pipe(tap(resp => {
+        this.limparDadosDaSessao();
         this._role.set(resp.papel);
         this._estacaoId.set(null);
         this._empresaId.set(resp.empresaId);
         this._empresaNome.set(resp.empresaNome ?? null);
       }));
+  }
+
+  /** Chamado em toda troca de sessão; os stores se limpam ao ouvir o aviso (ver `TrocaDeSessao`). */
+  private limparDadosDaSessao(): void {
+    this.trocaDeSessao.anunciar();
   }
 }

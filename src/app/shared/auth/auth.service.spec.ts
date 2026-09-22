@@ -5,6 +5,14 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../../environments/environment';
+import { CatalogService } from '../catalog.service';
+import { EpiChecklistService } from '../epi-checklist.service';
+import { Incident } from '../incident.models';
+import { IncidentService } from '../incident.service';
+import { McpCredentialService } from '../mcp-credential.service';
+import { TeamService } from '../team.service';
+import { WebhookService } from '../webhook.service';
+import { ZoneService } from '../zone.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -161,5 +169,153 @@ describe('AuthService', () => {
 
     expect(falhou).toBe(true);
     expect(service.role()).toBeNull();
+  });
+
+  describe('troca de sessão limpa os dados de quem saiu', () => {
+    // Stores são singletons de raiz: sem a limpeza, quem entrasse depois na
+    // mesma aba (outra empresa, ou um operador no kiosk) via os dados do anterior.
+    // Store novo com dado da empresa/usuário entra aqui (ver TrocaDeSessao).
+    const api = environment.apiUrl;
+
+    function popularStores() {
+      const stores = {
+        incidents: TestBed.inject(IncidentService),
+        catalog: TestBed.inject(CatalogService),
+        epis: TestBed.inject(EpiChecklistService),
+        team: TestBed.inject(TeamService),
+        webhooks: TestBed.inject(WebhookService),
+        zonas: TestBed.inject(ZoneService),
+        mcp: TestBed.inject(McpCredentialService),
+      };
+      stores.incidents.upsert({ incidentKey: 'k-antigo', detectedAt: '2026-09-22T10:00:00Z' } as Incident);
+      stores.incidents.loadSummary();
+      http.expectOne(r => r.url === `${api}/summary`).flush({ incidentesHoje: 1 });
+      stores.incidents.loadNaoLidas();
+      http.expectOne(`${api}/notificacoes/contagem-nao-lidas`).flush({ naoLidas: 3 });
+      stores.catalog.load();
+      http.expectOne(`${api}/cameras`).flush([{ id: 'CAM-01' }]);
+      http.expectOne(r => r.url === `${api}/stations`).flush([{ id: 'EST-01', cameras: [] }]);
+      stores.epis.load();
+      http.expectOne(`${api}/config/epis`).flush({ epis: ['capacete'] });
+      stores.team.load();
+      http.expectOne(`${api}/teams`).flush([{ id: 'EQ-1' }]);
+      http.expectOne(`${api}/users`).flush([{ username: 'u1' }]);
+      stores.webhooks.load();
+      http.expectOne(`${api}/webhooks`).flush([{ id: 1 }]);
+      stores.zonas.load('CAM-01');
+      http.expectOne(`${api}/cameras/CAM-01/zones`).flush([{ id: 1 }]);
+      stores.mcp.load();
+      http.expectOne(`${api}/mcp-credentials`).flush([{ id: 1 }]);
+      return stores;
+    }
+
+    type Stores = ReturnType<typeof popularStores>;
+
+    /** Um valor por dado de sessão; vazio em todos depois da troca. */
+    function retrato(s: Stores) {
+      return {
+        incidents: s.incidents.incidents().length,
+        summary: s.incidents.summary() !== null,
+        naoLidas: s.incidents.naoLidas(),
+        cameras: s.catalog.cameras().length,
+        stations: s.catalog.stations().length,
+        epis: s.epis.epis().length,
+        equipes: s.team.equipes().length,
+        usuarios: s.team.usuarios().length,
+        webhooks: s.webhooks.assinantes().length,
+        zonas: s.zonas.zonas().length,
+        mcp: s.mcp.credenciais().length,
+      };
+    }
+
+    const vazio = {
+      incidents: 0, summary: false, naoLidas: 0, cameras: 0, stations: 0, epis: 0,
+      equipes: 0, usuarios: 0, webhooks: 0, zonas: 0, mcp: 0,
+    };
+
+    beforeEach(() => {
+      http.expectOne(`${api}/auth/me`).flush({ papel: 'GESTOR', username: 'g1', empresaId: 'demo' });
+    });
+
+    it('controle: sem troca de sessão, todos os stores ficam populados', () => {
+      expect(retrato(popularStores())).toEqual({
+        incidents: 1, summary: true, naoLidas: 3, cameras: 1, stations: 1, epis: 1,
+        equipes: 1, usuarios: 1, webhooks: 1, zonas: 1, mcp: 1,
+      });
+    });
+
+    const fluxos: { nome: string; trocar: () => void }[] = [
+      {
+        nome: 'logout',
+        trocar: () => {
+          service.logout();
+          http.expectOne(`${api}/auth/logout`).flush(null);
+        },
+      },
+      {
+        nome: 'login de outro usuário na mesma aba (ex.: sessão expirada, sem logout)',
+        trocar: () => {
+          service.login('outro@acme', 'senha').subscribe();
+          http.expectOne(`${api}/auth/login`)
+            .flush({ papel: 'GESTOR', username: 'outro@acme', empresaId: 'acme' });
+        },
+      },
+      {
+        nome: 'login do kiosk',
+        trocar: () => {
+          service.loginEstacao('token-est').subscribe();
+          http.expectOne(`${api}/auth/login-estacao`)
+            .flush({ papel: 'OPERADOR', estacaoId: 'EST-02', empresaId: 'demo' });
+        },
+      },
+      {
+        nome: 'setup (bootstrap do gestor mestre)',
+        trocar: () => {
+          service.bootstrap('admin', 'senhaAdmin1', 'acme', 'Acme').subscribe();
+          http.expectOne(`${api}/setup`).flush({ papel: 'GESTOR', username: 'admin@acme', empresaId: 'acme' });
+        },
+      },
+    ];
+
+    for (const { nome, trocar } of fluxos) {
+      it(`${nome} limpa todos os stores`, () => {
+        const stores = popularStores();
+
+        trocar();
+
+        expect(retrato(stores)).toEqual(vazio);
+      });
+    }
+
+    it('resposta da sessão anterior ainda em voo é cancelada, não repovoa o store', () => {
+      const catalog = TestBed.inject(CatalogService);
+      const incidents = TestBed.inject(IncidentService);
+      catalog.load();
+      incidents.loadSummary();
+      const cameras = http.expectOne(`${api}/cameras`);
+      const stations = http.expectOne(r => r.url === `${api}/stations`);
+      const summary = http.expectOne(r => r.url === `${api}/summary`);
+
+      service.logout();
+      http.expectOne(`${api}/auth/logout`).flush(null);
+
+      expect(cameras.cancelled).toBe(true);
+      expect(stations.cancelled).toBe(true);
+      expect(summary.cancelled).toBe(true);
+      expect(catalog.cameras()).toEqual([]);
+      expect(incidents.summary()).toBeNull();
+    });
+
+    it('depois da troca, leituras da sessão nova voltam a preencher o store', () => {
+      const catalog = TestBed.inject(CatalogService);
+      service.logout();
+      http.expectOne(`${api}/auth/logout`).flush(null);
+
+      catalog.load();
+      http.expectOne(`${api}/cameras`).flush([{ id: 'CAM-02' }]);
+      http.expectOne(r => r.url === `${api}/stations`).flush([]);
+
+      expect(catalog.cameras().map(c => c.id)).toEqual(['CAM-02']);
+    });
   });
 });

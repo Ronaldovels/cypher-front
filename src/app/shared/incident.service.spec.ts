@@ -445,4 +445,58 @@ describe('IncidentService — SSE', () => {
     // e precisa aparecer em vez de sumir no catch do parse.
     expect(() => criados[0].emitirBruto('incident', '{"incidentKey":"k-torto"}')).toThrow();
   });
+
+  it('reset esquece incidentes, resumo e não lidas da sessão anterior e fecha o stream', () => {
+    service.connect();
+    criados[0].abrir();
+    http.match(() => true).forEach(r => r.flush(pagina([])));
+    criados[0].emitir('incident', incidente({ id: 9, incidentKey: 'k9' }));
+    service.loadSummary();
+    http.expectOne(r => r.url === `${environment.apiUrl}/summary`).flush({ incidentesHoje: 1 });
+    expect(service.incidents().length).toBe(1);
+    expect(service.naoLidas()).toBe(1);
+    expect(service.summary()).not.toBeNull();
+
+    service.reset();
+
+    expect(service.incidents()).toEqual([]);
+    expect(service.naoLidas()).toBe(0);
+    expect(service.summary()).toBeNull();
+    expect(criados[0].fechado).toBe(true);
+    expect(service.connection()).toBe('offline');
+  });
+
+  it('depois do reset, connect abre um stream novo e volta a ficar ao vivo', () => {
+    service.connect();
+    criados[0].abrir();
+    http.match(() => true).forEach(r => r.flush(pagina([])));
+
+    service.reset();
+    service.connect();
+
+    expect(criados.length).toBe(2);
+    expect(service.connection()).toBe('conectando');
+    criados[1].abrir();
+    http.match(() => true).forEach(r => r.flush(pagina([])));
+    expect(service.connection()).toBe('ao vivo');
+    criados[1].emitir('incident', incidente({ id: 10, incidentKey: 'k10' }));
+    expect(service.incidents().map(i => i.incidentKey)).toEqual(['k10']);
+  });
+
+  it('reset cancela o refresh agendado do resumo', () => {
+    vi.useFakeTimers();
+    try {
+      service.connect();
+      criados[0].abrir();
+      http.match(() => true).forEach(r => r.flush(pagina([])));
+      criados[0].emitir('incident', incidente({ id: 9, incidentKey: 'k9' }));
+
+      service.reset();
+      vi.advanceTimersByTime(5000);
+
+      http.expectNone(r => r.url === `${environment.apiUrl}/summary`);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

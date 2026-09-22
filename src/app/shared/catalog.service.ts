@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, takeUntil, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { TrocaDeSessao } from './auth/troca-de-sessao';
 import {
   Camera, CameraAdmin, CameraPayload, EstacaoAdmin, Station, StationPayload,
 } from './incident.models';
@@ -17,6 +18,8 @@ import {
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
   private http = inject(HttpClient);
+  /** Leituras passam `takeUntil` aqui: resposta da sessão anterior não repovoa o store (ver `TrocaDeSessao`). */
+  private trocaDeSessao$ = inject(TrocaDeSessao).troca$;
 
   private readonly _cameras = signal<Camera[]>([]);
   private readonly _stations = signal<Station[]>([]);
@@ -25,16 +28,29 @@ export class CatalogService {
   readonly cameras = this._cameras.asReadonly();
   readonly stations = this._stations.asReadonly();
 
+  constructor() {
+    this.trocaDeSessao$.subscribe(() => this.reset());
+  }
+
+  /** Esquece os dados da sessão — chamado a cada troca de sessão. */
+  reset(): void {
+    this._cameras.set([]);
+    this._stations.set([]);
+    this.incluirInativas = false;
+  }
+
   load(incluirInativas = false): void {
     this.incluirInativas = incluirInativas;
 
     this.http.get<Camera[]>(`${environment.apiUrl}/cameras`, { withCredentials: true })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({ next: c => this._cameras.set(c), error: () => { } });
 
     this.http.get<Station[]>(`${environment.apiUrl}/stations`, {
       params: incluirInativas ? { incluirInativas: 'true' } : {},
       withCredentials: true,
-    }).subscribe({ next: s => this._stations.set(s), error: () => { } });
+    }).pipe(takeUntil(this.trocaDeSessao$))
+      .subscribe({ next: s => this._stations.set(s), error: () => { } });
   }
 
   /** Estação que uma câmera cobre, ou null se a câmera não estiver cadastrada. */
