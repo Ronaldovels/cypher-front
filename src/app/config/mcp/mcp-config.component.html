@@ -1,0 +1,36 @@
+<section>
+  @if (erro()) {
+    <p class="vazio" role="alert">{{ erro() }}</p>
+  }
+
+  @if (apiKeyRecemCriada(); as chave) {
+    <div class="field" style="border:1px solid var(--accent);padding:16px;border-radius:8px;margin-bottom:20px">
+      <label>Copie a chave agora — ela não será exibida novamente</label>
+      <input class="input" readonly [value]="chave" onclick="this.select()" />
+      <button type="button" class="btn ghost sm" style="margin-top:8px" (click)="fecharAlertaDeSecret()">entendi, fechar</button>
+    </div>
+  }
+
+  <form class="auth-form" style="max-width:560px" (submit)="$event.preventDefault(); criar()">
+    <div class="field">
+      <label>Nome da credencial</label>
+      <input class="input" [value]="novoNome()" placeholder="ex.: Claude Desktop do Lucas"
+             (input)="novoNome.set($any($event.target).value)" />
+    </div>
+    <button type="submit" class="btn primary" [disabled]="salvando()">Gerar credencial</button>
+  </form>
+
+  <div style="margin-top:28px">
+    @for (c of credenciais(); track c.id) {
+      <div class="list-row">
+        <span>{{ c.nome }}</span>
+        <span class="status" [class.on]="c.ativa" [class.off]="!c.ativa">{{ c.ativa ? 'ativa' : 'revogada' }}</span>
+        @if (c.ativa) {
+          <button type="button" class="btn ghost sm" (click)="revogar(c.id)">revogar</button>
+        }
+      </div>
+    } @empty {
+      <p class="vazio">nenhuma credencial cadastrada ainda</p>
+    }
+  </div>
+</section>
