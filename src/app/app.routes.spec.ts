@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import {
-  canActivateGestor, canActivateOperadorOuGestor,
+  canActivateAutenticado, canActivateGestor, canActivateOperadorOuGestor,
 } from './shared/auth/auth.guards';
 
 describe('routes — guards de acesso (design doc de E4, §4.3)', () => {
@@ -36,10 +36,10 @@ describe('routes — guards de acesso (design doc de E4, §4.3)', () => {
       .toEqual([canActivateOperadorOuGestor]);
   });
 
-  it('/incidentes, /incidentes/:id e /estacoes continuam sem guard nesta entrega', () => {
-    expect(routes.find(r => r.path === 'incidentes')?.canActivate).toBeUndefined();
-    expect(routes.find(r => r.path === 'incidentes/:id')?.canActivate).toBeUndefined();
-    expect(routes.find(r => r.path === 'estacoes')?.canActivate).toBeUndefined();
+  it('/incidentes, /incidentes/:id e /estacoes exigem qualquer papel autenticado', () => {
+    expect(routes.find(r => r.path === 'incidentes')?.canActivate).toEqual([canActivateAutenticado]);
+    expect(routes.find(r => r.path === 'incidentes/:id')?.canActivate).toEqual([canActivateAutenticado]);
+    expect(routes.find(r => r.path === 'estacoes')?.canActivate).toEqual([canActivateAutenticado]);
   });
 
   it('/login e /login-estacao existem e nao tem guard', () => {
@@ -95,7 +95,7 @@ describe('routes — redirecionamento de ponta a ponta sem sessao', () => {
       .flush(null, { status: 401, statusText: 'Unauthorized' });
     await promessa;
 
-    expect(router.url).toBe('/login');
+    expect(router.url).toBe('/login?returnUrl=%2Fdashboard');
   });
 
   it('/estacao/EST-01 sem sessao redireciona para /login-estacao', async () => {
@@ -117,6 +117,38 @@ describe('routes — redirecionamento de ponta a ponta sem sessao', () => {
       .flush(null, { status: 401, statusText: 'Unauthorized' });
     await promessa;
 
-    expect(router.url).toBe('/login');
+    expect(router.url).toBe('/login?returnUrl=%2Fconfig%2Festacoes');
   });
+
+  for (const url of ['/incidentes', '/incidentes/1', '/estacoes']) {
+    it(`${url} sem sessao redireciona para /login, guardando a URL pedida`, async () => {
+      const harness = await RouterTestingHarness.create();
+      const promessa = harness.navigateByUrl(url);
+      await new Promise(resolve => setTimeout(resolve));
+      http.expectOne(`${environment.apiUrl}/auth/me`)
+        .flush(null, { status: 401, statusText: 'Unauthorized' });
+      await promessa;
+
+      expect(router.url).toBe(`/login?returnUrl=${encodeURIComponent(url)}`);
+    });
+  }
+
+  // O backend serve incidentes e câmeras/estações aos dois papéis.
+  const sessoes = {
+    GESTOR: { papel: 'GESTOR', username: 'g1', empresaId: 'demo' },
+    OPERADOR: { papel: 'OPERADOR', estacaoId: 'EST-01', empresaId: 'demo' },
+  };
+  for (const url of ['/incidentes', '/incidentes/1', '/estacoes']) {
+    for (const [papel, sessao] of Object.entries(sessoes)) {
+      it(`${url} continua aberto para ${papel}`, async () => {
+        const harness = await RouterTestingHarness.create();
+        const promessa = harness.navigateByUrl(url);
+        await new Promise(resolve => setTimeout(resolve));
+        http.expectOne(`${environment.apiUrl}/auth/me`).flush(sessao);
+        await promessa;
+
+        expect(router.url).toBe(url);
+      });
+    }
+  }
 });

@@ -113,4 +113,24 @@ describe('auth.guards', () => {
       .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
     expect(await liberado).toBe(true);
   });
+
+  it('canActivateAutenticado leva a URL pedida em returnUrl quando nao ha sessao', async () => {
+    const promessa = resultadoDe(() =>
+      canActivateAutenticado(rotaCom('123'), { url: '/incidentes/123' } as RouterStateSnapshot));
+    http.expectOne(`${environment.apiUrl}/auth/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    const resultado = await promessa;
+    expect(router.serializeUrl(resultado as UrlTree)).toBe('/login?returnUrl=%2Fincidentes%2F123');
+  });
+
+  it('canActivateGestor com OPERADOR logado nao leva returnUrl (o login devolveria para a mesma rota barrada)', async () => {
+    const promessa = resultadoDe(() =>
+      canActivateGestor(rotaCom(null), { url: '/dashboard' } as RouterStateSnapshot));
+    http.expectOne(`${environment.apiUrl}/auth/me`)
+      .flush({ papel: 'OPERADOR', estacaoId: 'EST-01' });
+
+    const resultado = await promessa;
+    expect(router.serializeUrl(resultado as UrlTree)).toBe('/login');
+  });
 });
