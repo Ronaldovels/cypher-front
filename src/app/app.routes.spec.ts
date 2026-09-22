@@ -95,7 +95,7 @@ describe('routes — redirecionamento de ponta a ponta sem sessao', () => {
       .flush(null, { status: 401, statusText: 'Unauthorized' });
     await promessa;
 
-    expect(router.url).toBe('/login');
+    expect(router.url).toBe('/login?returnUrl=%2Fdashboard');
   });
 
   it('/estacao/EST-01 sem sessao redireciona para /login-estacao', async () => {
@@ -117,11 +117,11 @@ describe('routes — redirecionamento de ponta a ponta sem sessao', () => {
       .flush(null, { status: 401, statusText: 'Unauthorized' });
     await promessa;
 
-    expect(router.url).toBe('/login');
+    expect(router.url).toBe('/login?returnUrl=%2Fconfig%2Festacoes');
   });
 
   for (const url of ['/incidentes', '/incidentes/1', '/estacoes']) {
-    it(`${url} sem sessao redireciona para /login`, async () => {
+    it(`${url} sem sessao redireciona para /login, guardando a URL pedida`, async () => {
       const harness = await RouterTestingHarness.create();
       const promessa = harness.navigateByUrl(url);
       await new Promise(resolve => setTimeout(resolve));
@@ -129,18 +129,26 @@ describe('routes — redirecionamento de ponta a ponta sem sessao', () => {
         .flush(null, { status: 401, statusText: 'Unauthorized' });
       await promessa;
 
-      expect(router.url).toBe('/login');
+      expect(router.url).toBe(`/login?returnUrl=${encodeURIComponent(url)}`);
     });
   }
 
-  it('/incidentes continua aberto para OPERADOR (o backend serve incidentes aos dois papeis)', async () => {
-    const harness = await RouterTestingHarness.create();
-    const promessa = harness.navigateByUrl('/incidentes');
-    await new Promise(resolve => setTimeout(resolve));
-    http.expectOne(`${environment.apiUrl}/auth/me`)
-      .flush({ papel: 'OPERADOR', estacaoId: 'EST-01', empresaId: 'demo' });
-    await promessa;
+  // O backend serve incidentes e câmeras/estações aos dois papéis.
+  const sessoes = {
+    GESTOR: { papel: 'GESTOR', username: 'g1', empresaId: 'demo' },
+    OPERADOR: { papel: 'OPERADOR', estacaoId: 'EST-01', empresaId: 'demo' },
+  };
+  for (const url of ['/incidentes', '/incidentes/1', '/estacoes']) {
+    for (const [papel, sessao] of Object.entries(sessoes)) {
+      it(`${url} continua aberto para ${papel}`, async () => {
+        const harness = await RouterTestingHarness.create();
+        const promessa = harness.navigateByUrl(url);
+        await new Promise(resolve => setTimeout(resolve));
+        http.expectOne(`${environment.apiUrl}/auth/me`).flush(sessao);
+        await promessa;
 
-    expect(router.url).toBe('/incidentes');
-  });
+        expect(router.url).toBe(url);
+      });
+    }
+  }
 });
