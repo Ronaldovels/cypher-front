@@ -2,6 +2,7 @@ import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { OnboardingData, DEFAULT_DATA, STEPS, deriveEpis, accentRgba, accentShade } from './models/onboarding.models';
 import { AuthService } from '../shared/auth/auth.service';
+import { TrocaDeSessao } from '../shared/auth/troca-de-sessao';
 import { mensagemDeErro } from '../shared/incident.models';
 
 @Injectable({ providedIn: 'root' })
@@ -25,6 +26,13 @@ export class OnboardingService {
   });
 
   constructor() {
+    // A senha do gestor mestre não pode sobreviver à troca de sessão: o
+    // serviço é de raiz, `/onboarding` não tem guard e o campo de senha é
+    // preenchido a partir de `data()`. O próprio setup concluído anuncia a
+    // troca, então a senha some assim que o POST /setup dá certo; num 409 ou
+    // erro de rede ela fica, para a pessoa tentar de novo.
+    inject(TrocaDeSessao).troca$.subscribe(() => this.updateData({ masterPassword: '' }));
+
     effect(() => {
       const d = this.data();
       document.documentElement.style.setProperty('--accent', d.accent);
