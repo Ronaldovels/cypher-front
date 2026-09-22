@@ -33,7 +33,8 @@ Todas as telas reaproveitam os primitivos globais do design system (`.panel`, `.
                           ├─▶ /config/epis
                           ├─▶ /config/cas
                           ├─▶ /config/equipe   (abas Equipes / Usuários)
-                          └─▶ /config/webhooks
+                          ├─▶ /config/webhooks
+                          └─▶ /config/mcp
 ```
 
 Navegação persistente por dock (`chrome-topbar` + `dock`), condicionada ao papel da sessão — não à rota. Central de notificações (offcanvas) acessível de qualquer tela do chrome.
@@ -53,6 +54,7 @@ Navegação persistente por dock (`chrome-topbar` + `dock`), condicionada ao pap
 | Config › CAs | `/config/cas` | E2 | certificados de aprovação dos EPIs |
 | Config › Equipe | `/config/equipe` | **Nova na E4** | equipes como entidade de primeira classe — exigido por E4 e pela gamificação (E5) |
 | Config › Webhooks | `/config/webhooks` | **Nova na Sprint 3** | fecha o gap de "só cadastrável via `application.yaml`+restart" registrado desde E1 §9 |
+| Config › MCP | `/config/mcp` | **Nova (integração MCP)** | cadastro de credenciais para agentes de IA (Claude, etc.) acessarem o servidor MCP — ver [`mcp-runbook.md`](mcp-runbook.md) |
 
 ## 3. Fluxo do operador (sessão `OPERADOR`, restrita à própria estação)
 
@@ -72,5 +74,6 @@ O Figma (`Interface`) documentou o desenho de alta fidelidade de Onboarding, Das
 4. **`/config/webhooks`** — cadastro de assinantes de webhook pela interface (Sprint 3, fecha gap de E1).
 5. **Editor de zonas de risco** (dentro de `/config/estacoes`) — canvas de polígono (Sprint 3).
 6. **Central de notificações** (offcanvas, global no chrome) — Sprint 3.
+7. **`/config/mcp`** — cadastro de credenciais para o servidor MCP (integração com agentes de IA).
 
 Cada uma tem razão registrada nas specs de design (`docs/superpowers/specs/`) e no changelog do Sprint Backlog (`docs/scrum/sprint-3/sprint-backlog.md`) — nenhuma foi adicionada "porque sim".
