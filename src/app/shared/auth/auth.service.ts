@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { CatalogService } from '../catalog.service';
 import { EpiChecklistService } from '../epi-checklist.service';
 import { IncidentService } from '../incident.service';
+import { McpCredentialService } from '../mcp-credential.service';
 import { TeamService } from '../team.service';
 import { WebhookService } from '../webhook.service';
 import { ZoneService } from '../zone.service';
@@ -29,7 +30,7 @@ export class AuthService {
    */
   private readonly storesDaSessao = [
     inject(IncidentService), inject(CatalogService), inject(EpiChecklistService),
-    inject(TeamService), inject(WebhookService), inject(ZoneService),
+    inject(TeamService), inject(WebhookService), inject(ZoneService), inject(McpCredentialService),
   ];
 
   private readonly _role = signal<Papel | null>(null);
@@ -141,7 +142,7 @@ export class AuthService {
    * Chamado em toda troca de sessão (login, login do kiosk, setup, logout):
    * os stores são singletons de raiz e sobrevivem à navegação, então quem
    * entrasse depois na mesma aba via os incidentes, câmeras, equipes e
-   * webhooks de quem saiu — inclusive um operador de kiosk vendo dados de
+   * webhooks e credenciais MCP de quem saiu — inclusive um operador de kiosk vendo dados de
    * outras estações, ou um gestor vendo os de outra empresa.
    */
   private limparDadosDaSessao(): void {

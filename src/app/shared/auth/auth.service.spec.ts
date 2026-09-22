@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 import { CatalogService } from '../catalog.service';
 import { Incident } from '../incident.models';
 import { IncidentService } from '../incident.service';
+import { McpCredentialService } from '../mcp-credential.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -193,6 +194,19 @@ describe('AuthService', () => {
       expect(incidents.incidents()).toEqual([]);
       expect(catalog.cameras()).toEqual([]);
       expect(catalog.stations()).toEqual([]);
+    });
+
+    it('logout limpa as credenciais MCP', () => {
+      http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'g1', empresaId: 'demo' });
+      const mcp = TestBed.inject(McpCredentialService);
+      mcp.load();
+      http.expectOne(`${environment.apiUrl}/mcp-credentials`).flush([{ id: 1 }]);
+      expect(mcp.credenciais().length).toBe(1);
+
+      service.logout();
+      http.expectOne(`${environment.apiUrl}/auth/logout`).flush(null);
+
+      expect(mcp.credenciais()).toEqual([]);
     });
 
     it('login de outro usuário na mesma aba (ex.: sessão expirada, sem logout)', () => {

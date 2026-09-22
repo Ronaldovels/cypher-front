@@ -12,6 +12,11 @@ export class McpCredentialService {
   private readonly _credenciais = signal<McpCredential[]>([]);
   readonly credenciais = this._credenciais.asReadonly();
 
+  /** Esquece os dados da sessão — chamado pelo AuthService ao trocar de usuário. */
+  reset(): void {
+    this._credenciais.set([]);
+  }
+
   load(): void {
     this.http.get<McpCredential[]>(`${environment.apiUrl}/mcp-credentials`, { withCredentials: true })
       .subscribe({ next: c => this._credenciais.set(c), error: () => { } });
