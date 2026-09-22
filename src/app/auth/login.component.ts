@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../shared/auth/auth.service';
 import { mensagemDeErro } from '../shared/incident.models';
@@ -24,6 +24,7 @@ const DRAFT_VAZIO: LoginDraft = { username: '', password: '' };
 export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private theme = inject(ThemeService);
 
   readonly exemplo = inject(USE_MOCK_DATA);
@@ -54,7 +55,10 @@ export class LoginComponent {
     this.auth.login(username, password).subscribe({
       next: resp => {
         this.enviando.set(false);
-        if (resp.papel === 'OPERADOR' && resp.estacaoId) {
+        const retorno = this.returnUrl();
+        if (retorno) {
+          this.router.navigateByUrl(retorno);
+        } else if (resp.papel === 'OPERADOR' && resp.estacaoId) {
           this.router.navigate(['/estacao', resp.estacaoId]);
         } else {
           this.router.navigate(['/dashboard']);
@@ -65,5 +69,19 @@ export class LoginComponent {
         this.erro.set(mensagemDeErro(e));
       },
     });
+  }
+
+  /**
+   * Deep link que o guard mandou para cá. Só caminho interno: `//outro.site`
+   * ou `https://...` virariam redirecionamento aberto, e voltar para o
+   * próprio `/login` seria inútil.
+   */
+  private returnUrl(): string | null {
+    const url = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (!url || !url.startsWith('/') || url.startsWith('//') || url.startsWith('/\\')
+        || url === '/login' || url.startsWith('/login?')) {
+      return null;
+    }
+    return url;
   }
 }

@@ -73,6 +73,43 @@ describe('LoginComponent', () => {
     expect(navegar).toHaveBeenCalledWith(['/estacao', 'EST-01']);
   });
 
+  describe('returnUrl do guard', () => {
+    /** A rota ativa passa a ter `?returnUrl=`, como depois do redirecionamento do guard. */
+    async function comReturnUrl(returnUrl: string): Promise<void> {
+      await router.navigateByUrl(`/?returnUrl=${encodeURIComponent(returnUrl)}`);
+    }
+
+    function entrarComo(resposta: object) {
+      const fixture = montar();
+      const porUrl = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+      const porComandos = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      fixture.componentInstance.patch({ username: 'u1', password: 'senha123' });
+      fixture.componentInstance.entrar();
+      http.expectOne(`${environment.apiUrl}/auth/login`).flush(resposta);
+      return { porUrl, porComandos };
+    }
+
+    it('volta para o deep link depois de entrar, inclusive como OPERADOR', async () => {
+      await comReturnUrl('/incidentes/123');
+
+      const { porUrl, porComandos } = entrarComo({ papel: 'OPERADOR', estacaoId: 'EST-01', username: 'op1' });
+
+      expect(porUrl).toHaveBeenCalledWith('/incidentes/123');
+      expect(porComandos).not.toHaveBeenCalled();
+    });
+
+    for (const externo of ['//evil.example', 'https://evil.example', '/\\evil.example', '/login']) {
+      it(`ignora returnUrl que nao e caminho interno util (${externo})`, async () => {
+        await comReturnUrl(externo);
+
+        const { porUrl, porComandos } = entrarComo({ papel: 'GESTOR', username: 'g1' });
+
+        expect(porUrl).not.toHaveBeenCalled();
+        expect(porComandos).toHaveBeenCalledWith(['/dashboard']);
+      });
+    }
+  });
+
   it('alternarTema chama o ThemeService.toggle', () => {
     const fixture = montar();
     const antes = fixture.componentInstance.temaEscuro();
