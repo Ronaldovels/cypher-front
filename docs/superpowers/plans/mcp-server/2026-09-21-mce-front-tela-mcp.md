@@ -131,7 +131,7 @@ describe('McpCredentialService', () => {
 
 - [ ] **Step 2: Rodar o teste, confirmar que falha**
 
-Run: `cd /home/asaas/projects/challenge/cypher-front && npx vitest run src/app/shared/mcp-credential.service.spec.ts`
+Run: `cd /home/asaas/projects/challenge/cypher-front && npx ng test --include=src/app/shared/mcp-credential.service.spec.ts --watch=false`
 Expected: FAIL (`mcp-credential.service.ts` ainda não existe)
 
 - [ ] **Step 3: Implementar o service**
@@ -170,7 +170,7 @@ export class McpCredentialService {
 
 - [ ] **Step 4: Rodar o teste, confirmar que passa**
 
-Run: `cd /home/asaas/projects/challenge/cypher-front && npx vitest run src/app/shared/mcp-credential.service.spec.ts`
+Run: `cd /home/asaas/projects/challenge/cypher-front && npx ng test --include=src/app/shared/mcp-credential.service.spec.ts --watch=false`
 Expected: PASS (3 testes)
 
 - [ ] **Step 5: Commit**
@@ -380,7 +380,7 @@ describe('McpConfigComponent', () => {
 
 - [ ] **Step 2: Rodar o teste, confirmar que falha**
 
-Run: `cd /home/asaas/projects/challenge/cypher-front && npx vitest run src/app/config/mcp/mcp-config.component.spec.ts`
+Run: `cd /home/asaas/projects/challenge/cypher-front && npx ng test --include=src/app/config/mcp/mcp-config.component.spec.ts --watch=false`
 Expected: FAIL (`mcp-config.component.ts` ainda não existe)
 
 - [ ] **Step 3: Implementar o componente**
@@ -491,12 +491,12 @@ export class McpConfigComponent implements OnInit {
 
 - [ ] **Step 4: Rodar o teste, confirmar que passa**
 
-Run: `cd /home/asaas/projects/challenge/cypher-front && npx vitest run src/app/config/mcp/mcp-config.component.spec.ts`
+Run: `cd /home/asaas/projects/challenge/cypher-front && npx ng test --include=src/app/config/mcp/mcp-config.component.spec.ts --watch=false`
 Expected: PASS (4 testes)
 
 - [ ] **Step 5: Rodar a suíte completa do front**
 
-Run: `cd /home/asaas/projects/challenge/cypher-front && npx vitest run`
+Run: `cd /home/asaas/projects/challenge/cypher-front && npx ng test --watch=false`
 Expected: PASS (nenhuma regressão)
 
 - [ ] **Step 6: Commit**
