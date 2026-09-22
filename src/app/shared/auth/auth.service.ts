@@ -3,6 +3,12 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { CatalogService } from '../catalog.service';
+import { EpiChecklistService } from '../epi-checklist.service';
+import { IncidentService } from '../incident.service';
+import { TeamService } from '../team.service';
+import { WebhookService } from '../webhook.service';
+import { ZoneService } from '../zone.service';
 import { LoginEstacaoResponse, LoginResponse, MeResponse, Papel } from './auth.models';
 
 /**
@@ -15,6 +21,16 @@ import { LoginEstacaoResponse, LoginResponse, MeResponse, Papel } from './auth.m
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
+
+  /**
+   * Stores de raiz com dados da empresa/usuário logado. Nenhum deles injeta
+   * AuthService, então não há ciclo — e todos são limpos em toda troca de
+   * sessão (ver `limparDadosDaSessao`).
+   */
+  private readonly storesDaSessao = [
+    inject(IncidentService), inject(CatalogService), inject(EpiChecklistService),
+    inject(TeamService), inject(WebhookService), inject(ZoneService),
+  ];
 
   private readonly _role = signal<Papel | null>(null);
   private readonly _estacaoId = signal<string | null>(null);
@@ -71,6 +87,7 @@ export class AuthService {
       .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { username, password },
         { withCredentials: true })
       .pipe(tap(resp => {
+        this.limparDadosDaSessao();
         this._role.set(resp.papel);
         this._estacaoId.set(resp.estacaoId ?? null);
         this._empresaId.set(resp.empresaId);
@@ -83,6 +100,7 @@ export class AuthService {
       .post<LoginEstacaoResponse>(`${environment.apiUrl}/auth/login-estacao`, { token },
         { withCredentials: true })
       .pipe(tap(resp => {
+        this.limparDadosDaSessao();
         this._role.set(resp.papel);
         this._estacaoId.set(resp.estacaoId);
         this._empresaId.set(resp.empresaId);
@@ -92,6 +110,7 @@ export class AuthService {
 
   /** Limpa a sessão local de imediato — não trava a navegação numa rede lenta numa ação de saída. */
   logout(): void {
+    this.limparDadosDaSessao();
     this._role.set(null);
     this._estacaoId.set(null);
     this._empresaId.set(null);
@@ -110,10 +129,24 @@ export class AuthService {
       .post<LoginResponse>(`${environment.apiUrl}/setup`, { username, password, empresaId, empresaNome },
         { withCredentials: true })
       .pipe(tap(resp => {
+        this.limparDadosDaSessao();
         this._role.set(resp.papel);
         this._estacaoId.set(null);
         this._empresaId.set(resp.empresaId);
         this._empresaNome.set(resp.empresaNome ?? null);
       }));
+  }
+
+  /**
+   * Chamado em toda troca de sessão (login, login do kiosk, setup, logout):
+   * os stores são singletons de raiz e sobrevivem à navegação, então quem
+   * entrasse depois na mesma aba via os incidentes, câmeras, equipes e
+   * webhooks de quem saiu — inclusive um operador de kiosk vendo dados de
+   * outras estações, ou um gestor vendo os de outra empresa.
+   */
+  private limparDadosDaSessao(): void {
+    for (const store of this.storesDaSessao) {
+      store.reset();
+    }
   }
 }

@@ -25,6 +25,13 @@ export class CatalogService {
   readonly cameras = this._cameras.asReadonly();
   readonly stations = this._stations.asReadonly();
 
+  /** Esquece os dados da sessão — chamado pelo AuthService ao trocar de usuário. */
+  reset(): void {
+    this._cameras.set([]);
+    this._stations.set([]);
+    this.incluirInativas = false;
+  }
+
   load(incluirInativas = false): void {
     this.incluirInativas = incluirInativas;
 

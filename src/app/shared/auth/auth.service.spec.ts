@@ -5,6 +5,9 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environment } from '../../../environments/environment';
+import { CatalogService } from '../catalog.service';
+import { Incident } from '../incident.models';
+import { IncidentService } from '../incident.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -161,5 +164,58 @@ describe('AuthService', () => {
 
     expect(falhou).toBe(true);
     expect(service.role()).toBeNull();
+  });
+
+  describe('troca de sessão limpa os dados de quem saiu', () => {
+    // Stores são singletons de raiz: sem a limpeza, quem entrasse depois na
+    // mesma aba (outra empresa, ou um operador no kiosk) via os dados do anterior.
+    const incidenteDaSessaoAnterior = { incidentKey: 'k-antigo', detectedAt: '2026-09-22T10:00:00Z' } as Incident;
+
+    function popularStores(): { incidents: IncidentService; catalog: CatalogService } {
+      const incidents = TestBed.inject(IncidentService);
+      const catalog = TestBed.inject(CatalogService);
+      incidents.upsert(incidenteDaSessaoAnterior);
+      catalog.load();
+      http.expectOne(`${environment.apiUrl}/cameras`).flush([{ id: 'CAM-01' }]);
+      http.expectOne(r => r.url === `${environment.apiUrl}/stations`).flush([{ id: 'EST-01', cameras: [] }]);
+      expect(incidents.incidents().length).toBe(1);
+      expect(catalog.cameras().length).toBe(1);
+      return { incidents, catalog };
+    }
+
+    it('logout', () => {
+      http.expectOne(`${environment.apiUrl}/auth/me`).flush({ papel: 'GESTOR', username: 'g1', empresaId: 'demo' });
+      const { incidents, catalog } = popularStores();
+
+      service.logout();
+      http.expectOne(`${environment.apiUrl}/auth/logout`).flush(null);
+
+      expect(incidents.incidents()).toEqual([]);
+      expect(catalog.cameras()).toEqual([]);
+      expect(catalog.stations()).toEqual([]);
+    });
+
+    it('login de outro usuário na mesma aba (ex.: sessão expirada, sem logout)', () => {
+      http.expectOne(`${environment.apiUrl}/auth/me`).flush(null, { status: 401, statusText: 'Unauthorized' });
+      const { incidents, catalog } = popularStores();
+
+      service.login('outro@acme', 'senha').subscribe();
+      http.expectOne(`${environment.apiUrl}/auth/login`)
+        .flush({ papel: 'GESTOR', username: 'outro@acme', empresaId: 'acme' });
+
+      expect(incidents.incidents()).toEqual([]);
+      expect(catalog.cameras()).toEqual([]);
+    });
+
+    it('login do kiosk', () => {
+      http.expectOne(`${environment.apiUrl}/auth/me`).flush(null, { status: 401, statusText: 'Unauthorized' });
+      const { incidents } = popularStores();
+
+      service.loginEstacao('token-est').subscribe();
+      http.expectOne(`${environment.apiUrl}/auth/login-estacao`)
+        .flush({ papel: 'OPERADOR', estacaoId: 'EST-02', empresaId: 'demo' });
+
+      expect(incidents.incidents()).toEqual([]);
+    });
   });
 });

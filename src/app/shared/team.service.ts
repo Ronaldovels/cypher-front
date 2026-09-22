@@ -21,6 +21,12 @@ export class TeamService {
   readonly equipes = this._equipes.asReadonly();
   readonly usuarios = this._usuarios.asReadonly();
 
+  /** Esquece os dados da sessão — chamado pelo AuthService ao trocar de usuário. */
+  reset(): void {
+    this._equipes.set([]);
+    this._usuarios.set([]);
+  }
+
   load(): void {
     this.http.get<Equipe[]>(`${environment.apiUrl}/teams`, { withCredentials: true })
       .subscribe({ next: e => this._equipes.set(e), error: () => { } });

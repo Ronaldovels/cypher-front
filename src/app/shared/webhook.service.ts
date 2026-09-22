@@ -20,6 +20,11 @@ export class WebhookService {
   private readonly _assinantes = signal<Webhook[]>([]);
   readonly assinantes = this._assinantes.asReadonly();
 
+  /** Esquece os dados da sessão — chamado pelo AuthService ao trocar de usuário. */
+  reset(): void {
+    this._assinantes.set([]);
+  }
+
   load(): void {
     this.http.get<Webhook[]>(`${environment.apiUrl}/webhooks`, { withCredentials: true })
       .subscribe({ next: w => this._assinantes.set(w), error: () => { } });

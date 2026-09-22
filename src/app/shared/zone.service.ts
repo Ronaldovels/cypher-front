@@ -19,6 +19,11 @@ export class ZoneService {
   private readonly _zonas = signal<Zone[]>([]);
   readonly zonas = this._zonas.asReadonly();
 
+  /** Esquece os dados da sessão — chamado pelo AuthService ao trocar de usuário. */
+  reset(): void {
+    this._zonas.set([]);
+  }
+
   load(cameraId: string): void {
     this.http.get<Zone[]>(`${environment.apiUrl}/cameras/${cameraId}/zones`, { withCredentials: true })
       .subscribe({ next: z => this._zonas.set(z), error: () => this._zonas.set([]) });

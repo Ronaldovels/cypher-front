@@ -22,6 +22,11 @@ export class EpiChecklistService {
   private readonly _epis = signal<EpiTipo[]>([]);
   readonly epis = this._epis.asReadonly();
 
+  /** Esquece os dados da sessão — chamado pelo AuthService ao trocar de usuário. */
+  reset(): void {
+    this._epis.set([]);
+  }
+
   load(): void {
     this.http.get<EpiChecklistResponse>(`${environment.apiUrl}/config/epis`, { withCredentials: true })
       .subscribe({ next: r => this._epis.set(r.epis), error: () => this._epis.set([]) });

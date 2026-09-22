@@ -194,6 +194,25 @@ export class IncidentService {
     this._connection.set('offline');
   }
 
+  /**
+   * Esquece tudo da sessão — chamado pelo AuthService ao trocar de usuário.
+   *
+   * O serviço é singleton de raiz: sem isto, quem entrasse depois na mesma
+   * aba (outro gestor, outra empresa, ou um operador no kiosk) via até 100
+   * incidentes, o resumo e o contador de não lidas de quem saiu.
+   */
+  reset(): void {
+    this.disconnect();
+    if (this.summaryTimer !== null) {
+      clearTimeout(this.summaryTimer);
+      this.summaryTimer = null;
+    }
+    this.ultimoFiltros = undefined;
+    this._incidents.set([]);
+    this._summary.set(null);
+    this._naoLidas.set(0);
+  }
+
   private receber(event: MessageEvent, novo: boolean): void {
     let incidente: Incident;
     try {
