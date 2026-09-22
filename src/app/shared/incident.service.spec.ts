@@ -466,6 +466,23 @@ describe('IncidentService — SSE', () => {
     expect(service.connection()).toBe('offline');
   });
 
+  it('depois do reset, connect abre um stream novo e volta a ficar ao vivo', () => {
+    service.connect();
+    criados[0].abrir();
+    http.match(() => true).forEach(r => r.flush(pagina([])));
+
+    service.reset();
+    service.connect();
+
+    expect(criados.length).toBe(2);
+    expect(service.connection()).toBe('conectando');
+    criados[1].abrir();
+    http.match(() => true).forEach(r => r.flush(pagina([])));
+    expect(service.connection()).toBe('ao vivo');
+    criados[1].emitir('incident', incidente({ id: 10, incidentKey: 'k10' }));
+    expect(service.incidents().map(i => i.incidentKey)).toEqual(['k10']);
+  });
+
   it('reset cancela o refresh agendado do resumo', () => {
     vi.useFakeTimers();
     try {

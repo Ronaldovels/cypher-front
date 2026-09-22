@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, takeUntil, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { TrocaDeSessao } from './auth/troca-de-sessao';
 import { Zone, ZonePayload } from './zone.models';
 
 /**
@@ -15,17 +16,24 @@ import { Zone, ZonePayload } from './zone.models';
 @Injectable({ providedIn: 'root' })
 export class ZoneService {
   private http = inject(HttpClient);
+  /** Leituras passam `takeUntil` aqui: resposta da sessão anterior não repovoa o store (ver `TrocaDeSessao`). */
+  private trocaDeSessao$ = inject(TrocaDeSessao).troca$;
 
   private readonly _zonas = signal<Zone[]>([]);
   readonly zonas = this._zonas.asReadonly();
 
-  /** Esquece os dados da sessão — chamado pelo AuthService ao trocar de usuário. */
+  constructor() {
+    this.trocaDeSessao$.subscribe(() => this.reset());
+  }
+
+  /** Esquece os dados da sessão — chamado a cada troca de sessão. */
   reset(): void {
     this._zonas.set([]);
   }
 
   load(cameraId: string): void {
     this.http.get<Zone[]>(`${environment.apiUrl}/cameras/${cameraId}/zones`, { withCredentials: true })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({ next: z => this._zonas.set(z), error: () => this._zonas.set([]) });
   }
 

@@ -3,14 +3,8 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { CatalogService } from '../catalog.service';
-import { EpiChecklistService } from '../epi-checklist.service';
-import { IncidentService } from '../incident.service';
-import { McpCredentialService } from '../mcp-credential.service';
-import { TeamService } from '../team.service';
-import { WebhookService } from '../webhook.service';
-import { ZoneService } from '../zone.service';
 import { LoginEstacaoResponse, LoginResponse, MeResponse, Papel } from './auth.models';
+import { TrocaDeSessao } from './troca-de-sessao';
 
 /**
  * Sessão do usuário (cookie `JSESSIONID`, `HttpOnly` — este serviço nunca vê
@@ -22,16 +16,7 @@ import { LoginEstacaoResponse, LoginResponse, MeResponse, Papel } from './auth.m
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-
-  /**
-   * Stores de raiz com dados da empresa/usuário logado. Nenhum deles injeta
-   * AuthService, então não há ciclo — e todos são limpos em toda troca de
-   * sessão (ver `limparDadosDaSessao`).
-   */
-  private readonly storesDaSessao = [
-    inject(IncidentService), inject(CatalogService), inject(EpiChecklistService),
-    inject(TeamService), inject(WebhookService), inject(ZoneService), inject(McpCredentialService),
-  ];
+  private trocaDeSessao = inject(TrocaDeSessao);
 
   private readonly _role = signal<Papel | null>(null);
   private readonly _estacaoId = signal<string | null>(null);
@@ -138,16 +123,8 @@ export class AuthService {
       }));
   }
 
-  /**
-   * Chamado em toda troca de sessão (login, login do kiosk, setup, logout):
-   * os stores são singletons de raiz e sobrevivem à navegação, então quem
-   * entrasse depois na mesma aba via os incidentes, câmeras, equipes e
-   * webhooks e credenciais MCP de quem saiu — inclusive um operador de kiosk vendo dados de
-   * outras estações, ou um gestor vendo os de outra empresa.
-   */
+  /** Chamado em toda troca de sessão; os stores se limpam ao ouvir o aviso (ver `TrocaDeSessao`). */
   private limparDadosDaSessao(): void {
-    for (const store of this.storesDaSessao) {
-      store.reset();
-    }
+    this.trocaDeSessao.anunciar();
   }
 }

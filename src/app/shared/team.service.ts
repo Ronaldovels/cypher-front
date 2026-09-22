@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, takeUntil, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { TrocaDeSessao } from './auth/troca-de-sessao';
 import { Equipe, EquipePayload, Usuario, UsuarioPayload } from './team.models';
 
 /**
@@ -14,6 +15,8 @@ import { Equipe, EquipePayload, Usuario, UsuarioPayload } from './team.models';
 @Injectable({ providedIn: 'root' })
 export class TeamService {
   private http = inject(HttpClient);
+  /** Leituras passam `takeUntil` aqui: resposta da sessão anterior não repovoa o store (ver `TrocaDeSessao`). */
+  private trocaDeSessao$ = inject(TrocaDeSessao).troca$;
 
   private readonly _equipes = signal<Equipe[]>([]);
   private readonly _usuarios = signal<Usuario[]>([]);
@@ -21,7 +24,11 @@ export class TeamService {
   readonly equipes = this._equipes.asReadonly();
   readonly usuarios = this._usuarios.asReadonly();
 
-  /** Esquece os dados da sessão — chamado pelo AuthService ao trocar de usuário. */
+  constructor() {
+    this.trocaDeSessao$.subscribe(() => this.reset());
+  }
+
+  /** Esquece os dados da sessão — chamado a cada troca de sessão. */
   reset(): void {
     this._equipes.set([]);
     this._usuarios.set([]);
@@ -29,8 +36,10 @@ export class TeamService {
 
   load(): void {
     this.http.get<Equipe[]>(`${environment.apiUrl}/teams`, { withCredentials: true })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({ next: e => this._equipes.set(e), error: () => { } });
     this.http.get<Usuario[]>(`${environment.apiUrl}/users`, { withCredentials: true })
+      .pipe(takeUntil(this.trocaDeSessao$))
       .subscribe({ next: u => this._usuarios.set(u), error: () => { } });
   }
 
