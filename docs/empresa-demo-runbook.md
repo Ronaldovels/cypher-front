@@ -3,7 +3,7 @@
 Complementa `e1-runbook-local.md` (como subir os 3 projetos). Este documento
 descreve o que existe na empresa `demo` para teste local — câmeras reais da
 meta indústria, webcam do notebook, equipes/operadores da gamificação (E5) —
-e como reconstruir esses dados do zero.
+além de como reconstruir esses dados do zero e preparar a banca final.
 
 **Nunca commitar segredo real aqui.** `data/cypherdb.mv.db` (`cypher`) é
 gitignorado de propósito — carrega tokens de estação e api-keys de câmera em
@@ -95,25 +95,82 @@ editável em `/config/estacoes`.
 
 ---
 
-## 5. Equipes de teste da E5 (gamificação)
+## 5. Equipes da gamificação (E5)
 
-Populadas com 14 dias de heartbeat/incidente sintético nas câmeras
-**genéricas** (`CAM-01`–`04`, seed padrão do `CatalogSeeder`) — nunca nas
-câmeras reais da fábrica, para não misturar dado fictício com o que vira
-histórico de produção real quando o pipeline rodar lá de verdade.
+Desde a preparação da banca final (§6), as equipes do placar ficam nas
+**estações reais**, e os alertas dos testes na meta indústria contam no
+placar. Só a cobertura (`monitoramento_diario`) é sintética nas câmeras
+reais: 14 dias contados a partir do dia em que o script roda, e só nos dias
+e turnos sem heartbeat real.
 
-| Equipe | Turno | Estações | Estado no placar |
+| Equipe | Turno | Estações | Origem dos incidentes |
 |---|---|---|---|
-| `EQ-DEMOA` | MANHA | EST-01/EST-02 | conformidade melhorou semana a semana, 1º no ranking, metas atingidas |
-| `EQ-DEMOB` | TARDE | EST-03/EST-04 | conformidade piorou, 2º no ranking |
-| `EQ-DEMOC` | NOITE | EST-01/EST-02 (mesmas estações, turno sem heartbeat) | "dados insuficientes" — fora do ranking |
+| `EQ-DEMOA` Usinagem - Manhã | MANHA | Fresa 1 + Fresa 2 | alertas reais dos testes |
+| `EQ-DEMOB` Montagem - Manhã | MANHA | Tenda + Sala 4 | alertas reais dos testes |
+| `EQ-DEMOC` Usinagem - Noite | NOITE | Fresa 1 + Fresa 2 | nenhum, sem cobertura: aparece como "dados insuficientes" |
+| `EQ-DEMOD` Produção - Tarde | TARDE | EST-03 + EST-04 (`CAM-03`/`CAM-04`, vídeos de dataset) | sintéticos: mais incidentes na semana anterior, menos na atual |
+
+A `EQ-DEMOD` existe porque os alertas reais caem todos na mesma semana. Sem
+ela, nenhuma equipe apareceria melhorando. Os incidentes fictícios ficam nas
+câmeras genéricas, nunca nas reais.
+
+A tendência das equipes reais depende do dia em que o placar é consultado.
+Ensaiado em 22/09 com o script rodado para 23/09:
+
+| Equipe | Placar em 23/09 |
+|---|---|
+| Produção - Tarde | 99,9%, melhora +2,9 pp |
+| Montagem - Manhã | 99,6%, piora −0,4 pp, 7 dias sem queda |
+| Usinagem - Manhã | 98,5%, piora −1,5 pp, 7 dias sem queda |
+| Usinagem - Noite | dados insuficientes |
 
 Ver `GET /api/v1/placar` (logado como `gestor@demo`) ou `/placar` no front.
 
 ---
 
-## 6. Referências
+## 6. Preparar para a banca final da SPI
+
+Roda em cima do banco local atual, sem recriar nada:
+
+```bash
+cd ~/projects/cypher
+./scripts/subir-empresa-demo.sh start     # backend + front + webcam (o seed antigo é pulado)
+./scripts/preparar-demo-banca.sh          # prepara a demo e mostra o placar no fim
+```
+
+O que o `preparar-demo-banca.sh` (com `scripts/demo_banca.py`) faz:
+
+1. Grava um backup consistente em `data.bak-<data-hora>/cypherdb.zip`, fora de `data/` e gitignorado.
+2. Fecha com `PIPELINE_STOPPED` os alertas testados que ficaram abertos, porque o pipeline parou sem mandar o fechamento. O fim registrado é o último instante daquela execução. Sem isso, eles apareceriam como incidentes ativos no painel.
+3. Apaga o histórico sintético antigo (`run_id = seed-run-1` e o heartbeat sintético das `CAM-01..04`). Esse histórico foi datado no dia em que foi gerado e ficou fora das duas semanas que o placar compara.
+4. Coloca as equipes nas estações da §5 e reativa `CAM-03`/`CAM-04`, porque o placar só conta câmera ativa.
+5. Recria a cobertura e os incidentes sintéticos relativos a hoje.
+
+Pode rodar mais de uma vez, e com o backend no ar ou parado. O que é sintético
+é identificável e recriado a cada execução:
+
+- incidentes com `run_id = seed-banca`;
+- linhas de `monitoramento_diario` com `ultimo_heartbeat` terminando em `.987654` segundos.
+
+Para ensaiar outra data, use `CYPHER_DEMO_HOJE=AAAA-MM-DD ./scripts/preparar-demo-banca.sh`.
+
+Para voltar ao backup, pare o backend e rode:
+
+```bash
+java -cp <h2.jar> org.h2.tools.Restore -file data.bak-<...>/cypherdb.zip -dir data -db cypherdb
+```
+
+**Pontos de atenção na apresentação:**
+
+- O dashboard mostra cerca de 500 alertas pendentes, porque os alertas dos testes nunca foram reconhecidos.
+- A renotificação está ligada (`cypher-capture#13`). Uma violação que continua na webcam gera um alerta novo a cada 120 s.
+- `CAM-03`/`CAM-04` aparecem no painel e ficam offline no modo webcam. Com `--orchestrator`, o pipeline passa a rodar `cenario3.mp4`/`cenario4.mp4` nelas.
+
+---
+
+## 7. Referências
 
 - `e1-runbook-local.md` — como subir os 3 projetos (backend, capture, front).
 - `docs/superpowers/specs/planejadas/2026-08-29-gamificacao-e5-design.md` — design da E5, incluindo o piso de cobertura (0,5) que define "dados insuficientes".
-- `scripts/seed-empresa-demo.sh` / `scripts/seed_gamificacao_demo.py` (repo `cypher`) — fonte de verdade reproduzível deste documento.
+- `scripts/seed-empresa-demo.sh` / `scripts/seed_gamificacao_demo.py` (repo `cypher`) — reconstroem o cadastro da demo do zero (§1).
+- `scripts/preparar-demo-banca.sh` / `scripts/demo_banca.py` (repo `cypher`) — preparação da banca (§5 e §6).
