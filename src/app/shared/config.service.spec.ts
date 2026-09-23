@@ -43,4 +43,18 @@ describe('ConfigService', () => {
     expect(service.config()?.company).toBe('Acme');
     expect(service.config()?.epis).toEqual(['capacete', 'luvas']);
   });
+
+  it('config antigo com auricular/cinto no localStorage e descartado na leitura', () => {
+    localStorage.setItem('cypher.config', JSON.stringify({
+      company: 'Acme', cnpj: '', sector: '', logoUrl: null, logoName: '', accent: '#F4622A',
+      epis: ['capacete', 'auricular', 'cinto'],
+      cas: { capacete: { ca: '31469' }, auricular: { ca: '11222' }, cinto: { ca: '33501' } },
+    }));
+
+    const service = criar();
+
+    expect(service.config()?.company).toBe('Acme');
+    expect(service.config()?.epis).toEqual(['capacete']);
+    expect(Object.keys(service.config()?.cas ?? {})).toEqual(['capacete']);
+  });
 });

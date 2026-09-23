@@ -35,21 +35,11 @@ import { Component, input } from '@angular/core';
           <path d="M11 14l-4-2M21 14l4-2M11 21l-4 2M21 21l4 2"/>
           <path d="M11 16h10M11 19h10"/>
         }
-        @case ('auricular') {
-          <path d="M5 18v-2a11 11 0 0 1 22 0v2"/>
-          <path d="M5 18c0-2 2-3 3-3h2v8H8c-2 0-3-1-3-3z"/>
-          <path d="M27 18c0-2-2-3-3-3h-2v8h2c2 0 3-1 3-3z"/>
-        }
         @case ('botas') {
           <path d="M9 6h5v14"/>
           <path d="M9 20v-6"/>
           <path d="M14 20l9 2c2 .5 3 1 3 3v1H6v-2c0-2 1-3 3-4z"/>
           <path d="M14 12h4"/>
-        }
-        @case ('cinto') {
-          <rect x="4" y="13" width="24" height="6" rx="1"/>
-          <rect x="13" y="11" width="6" height="10" rx="1"/>
-          <circle cx="16" cy="16" r="1.2" [attr.fill]="color()"/>
         }
       }
     </svg>

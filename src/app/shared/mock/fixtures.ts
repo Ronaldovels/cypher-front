@@ -91,7 +91,7 @@ export const INCIDENTS: Incident[] = [
     snapshotUrl: 'https://placehold.co/640x360?text=exemplo-5' },
   { ...MOLDE, id: 4, incidentKey: 'exemplo-4', cameraId: 'CAM-01', type: 'EPI_VIOLATION',
     severity: 3, nivel: 'ALTO', descricao: 'Capacete ausente', detectedAt: minutosAtras(90),
-    epiMissing: ['no_helmet'], epiPresent: ['VEST'], peakSeverity: 3 },
+    epiMissing: ['HELMET'], epiPresent: ['VEST'], peakSeverity: 3 },
   { ...MOLDE, id: 3, incidentKey: 'exemplo-3', cameraId: 'CAM-03', type: 'ZONE_VIOLATION',
     severity: 2, nivel: 'MEDIO', descricao: 'Entrada em zona de risco',
     detectedAt: minutosAtras(200), zoneName: 'Zona 3 · empilhadeiras', zoneStatus: 'inside',
@@ -103,7 +103,7 @@ export const INCIDENTS: Incident[] = [
     closedReason: 'STATE_EXIT', status: 'RESOLVIDO', peakSeverity: 1 },
   { ...MOLDE, id: 1, incidentKey: 'exemplo-1', cameraId: 'CAM-02', type: 'EPI_VIOLATION',
     severity: 2, nivel: 'MEDIO', descricao: 'Luvas ausentes', detectedAt: minutosAtras(480),
-    epiMissing: ['no_gloves'], durationSeconds: 300, endedAt: minutosAtras(475),
+    epiMissing: ['GLOVE'], durationSeconds: 300, endedAt: minutosAtras(475),
     closedReason: 'STATE_EXIT', status: 'RESOLVIDO', peakSeverity: 2,
     snapshotUrl: 'https://placehold.co/640x360?text=exemplo-1' },
 ];

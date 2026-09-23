@@ -1,4 +1,5 @@
 import { Component, input, computed } from '@angular/core';
+import { EPI_CATEGORIA } from '../../models/onboarding.models';
 
 @Component({
   selector: 'app-mannequin',
@@ -11,11 +12,7 @@ export class MannequinComponent {
   accent = input<string>('#F4622A');
 
   private catBySlot(slot: string): string | undefined {
-    const map: Record<string, string> = {
-      capacete: 'cabeca', oculos: 'olhos', auricular: 'audicao',
-      mascara: 'respiracao', luvas: 'maos', colete: 'corpo', botas: 'pes', cinto: 'altura',
-    };
-    return map[slot];
+    return EPI_CATEGORIA[slot];
   }
 
   isOn(slot: string): boolean { return !!this.picks()[this.catBySlot(slot) ?? '']; }
@@ -57,6 +54,5 @@ export class MannequinComponent {
   respFull = computed(() => this.pickId('respiracao') === 're-vp');
   isApron = computed(() => this.pickId('corpo') === 'co-av');
   isInsulating = computed(() => this.pickId('pes') === 'bo-id');
-  isConcha = computed(() => this.pickId('audicao') === 'au-c');
   hasJugular = computed(() => this.pickId('cabeca') === 'cap-j');
 }

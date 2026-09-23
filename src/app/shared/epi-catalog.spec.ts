@@ -7,7 +7,7 @@ describe('epi-catalog', () => {
     expect(toEpiChecklist(['capacete', 'luvas', 'capacete'])).toEqual(['HELMET', 'GLOVE']);
   });
 
-  it('toEpiChecklist descarta auricular e cinto (sem classe de deteccao)', () => {
+  it('toEpiChecklist descarta chaves que não são dos 6 EPIs canônicos', () => {
     expect(toEpiChecklist(['auricular', 'cinto', 'botas'])).toEqual(['BOOTS']);
   });
 
@@ -20,15 +20,15 @@ describe('epi-catalog', () => {
     expect(epiTipoLabel('ALGO_DESCONHECIDO')).toBe('ALGO_DESCONHECIDO');
   });
 
-  it('epiFieldLabel reconhece tanto violation_label quanto o rotulo cru do detector', () => {
-    expect(epiFieldLabel('no_helmet')).toBe('Capacete');
-    expect(epiFieldLabel('no_gloves')).toBe('Luvas');
+  it('epiFieldLabel traduz o EpiTipo canônico de epiPresent/epiMissing pro rótulo em PT', () => {
+    expect(epiFieldLabel('HELMET')).toBe('Capacete');
+    expect(epiFieldLabel('GLOVE')).toBe('Luvas');
     expect(epiFieldLabel('VEST')).toBe('Colete refletivo');
-    expect(epiFieldLabel('boots')).toBe('Bota de segurança');
-    expect(epiFieldLabel('Goggles')).toBe('Óculos de proteção');
   });
 
   it('epiFieldLabel mantém o valor original quando não reconhece', () => {
     expect(epiFieldLabel('algo-novo')).toBe('algo-novo');
+    // rótulos crus antigos do detector não são mais traduzidos: a API já normaliza.
+    expect(epiFieldLabel('no_helmet')).toBe('no_helmet');
   });
 });

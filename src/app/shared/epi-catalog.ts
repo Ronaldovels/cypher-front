@@ -2,11 +2,9 @@
  * Ponte entre as chaves em português usadas no onboarding/mannequin
  * (`capacete`, `colete`, ...) e o enum canônico que trafega com o backend e
  * o pipeline (`EpiTipo` — achado de campo 2026-09-20: 3 convenções soltas
- * coexistiam antes disso). `auricular` e `cinto` ficam de fora do mapa de
- * propósito: o modelo de detecção não tem classe pra eles, então nunca
- * poderiam ser confirmados como presentes/ausentes — continuam existindo
- * como registro local (mannequin, onboarding), mas nunca são enviados ao
- * checklist global nem aparecem como EPI exigível de zona.
+ * coexistiam antes disso). Só existem os 6 EPIs que o modelo de detecção
+ * reconhece — na UI e no contrato; `auricular` e `cinto` saíram de vez,
+ * porque nunca poderiam ser confirmados como presentes/ausentes.
  */
 export type EpiTipo = 'HELMET' | 'GOGGLES' | 'GLOVE' | 'VEST' | 'BOOTS' | 'MASK';
 
@@ -33,33 +31,12 @@ export function epiTipoLabel(tipo: string): string {
 }
 
 /**
- * `Incident.epiPresent`/`epiMissing` (do pipeline) não trafegam no formato
- * canônico do enum: `epiPresent` traz a classe crua do detector
- * (`HELMET`, `Goggles`, `boots`, ...) e `epiMissing` traz o violation_label
- * (`no_helmet`, `no_gloves`, ...) — ver `epi_catalog.py` no cypher-capture.
- * Estes dois mapas traduzem os dois formatos pro mesmo rótulo em PT.
+ * `Incident.epiPresent`/`epiMissing` chegam já no formato canônico
+ * (`['HELMET', 'GOGGLES']`): o pipeline passou a enviar `EpiTipo` e a API
+ * normaliza as linhas antigas na leitura. Valor desconhecido passa cru.
  */
-const DETECTOR_LABEL_TO_PT: Record<string, string> = {
-  HELMET: 'Capacete',
-  Goggles: 'Óculos de proteção',
-  GLOVE: 'Luvas',
-  VEST: 'Colete refletivo',
-  boots: 'Bota de segurança',
-  MASK: 'Máscara / Respirador',
-};
-
-const VIOLATION_LABEL_TO_PT: Record<string, string> = {
-  no_helmet: 'Capacete',
-  no_goggle: 'Óculos de proteção',
-  no_gloves: 'Luvas',
-  no_vest: 'Colete refletivo',
-  no_boots: 'Bota de segurança',
-  no_mask: 'Máscara / Respirador',
-};
-
-/** Traduz um item cru de `epiPresent`/`epiMissing` pro rótulo em PT; mantém o valor original se não reconhecido. */
 export function epiFieldLabel(raw: string): string {
-  return VIOLATION_LABEL_TO_PT[raw] ?? DETECTOR_LABEL_TO_PT[raw] ?? EPI_TIPO_LABEL[raw as EpiTipo] ?? raw;
+  return EPI_TIPO_LABEL[raw as EpiTipo] ?? raw;
 }
 
 /** Traduz as chaves PT do onboarding para o checklist canônico enviado ao backend. */

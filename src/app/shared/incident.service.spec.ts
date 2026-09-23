@@ -180,13 +180,13 @@ describe('IncidentService', () => {
   });
 
   it('loadSummary manda os filtros como query params quando informados', () => {
-    service.loadSummary({ since: '2026-09-01T00:00:00.000Z', turno: 'A', setor: 'montagem', epi: 'capacete', detalhado: true });
+    service.loadSummary({ since: '2026-09-01T00:00:00.000Z', turno: 'A', setor: 'montagem', epi: 'HELMET', detalhado: true });
 
     const req = http.expectOne(r => r.url === `${environment.apiUrl}/summary`);
     expect(req.request.params.get('since')).toBe('2026-09-01T00:00:00.000Z');
     expect(req.request.params.get('turno')).toBe('A');
     expect(req.request.params.get('setor')).toBe('montagem');
-    expect(req.request.params.get('epi')).toBe('capacete');
+    expect(req.request.params.get('epi')).toBe('HELMET');
     expect(req.request.params.get('detalhado')).toBe('true');
     req.flush({
       incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0,

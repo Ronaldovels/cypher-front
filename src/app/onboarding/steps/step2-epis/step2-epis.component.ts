@@ -2,7 +2,7 @@ import { Component, inject, computed } from '@angular/core';
 import { OnboardingService } from '../../onboarding.service';
 import { EpiIconComponent } from '../../components/epi-icon/epi-icon.component';
 import { MannequinComponent } from '../../components/mannequin/mannequin.component';
-import { EPI_LIST } from '../../models/onboarding.models';
+import { EPI_CATEGORIA, EPI_LIST } from '../../models/onboarding.models';
 
 @Component({
   selector: 'app-step2-epis',
@@ -15,12 +15,8 @@ export class Step2EpisComponent {
 
   // Derive picks for the mannequin from the epis array (category key → 'on')
   mannequinPicks = computed<Record<string, string>>(() => {
-    const epiToCat: Record<string, string> = {
-      capacete: 'cabeca', oculos: 'olhos', auricular: 'audicao',
-      mascara: 'respiracao', luvas: 'maos', colete: 'corpo', botas: 'pes', cinto: 'altura',
-    };
     return (this.state.data().epis || []).reduce<Record<string, string>>((acc, e) => {
-      const c = epiToCat[e];
+      const c = EPI_CATEGORIA[e];
       if (c) acc[c] = 'on';
       return acc;
     }, {});

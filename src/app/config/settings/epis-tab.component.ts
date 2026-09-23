@@ -6,9 +6,7 @@ import { fromEpiChecklist, toEpiChecklist } from '../../shared/epi-catalog';
 import { mensagemDeErro } from '../../shared/incident.models';
 import { EpiIconComponent } from '../../onboarding/components/epi-icon/epi-icon.component';
 import { MannequinComponent } from '../../onboarding/components/mannequin/mannequin.component';
-import { EPI_LIST } from '../../onboarding/models/onboarding.models';
-
-const SEM_DETECCAO_AUTOMATICA = new Set(['auricular', 'cinto']);
+import { EPI_CATEGORIA, EPI_LIST } from '../../onboarding/models/onboarding.models';
 
 /**
  * Aba "EPIs monitorados" — mesma grade e prévia do manequim do Step 2 do
@@ -17,10 +15,8 @@ const SEM_DETECCAO_AUTOMATICA = new Set(['auricular', 'cinto']);
  * O checklist em si (achado de campo 2026-09-20) mora no backend, não mais
  * só no `localStorage`: é o que o pipeline, rodando numa máquina separada,
  * usa como exigência padrão de EPI quando a pessoa não está numa zona com
- * `requiredPpe` próprio. `auricular` e `cinto` continuam na grade — o
- * mannequin/onboarding ainda os usa — mas nunca entram nesse envio: o
- * modelo de detecção não tem classe pra eles, então nunca seriam
- * confirmados como ausentes.
+ * `requiredPpe` próprio. A grade tem só os 6 itens que o modelo de detecção
+ * reconhece, então o que aparece aqui é exatamente o que vai pro backend.
  */
 @Component({
   selector: 'app-epis-tab',
@@ -36,7 +32,6 @@ export class EpisTabComponent {
   private cfgService = inject(ConfigService);
   private checklistService = inject(EpiChecklistService);
   epiList = EPI_LIST;
-  semDeteccaoAutomatica = SEM_DETECCAO_AUTOMATICA;
 
   private readonly baseline = signal<string[]>([...(this.cfgService.config()?.epis ?? [])]);
   readonly draft = signal<string[]>([...this.baseline()]);
@@ -51,12 +46,8 @@ export class EpisTabComponent {
   });
 
   mannequinPicks = computed<Record<string, string>>(() => {
-    const epiToCat: Record<string, string> = {
-      capacete: 'cabeca', oculos: 'olhos', auricular: 'audicao',
-      mascara: 'respiracao', luvas: 'maos', colete: 'corpo', botas: 'pes', cinto: 'altura',
-    };
     return this.draft().reduce<Record<string, string>>((acc, e) => {
-      const c = epiToCat[e];
+      const c = EPI_CATEGORIA[e];
       if (c) acc[c] = 'on';
       return acc;
     }, {});
@@ -74,13 +65,9 @@ export class EpisTabComponent {
 
   constructor() {
     this.checklistService.load();
-    // O backend só conhece os 6 itens canônicos; auricular/cinto (locais,
-    // sem classe de deteccao) sao preservados do que ja estava salvo aqui.
+    // O checklist do backend é a fonte da verdade da baseline.
     effect(() => {
-      const doBackend = fromEpiChecklist(this.checklistService.epis());
-      const extrasLocais = (this.cfgService.config()?.epis ?? [])
-        .filter(chave => SEM_DETECCAO_AUTOMATICA.has(chave));
-      const base = [...new Set([...doBackend, ...extrasLocais])];
+      const base = fromEpiChecklist(this.checklistService.epis());
       this.baseline.set(base);
       this.draft.set(base);
     });

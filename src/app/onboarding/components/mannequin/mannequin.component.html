@@ -43,18 +43,6 @@
     }
   </g>
 
-  <!-- CINTO ALTURA -->
-  <g [class]="layerClass('cinto')" [attr.filter]="isOn('cinto') ? 'url(#epiGlow)' : null">
-    <g filter="url(#softShadow)">
-      <rect x="132" y="388" width="136" height="22" [attr.fill]="accent()" stroke="#2A2A2A" stroke-width="1.6"/>
-      <rect x="190" y="384" width="20" height="32" rx="2" fill="#3A3A40" stroke="#0a0a0a" stroke-width="1.4"/>
-      <path d="M158 200 L195 388" [attr.stroke]="accent()" stroke-width="14" stroke-linecap="round"/>
-      <path d="M242 200 L205 388" [attr.stroke]="accent()" stroke-width="14" stroke-linecap="round"/>
-      <path d="M158 200 L242 200" [attr.stroke]="accent()" stroke-width="10" stroke-linecap="round"/>
-      <circle cx="200" cy="308" r="9" fill="#2A2A2A" [attr.stroke]="accent()" stroke-width="2.2"/>
-    </g>
-  </g>
-
   <!-- CAPACETE -->
   <g [class]="layerClass('capacete')" [attr.filter]="isOn('capacete') ? 'url(#epiGlow)' : null">
     <g filter="url(#softShadow)">
@@ -96,22 +84,6 @@
       }
     </g>
   }
-
-  <!-- AURICULAR -->
-  <g [class]="layerClass('auricular')" [attr.filter]="isOn('auricular') ? 'url(#epiGlow)' : null">
-    @if (isConcha()) {
-      <g filter="url(#softShadow)">
-        <path d="M132 142 Q140 92 200 90 Q260 92 268 142" stroke="#2A2A2A" stroke-width="4" fill="none" stroke-linecap="round"/>
-        <ellipse cx="130" cy="154" rx="16" ry="22" fill="#FF6A2F" stroke="#2A2A2A" stroke-width="2"/>
-        <ellipse cx="270" cy="154" rx="16" ry="22" fill="#FF6A2F" stroke="#2A2A2A" stroke-width="2"/>
-      </g>
-    } @else {
-      <g filter="url(#softShadow)">
-        <ellipse cx="138" cy="160" rx="7" ry="10" fill="#F5E0C0" stroke="#2A2A2A" stroke-width="1.4"/>
-        <ellipse cx="262" cy="160" rx="7" ry="10" fill="#F5E0C0" stroke="#2A2A2A" stroke-width="1.4"/>
-      </g>
-    }
-  </g>
 
   <!-- MÁSCARA -->
   <g [class]="layerClass('mascara')" [attr.filter]="isOn('mascara') ? 'url(#epiGlow)' : null">

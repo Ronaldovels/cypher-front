@@ -1,5 +1,5 @@
 import { Injectable, signal, effect } from '@angular/core';
-import { accentRgba, accentShade } from '../onboarding/models/onboarding.models';
+import { accentRgba, accentShade, sanitizeEpiState } from '../onboarding/models/onboarding.models';
 
 export interface CypherConfig {
   company: string;
@@ -41,7 +41,8 @@ export class ConfigService {
   private loadFromStorage(): CypherConfig | null {
     try {
       const raw = localStorage.getItem(this.KEY);
-      return raw ? JSON.parse(raw) : null;
+      // Config salvo por versões antigas pode trazer auricular/cinto — descarta.
+      return raw ? sanitizeEpiState(JSON.parse(raw) as CypherConfig) : null;
     } catch { return null; }
   }
 

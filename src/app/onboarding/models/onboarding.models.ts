@@ -70,10 +70,19 @@ export const EPI_LIST: EpiItem[] = [
   { key: 'luvas', name: 'Luvas', nrm: 'NR-6' },
   { key: 'oculos', name: 'Óculos de proteção', nrm: 'NR-6' },
   { key: 'mascara', name: 'Máscara / Respirador', nrm: 'NR-15' },
-  { key: 'auricular', name: 'Protetor auricular', nrm: 'NR-15' },
   { key: 'botas', name: 'Bota de segurança', nrm: 'NR-6' },
-  { key: 'cinto', name: 'Cinto de segurança', nrm: 'NR-35' },
 ];
+
+/** Chave PT do EPI → categoria de CA/manequim (os 6 itens detectáveis). */
+export const EPI_CATEGORIA: Record<string, string> = {
+  capacete: 'cabeca', oculos: 'olhos', mascara: 'respiracao',
+  luvas: 'maos', colete: 'corpo', botas: 'pes',
+};
+
+/** Inverso de `EPI_CATEGORIA`: categoria → chave PT do EPI. */
+export const CATEGORIA_EPI: Record<string, string> = Object.fromEntries(
+  Object.entries(EPI_CATEGORIA).map(([epi, cat]) => [cat, epi]),
+);
 
 export const SECTORS: string[] = ['Metalurgia', 'Automotivo', 'Químico', 'Alimentício', 'Construção', 'Outros'];
 
@@ -82,12 +91,10 @@ export const PRESET_COLORS: string[] = ['#F4622A', '#2A6FDB', '#1F8A5B', '#C03E5
 export const CATEGORIES: Category[] = [
   { key: 'cabeca', name: 'Cabeça', sub: 'Capacete', required: true, slot: 'capacete' },
   { key: 'olhos', name: 'Olhos · Face', sub: 'Óculos', required: true, slot: 'oculos' },
-  { key: 'audicao', name: 'Audição', sub: 'Protetor', required: false, slot: 'auricular' },
   { key: 'respiracao', name: 'Respiração', sub: 'Máscara', required: false, slot: 'mascara' },
   { key: 'maos', name: 'Mãos', sub: 'Luvas', required: true, slot: 'luvas' },
   { key: 'corpo', name: 'Corpo', sub: 'Colete · Avental', required: true, slot: 'colete' },
   { key: 'pes', name: 'Pés', sub: 'Bota', required: true, slot: 'botas' },
-  { key: 'altura', name: 'Altura', sub: 'Cinto · Linha de vida', required: false, slot: 'cinto' },
 ];
 
 export const OPTIONS: Record<string, EpiOption[]> = {
@@ -100,10 +107,6 @@ export const OPTIONS: Record<string, EpiOption[]> = {
     { id: 'oc-a', name: 'Óculos ampla visão', ca: 'CA 28.011', tag: 'Obrigatório' },
     { id: 'oc-s', name: 'Óculos solar escuro', ca: 'CA 30.224', tag: 'Solda · luz intensa' },
     { id: 'oc-fs', name: 'Protetor facial', ca: 'CA 37.105', tag: 'Esmerilhamento' },
-  ],
-  audicao: [
-    { id: 'au-p', name: 'Protetor tipo plug', ca: 'CA 11.222', tag: 'Recomendado · NR-15' },
-    { id: 'au-c', name: 'Protetor tipo concha', ca: 'CA 19.804', tag: 'Ambientes ≥ 85 dB' },
   ],
   respiracao: [
     { id: 're-p3', name: 'Respirador PFF3', ca: 'CA 38.118', tag: 'Particulados finos' },
@@ -122,16 +125,12 @@ export const OPTIONS: Record<string, EpiOption[]> = {
     { id: 'bo-bk', name: 'Bota com bico de aço', ca: 'CA 26.318', tag: 'Obrigatório' },
     { id: 'bo-id', name: 'Bota isolante elétrica', ca: 'CA 39.044', tag: 'Eletricistas' },
   ],
-  altura: [
-    { id: 'al-c5', name: 'Cinto paraquedista 5 pontos', ca: 'CA 33.501', tag: 'Acima de 2 m' },
-    { id: 'al-tr', name: 'Talabarte duplo com ABS', ca: 'CA 38.118', tag: 'Complementar' },
-  ],
 };
 
 export const ROLE_PRESETS: RolePreset[] = [
-  { id: 'machine', name: 'Operador de máquina', picks: { cabeca: 'cap-a', olhos: 'oc-a', audicao: 'au-c', maos: 'lv-vq', corpo: 'co-cv', pes: 'bo-bk' } },
-  { id: 'welder', name: 'Soldador', picks: { cabeca: 'cap-a', olhos: 'oc-s', audicao: 'au-p', maos: 'lv-vq', corpo: 'co-av', pes: 'bo-bk' } },
-  { id: 'height', name: 'Trabalho em altura', picks: { cabeca: 'cap-j', olhos: 'oc-a', maos: 'lv-vq', corpo: 'co-cv', pes: 'bo-bk', altura: 'al-c5' } },
+  { id: 'machine', name: 'Operador de máquina', picks: { cabeca: 'cap-a', olhos: 'oc-a', maos: 'lv-vq', corpo: 'co-cv', pes: 'bo-bk' } },
+  { id: 'welder', name: 'Soldador', picks: { cabeca: 'cap-a', olhos: 'oc-s', maos: 'lv-vq', corpo: 'co-av', pes: 'bo-bk' } },
+  { id: 'height', name: 'Trabalho em altura', picks: { cabeca: 'cap-j', olhos: 'oc-a', maos: 'lv-vq', corpo: 'co-cv', pes: 'bo-bk' } },
   { id: 'storage', name: 'Almoxarife', picks: { cabeca: 'cap-a', olhos: 'oc-a', corpo: 'co-cv', pes: 'bo-bk' } },
   { id: 'chem', name: 'Operador químico', picks: { cabeca: 'cap-a', respiracao: 're-vp', maos: 'lv-ni', corpo: 'co-cv', pes: 'bo-bk' } },
 ];
@@ -142,11 +141,25 @@ export const DEFAULT_DATA: OnboardingData = {
 };
 
 export function deriveEpis(picks: Record<string, string>): string[] {
-  const map: Record<string, string> = {
-    cabeca: 'capacete', olhos: 'oculos', audicao: 'auricular',
-    respiracao: 'mascara', maos: 'luvas', corpo: 'colete', pes: 'botas', altura: 'cinto',
-  };
-  return Object.entries(picks).filter(([, v]) => !!v).map(([k]) => map[k]).filter(Boolean);
+  return Object.entries(picks).filter(([, v]) => !!v).map(([k]) => CATEGORIA_EPI[k]).filter(Boolean);
+}
+
+/**
+ * Descarta o que ficou de versões antigas no `localStorage` — EPIs e CAs
+ * fora da `EPI_LIST` (`auricular`, `cinto`; os CAs são indexados pela chave
+ * do EPI) e picks de categorias que não existem mais (`audicao`, `altura`) —
+ * pra não quebrar a grade nem deixar item fantasma no manequim.
+ */
+export function sanitizeEpiState<T extends { epis?: string[]; picks?: Record<string, string>; cas?: Record<string, unknown> }>(data: T): T {
+  const episValidos = new Set(EPI_LIST.map(e => e.key));
+  const categoriasValidas = new Set(CATEGORIES.map(c => c.key));
+  const filtraChaves = <V>(r: Record<string, V>, validas: Set<string>) =>
+    Object.fromEntries(Object.entries(r).filter(([k]) => validas.has(k)));
+  const limpo = { ...data };
+  if (Array.isArray(data.epis)) limpo.epis = data.epis.filter(e => episValidos.has(e));
+  if (data.picks) limpo.picks = filtraChaves(data.picks, categoriasValidas);
+  if (data.cas) limpo.cas = filtraChaves(data.cas, episValidos);
+  return limpo;
 }
 
 export function hexToRgb(h: string): [number, number, number] {

@@ -10,7 +10,7 @@ import { ConnectionBadgeComponent } from '../shared/connection-badge/connection-
 import { DockComponent } from '../shared/dock/dock.component';
 import { IncidentService } from '../shared/incident.service';
 import { StationCell, SummaryFiltros, severityClass } from '../shared/incident.models';
-import { EPI_LIST } from '../onboarding/models/onboarding.models';
+import { EPI_TIPO_LABEL, EpiTipo } from '../shared/epi-catalog';
 
 export const TEMP_HOURS = ['12AM', '2AM', '4AM', '6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
 export const TEMP_DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -215,8 +215,9 @@ export class HeatmapComponent implements OnInit, OnDestroy {
     return Array.from(setores).sort();
   });
 
-  /** Só os 4 EPIs que o backend sabe filtrar (spec §1.4) — os outros 4 de EPI_LIST ficam de fora até o cypher-capture detectar essas violações. */
-  readonly episDisponiveis = EPI_LIST.filter(e => ['capacete', 'oculos', 'luvas', 'botas'].includes(e.key));
+  /** Os 6 EPIs canônicos — o `GET /summary?epi=` recebe o nome do `EpiTipo` (`HELMET`, ...). */
+  readonly episDisponiveis = (Object.keys(EPI_TIPO_LABEL) as EpiTipo[])
+    .map(tipo => ({ tipo, nome: EPI_TIPO_LABEL[tipo] }));
 
   readonly urlResumoPdf = computed(() => {
     const filtros = this.filtrosAtuais();

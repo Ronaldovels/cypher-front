@@ -52,22 +52,22 @@ describe('EpisTabComponent', () => {
     expect(componente.sujo()).toBe(false);
   });
 
-  it('auricular e cinto (sem classe de deteccao) nao entram no checklist enviado ao backend', () => {
+  it('a baseline vem só do checklist do backend, ignorando EPI local que não existe mais', () => {
+    localStorage.setItem('cypher.config', JSON.stringify({ accent: '#F4622A', epis: ['auricular', 'cinto'], cas: {} }));
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideHttpClient(withFetch()), provideHttpClientTesting()],
+    });
+    http = TestBed.inject(HttpTestingController);
+
     const fixture = TestBed.createComponent(EpisTabComponent);
     fixture.detectChanges();
-    http.expectOne(`${environment.apiUrl}/config/epis`).flush({ epis: [] });
+    http.expectOne(`${environment.apiUrl}/config/epis`).flush({ epis: ['HELMET'] });
+    TestBed.tick();
 
     const componente = fixture.componentInstance;
-    componente.toggle('auricular');
-    componente.toggle('cinto');
-    componente.salvar();
-
-    const req = http.expectOne(`${environment.apiUrl}/config/epis`);
-    expect(req.request.body).toEqual({ epis: [] });
-    req.flush({ epis: [] });
-
-    // mas continuam marcados localmente, pro mannequin/onboarding.
-    expect(componente.isOn('auricular')).toBe(true);
-    expect(componente.isOn('cinto')).toBe(true);
+    expect(componente.draft()).toEqual(['capacete']);
+    expect(componente.sujo()).toBe(false);
+    expect(componente.epiList.map(e => e.key)).not.toContain('auricular');
   });
 });

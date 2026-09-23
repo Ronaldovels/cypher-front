@@ -33,8 +33,8 @@
     <span class="fb-label">EPI</span>
     <select class="fb-select" [(ngModel)]="epi" name="heatmapEpi" (ngModelChange)="setEpi($event)">
       <option value="">Todos os EPIs</option>
-      @for (e of episDisponiveis; track e.key) {
-        <option [value]="e.key">{{ e.name }}</option>
+      @for (e of episDisponiveis; track e.tipo) {
+        <option [value]="e.tipo">{{ e.nome }}</option>
       }
     </select>
     <div class="fb-sep"></div>

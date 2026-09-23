@@ -275,15 +275,26 @@ describe('HeatmapComponent', () => {
     req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
   });
 
-  it('trocar o EPI recarrega o summary com o filtro', () => {
+  it('trocar o EPI recarrega o summary com o filtro no nome do EpiTipo', () => {
     const fixture = montarCom([]);
     http.match(r => r.url === `${environment.apiUrl}/summary`);
 
-    fixture.componentInstance.setEpi('capacete');
+    fixture.componentInstance.setEpi('HELMET');
 
     const req = ultimaRequisicaoDeSummary();
-    expect(req.request.params.get('epi')).toBe('capacete');
+    expect(req.request.params.get('epi')).toBe('HELMET');
     req.flush({ incidentesHoje: 0, incidentesOntem: 0, criticosHoje: 0, pendentes: 0, heatmap: [], ultimosSeteDias: [] });
+  });
+
+  it('o filtro de EPI oferece os 6 EpiTipo, com valor canônico e rótulo em PT', () => {
+    const fixture = montarCom([]);
+    http.match(r => r.url === `${environment.apiUrl}/summary`);
+
+    const opcoes = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLOptionElement>('select[name="heatmapEpi"] option'),
+    ).filter(o => o.value);
+    expect(opcoes.map(o => o.value)).toEqual(['HELMET', 'GOGGLES', 'GLOVE', 'VEST', 'BOOTS', 'MASK']);
+    expect(opcoes[0].textContent?.trim()).toBe('Capacete');
   });
 
   it('trocar o turno recarrega o summary com o filtro', () => {
@@ -407,12 +418,12 @@ describe('HeatmapComponent', () => {
 
     comp.setShift('A');
     comp.setSetor('montagem');
-    comp.setEpi('capacete');
+    comp.setEpi('HELMET');
     http.match(r => r.url === `${environment.apiUrl}/summary`); // drena as 3 recargas dos setters acima
 
     const url = new URL(comp.urlResumoPdf(), 'http://localhost');
     expect(url.searchParams.get('turno')).toBe('A');
     expect(url.searchParams.get('setor')).toBe('montagem');
-    expect(url.searchParams.get('epi')).toBe('capacete');
+    expect(url.searchParams.get('epi')).toBe('HELMET');
   });
 });
