@@ -148,6 +148,13 @@ Vídeo curto (gravado com os 3 projetos rodando localmente — ver [`scripts/sub
 - [ ] Central de notificações (sino no topbar)
 - [ ] Login do kiosk (`/login-estacao`) → operação de estação, sem acesso ao dashboard do gestor
 
+### 🎬 Vídeos do pitch final (Fase 4)
+
+Gravados com o sistema rodando, com motion, seguindo o roteiro do pitch. Os detalhes de cada um estão em [`docs/apresentacao/videos/`](docs/apresentacao/videos/README.md).
+
+- **[Demonstração ao vivo — 60s](docs/apresentacao/videos/pitch-final-demo-ao-vivo.mp4)**: backup do slide 12, com detecção → decisão → alerta nas duas telas → análise por IA.
+- **[Tour pelas telas — 1min45](docs/apresentacao/videos/pitch-final-tour-telas.mp4)**: login, dashboard, ao vivo, heatmap, incidentes, placar, EPIs, zonas de risco e MCP.
+
 ### Evolução do protótipo nesta Sprint
 
 O protótipo em alta fidelidade no Figma (`Interface`) documentou o desenho de Onboarding, Dashboard e Heatmap nas Sprints 1–2. A partir da E4 o projeto entrou em fase de implementação — cada tela nova nasceu direto como componente Angular real (seguindo os primitivos do [design system](docs/design-system.md)), em vez de primeiro virar artboard no Figma. O mapeamento completo do fluxo de telas implementadas, com justificativa por tela, está em **[`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md)** — 6 telas/fluxos novos em relação ao protótipo original: login do gestor, login do kiosk, `/config/equipe`, `/placar` (gamificação), `/config/webhooks` e o editor de zonas de risco.
