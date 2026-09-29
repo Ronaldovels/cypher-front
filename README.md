@@ -18,6 +18,30 @@ Cypher Front é a interface de gestão e operação do sistema Cypher, apresenta
 - **Relatórios**: exportação de CSV/PDF
 - **Chrome TopBar / Dock**: navegação persistente, condicionada ao papel da sessão
 
+## 🎬 Vídeos do pitch final (Fase 4)
+
+Gravados em 29/09/2026 com os 3 projetos rodando sobre a empresa `demo`, na ordem do roteiro do pitch. Este é o repositório principal da entrega; as telas que aparecem são deste front.
+
+### Demonstração ao vivo · 60s
+
+Backup do slide 12. Na ordem da narração: detecção, decisão (histerese e zona), alerta chegando no kiosk do operador e no dashboard do gestor, e análise por IA.
+
+https://github.com/user-attachments/assets/1eafada7-b96e-4b8e-9615-0f337889741e
+
+### Tour pelas telas · 1min45
+
+Login por papel, dashboard em tempo real, ao vivo por setor, heatmap, incidentes, placar, EPIs por operação, editor de zonas de risco e servidor MCP.
+
+https://github.com/user-attachments/assets/d2439482-547c-42e5-b491-f5240e6f2619
+
+### Apresentação completa · 2min45
+
+O tour seguido da demonstração ao vivo, em um arquivo só.
+
+https://github.com/user-attachments/assets/ad56a7dd-3999-4b73-a855-ad9485288213
+
+> Os vídeos não têm áudio. Arquivos originais e como foram gravados: [`docs/apresentacao/videos`](docs/apresentacao/videos/README.md).
+
 ## 🚀 Começando
 
 ### Instalação
@@ -133,7 +157,7 @@ ng e2e
 
 **As telas são demonstradas rodando no projeto local** (ver [docs/e1-runbook-local.md](docs/e1-runbook-local.md) e [docs/empresa-demo-runbook.md](docs/empresa-demo-runbook.md)), com dado real da empresa `demo` — o Figma documenta o desenho de alta fidelidade das telas originais (Sprints 1–2); a evolução desta Sprint é código real, mapeada em `docs/fluxo-de-telas.md`.
 
-### 🎥 Vídeo de demonstração
+### 🎥 Vídeo de demonstração (Sprint 3)
 
 https://github.com/user-attachments/assets/da582c0c-9bc6-4ca3-9de6-844e875141b9
 
@@ -147,14 +171,6 @@ Vídeo curto (gravado com os 3 projetos rodando localmente — ver [`scripts/sub
 - [ ] Config — zonas de risco (editor de polígono), equipes/usuários, webhooks
 - [ ] Central de notificações (sino no topbar)
 - [ ] Login do kiosk (`/login-estacao`) → operação de estação, sem acesso ao dashboard do gestor
-
-### 🎬 Vídeos do pitch final (Fase 4)
-
-Gravados com o sistema rodando, com motion, seguindo o roteiro do pitch. Os detalhes de cada um estão em [`docs/apresentacao/videos/`](docs/apresentacao/videos/README.md).
-
-- **[Demonstração ao vivo — 60s](docs/apresentacao/videos/pitch-final-demo-ao-vivo.mp4)**: backup do slide 12, com detecção → decisão → alerta nas duas telas → análise por IA.
-- **[Tour pelas telas — 1min45](docs/apresentacao/videos/pitch-final-tour-telas.mp4)**: login, dashboard, ao vivo, heatmap, incidentes, placar, EPIs, zonas de risco e MCP.
-- **[Completo — 2min45](docs/apresentacao/videos/pitch-final-completo.mp4)**: tour seguido da demonstração ao vivo.
 
 ### Evolução do protótipo nesta Sprint
 
