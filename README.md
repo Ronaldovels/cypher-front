@@ -154,6 +154,7 @@ Gravados com o sistema rodando, com motion, seguindo o roteiro do pitch. Os deta
 
 - **[Demonstração ao vivo — 60s](docs/apresentacao/videos/pitch-final-demo-ao-vivo.mp4)**: backup do slide 12, com detecção → decisão → alerta nas duas telas → análise por IA.
 - **[Tour pelas telas — 1min45](docs/apresentacao/videos/pitch-final-tour-telas.mp4)**: login, dashboard, ao vivo, heatmap, incidentes, placar, EPIs, zonas de risco e MCP.
+- **[Completo — 2min45](docs/apresentacao/videos/pitch-final-completo.mp4)**: tour seguido da demonstração ao vivo.
 
 ### Evolução do protótipo nesta Sprint
 

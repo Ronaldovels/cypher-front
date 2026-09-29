@@ -8,6 +8,7 @@ seguindo o `Roteiro-Pitch-Final-Cypher.pdf`.
 |---|---|---|
 | [`pitch-final-demo-ao-vivo.mp4`](pitch-final-demo-ao-vivo.mp4) | 60s | **Backup do slide 12 (demonstração ao vivo).** Mesma ordem da narração: detecção → decisão → alerta nas duas telas → análise. Se a demo ao vivo falhar, corte para ele e siga a fala igual. |
 | [`pitch-final-tour-telas.mp4`](pitch-final-tour-telas.mp4) | 1min45 | Tour pelas telas: acesso por papel, dashboard, ao vivo, heatmap, incidentes, placar, EPIs, editor de zonas, MCP e fechamento. |
+| [`pitch-final-completo.mp4`](pitch-final-completo.mp4) | 2min45 | Tour seguido da demonstração ao vivo, em um arquivo só. |
 
 Os vídeos não têm áudio.
 
