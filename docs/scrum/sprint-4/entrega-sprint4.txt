@@ -1,0 +1,15 @@
+Entrega Sprint 4 — Cypher (Challenge SPI/FIAP)
+
+Integrantes:
+Lucas Rodrigues Grecco - RM 558261
+Felipe Wapf Fettback - RM 557217
+Monique Ferreira Dos Anjos - RM 558262
+Rafael Augusto Oliveira Silva - RM 555154
+Ronaldo Veloso Filho - RM 556445
+Tiago Brito Nario - RM 558248
+
+Repositorio GitHub (final): https://github.com/Ronaldovels/cypher-front
+
+Board Trello (atualizado): https://trello.com/b/AqgHhHCP/dev4-cypher-challenge
+
+Video de pitch (YouTube, nao listado): [PREENCHER]
