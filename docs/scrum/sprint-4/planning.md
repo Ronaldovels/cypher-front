@@ -28,7 +28,7 @@ Quem propôs cada decisão e o motivo dito na reunião ficam para o time registr
 
 ## Itens puxados e responsáveis
 
-Ver [sprint-backlog.md](sprint-backlog.md). Os responsáveis marcados como sugestão precisam ser confirmados pelo time no Trello.
+Ver [sprint-backlog.md](sprint-backlog.md). Responsáveis e revisores ainda sem nome aparecem como "a definir".
 
 ## Capacidade
 
