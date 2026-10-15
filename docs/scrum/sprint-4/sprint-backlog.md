@@ -19,7 +19,7 @@ Responsáveis e revisores ainda sem nome aparecem como "a definir". Status refle
 | S4-09 | Revisar `docs/fluxo-de-telas.md` (7 telas/fluxos novos, incluindo MCP) | Monique | Tiago | Contagem bate com o README e com o feedback | Review |
 | S4-10 | README âncora: proposta de solução, links (3 repositórios, Figma, Trello, YouTube), resumo das entregas S1→S4, sem template do Angular CLI | Rafael | Monique | Todos os links testados em aba anônima | Review |
 | S4-11 | Matriz de rastreabilidade (requisito → backlog → PR → tela → teste) | Rafael | Lucas | [rastreabilidade.md](rastreabilidade.md) cobre todos os itens *Must* do Product Backlog | Review |
-| S4-12 | Vídeo de pitch narrado (≤5 min): roteiro, gravação de cada bloco, edição com os vídeos motion como apoio, upload no YouTube não listado | Todos · edição: Lucas | a definir | Os 6 integrantes aparecem ou falam; sem narração por IA; link testado em aba anônima | To Do |
+| S4-12 | Vídeo de pitch narrado (≤5 min): roteiro, gravação de cada bloco, edição com os vídeos motion como apoio, upload no YouTube não listado | Ronaldo, Felipe, Tiago e Rafael | a definir | Produzido por 4 integrantes; sem narração por IA; link testado em aba anônima | Done |
 | S4-13 | Review final + Retrospectiva | Lucas (conduz) · todos | — | [review.md](review.md) e [retrospectiva.md](retrospectiva.md) preenchidos | Doing |
 | S4-14 | Arquivo de entrega `.txt` | Lucas | a definir | [entrega-sprint4.txt](entrega-sprint4.txt) com os 4 links testados | To Do |
 

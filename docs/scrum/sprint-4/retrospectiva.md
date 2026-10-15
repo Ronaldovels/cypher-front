@@ -32,4 +32,4 @@ Maior acerto, maior erro de processo e o que o time levaria para o próximo proj
 |---|---|
 | Tornar os 3 repositórios públicos ou dar acesso aos avaliadores | a definir |
 | Cada integrante commitar da própria conta o card que assumiu | cada integrante |
-| Gravar os blocos do vídeo de pitch | cada integrante |
+| Vídeo de pitch: concluído e publicado por Ronaldo, Felipe, Tiago e Rafael | concluído |
