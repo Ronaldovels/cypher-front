@@ -37,7 +37,8 @@ Responsável de cada card: ver [sprint-backlog.md](sprint-backlog.md). A autoria
 
 ## Demonstração
 
-- Quem demonstrou e quais fluxos foram mostrados na reunião: a registrar pelo time.
+- Apresentação final à SPI Integração em 2026-09-23 (informada pelo time). Quem apresentou, quais fluxos foram mostrados e o feedback recebido: a registrar pelo time.
+- Quem demonstrou e quais fluxos foram mostrados nesta Review: a registrar pelo time.
 - Instalação limpa seguindo o README: passou em 2026-10-15 (ver S4-03 acima).
 
 ## Feedback recebido
