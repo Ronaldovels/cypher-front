@@ -19,7 +19,7 @@ O que funcionou, o que não funcionou e o que cada pessoa faria diferente só po
 
 Dados que o histórico mostra e que a conversa pode partir:
 
-- **Concentração de autoria.** Os commits dos três repositórios estão quase todos em uma conta: `cypher-front` 297 do Lucas e 6 do Ronaldo; `cypher` 184 e 3; `cypher-capture` 133 do Lucas, 6 do Ronaldo e 5 do Felipe. A divisão por frente prevista na Sprint 4 só aparece no git se cada integrante commitar o próprio card.
+- **Concentração de autoria.** Os commits dos três repositórios estão quase todos em uma conta: `cypher-front` 297 do Lucas e 6 do Ronaldo; `cypher` 184 e 3; `cypher-capture` 133 do Lucas, 6 do Ronaldo e 5 do Felipe. A divisão por frente prevista na Sprint 4 só aparece no git se cada integrante commitar o próprio card. Como as entregas da Sprint 4 foram feitas presencialmente em grupo e commitadas pela conta do Lucas, a divisão passou a ser registrada com `Co-authored-by` por card. Isso documenta a participação, mas não substitui commits nas contas de cada integrante, que fica como ação para a próxima Sprint.
 - **Escolha técnica que se sustentou.** Selecionar o detector de EPI pelo comportamento em cena (YOLO26m, com 74% menos falsos positivos que o candidato de mAP parecido) e não só pelo mAP ([`metricas-finais.md`](https://github.com/lucvs07/cypher-capture/blob/main/docs/metricas-finais.md)).
 - **Erro de processo que a Sprint 4 corrigiu.** O sistema só subia na máquina de quem o desenvolveu (caminhos fixos em `~/projects`, vídeos de validação fora do git, GPU assumida). O teste de instalação limpa achou e corrigiu isso.
 - **Ponto aberto.** Os repositórios estavam privados no teste de 2026-10-15, o que impediria o avaliador de seguir o README.

@@ -12,7 +12,7 @@ Uma linha por integrante por daily. Registrar só **o que mudou, a decisão toma
 
 ## Andamento por tarefa, comprovado pelo git
 
-Cada linha é uma tarefa entregue, com a data e o autor do commit. A data é a do commit; o que foi falado entre as pessoas não está aqui.
+Cada linha é uma tarefa entregue, com a data e o autor do commit. A coluna de autor é a conta que commitou; o responsável pelo card consta como coautor (`Co-authored-by`) no commit, pois o trabalho foi feito presencialmente em grupo. A data é a do commit; o que foi falado entre as pessoas não está aqui.
 
 | Data | Autor do commit | Tarefa | Repositório (commit) | Card |
 |---|---|---|---|---|
