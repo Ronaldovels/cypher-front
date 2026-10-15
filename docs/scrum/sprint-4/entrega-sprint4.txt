@@ -12,4 +12,4 @@ Repositorio GitHub (final): https://github.com/Ronaldovels/cypher-front
 
 Board Trello (atualizado): https://trello.com/b/AqgHhHCP/dev4-cypher-challenge
 
-Video de pitch (YouTube, nao listado): [PREENCHER]
+Video de pitch final (YouTube, nao listado): https://youtu.be/RNXN9POxUuM

@@ -23,7 +23,7 @@ Um card só vai para **Done** no Trello quando as condições do seu tipo e as g
 
 - [ ] Tem até 5 minutos, e todos os integrantes aparecem ou falam. Sem narração por IA.
 - [ ] Cobre: apresentação do grupo, problema, solução, demo do app funcionando e impacto esperado para a Metaindústria.
-- [ ] Está no YouTube como **não listado**, e o link foi aberto em aba anônima.
+- [x] Está no YouTube como **não listado**, e o link foi aberto em aba anônima.
 
 ## Cerimônias
 

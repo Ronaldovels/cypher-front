@@ -5,7 +5,7 @@
 
 ## Sprint Goal atingido?
 
-Parcialmente. O sistema instala e roda seguindo só o README, e a documentação está consolidada. Faltam o vídeo de pitch gravado pelos integrantes e publicado no YouTube, a atualização do board Trello e o preenchimento, pelo time, das informações que só o time tem (datas, presença, retro individual).
+Parcialmente. O sistema instala e roda seguindo só o README, e a documentação está consolidada. O vídeo de pitch foi publicado no YouTube. Faltam a atualização do board Trello e o preenchimento, pelo time, das informações que só o time tem (datas, presença, retro individual).
 
 ## Entregue
 
@@ -29,7 +29,7 @@ Responsável de cada card: ver [sprint-backlog.md](sprint-backlog.md). A autoria
 
 | ID | Item | Motivo | Destino |
 |---|---|---|---|
-| S4-12 | Vídeo de pitch narrado pelos 6 integrantes, até 5 min, no YouTube não listado | Depende da gravação dos integrantes | Prazo 2026-10-23 |
+| S4-12 | Vídeo de pitch narrado pelos 6 integrantes, até 5 min | Publicado no YouTube como não listado: https://youtu.be/RNXN9POxUuM. O time confirmou que o link abre em aba anônima (Definition of Done) | Entregue |
 | S4-13 | Retrospectiva individual e informações da reunião | Só o time tem | Preencher nesta ata e em [retrospectiva.md](retrospectiva.md) |
 | S4-14 | Link do vídeo no `.txt` de entrega | Depende do S4-12 | Preencher e conferir em aba anônima |
 | — | Atualizar o board Trello com o Sprint Backlog final e esta ata | Não feito | Ação do time |

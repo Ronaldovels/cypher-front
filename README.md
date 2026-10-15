@@ -12,7 +12,7 @@ Este repositório (`cypher-front`, Angular 21) é o **repositório principal da 
 
 ## Links
 
-- **Vídeo de pitch (YouTube, não listado):** o link entra aqui e em [`entrega-sprint4.txt`](docs/scrum/sprint-4/entrega-sprint4.txt) assim que o vídeo for publicado.
+- **Vídeo de pitch final (YouTube, não listado):** https://youtu.be/RNXN9POxUuM
 - **Board Trello:** https://trello.com/b/AqgHhHCP/dev4-cypher-challenge
 - **Protótipo Figma (interface):** https://www.figma.com/design/kyeXTO2Uw0lkm8DPK2a22v/Interface?node-id=48-2
 - **Figma (exploração de estilos):** https://www.figma.com/design/nPjn6ULYdgGZDGlrjz5fhG/cypher---rascunhos-de-telas
