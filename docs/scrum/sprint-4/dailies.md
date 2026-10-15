@@ -24,11 +24,11 @@ Cada linha é uma tarefa entregue, com a data e o autor do commit. A coluna de a
 | 2026-09-22 | Ronaldo | — | Rotas `/incidentes` e `/estacoes` exigem sessão; troca de sessão limpa os stores | front `ea6c393`, `b5622e2` | pós-Sprint 3 |
 | 2026-09-22 | Lucas | — | Limpeza de estado na troca de sessão (credenciais MCP, senha do gestor mestre), login volta ao endereço barrado, runbook MCP | front `ede8ade`, `56687f9`, `b6f2d09`, `3e47166`, `0e8cf4e` | pós-Sprint 3 |
 | 2026-09-22 | Lucas | — | Fechamento pendente do incidente sai sem frame e no SIGTERM; renotificação; 404 retentável no sink | capture `e27b092`, `fc9deec`, `1890a0c`, `ecc0561` | pós-Sprint 3 |
-| 2026-09-29 | Lucas | Monique | Vídeos motion do pitch (demo ao vivo, tour pelas telas, apresentação completa) nos 3 READMEs | front `4fd01eb`, `138e290`, `b4f1831`; capture `7e52a56`, `1ae1689`, `0fafa1f`; backend `bd2fde0`, `5195edb`, `4e1f4c3` | S4-01 |
+| 2026-09-29 | Lucas | Monique | Vídeos motion do pitch (demo ao vivo, tour pelas telas, apresentação completa) nos 3 READMEs | front `4fd01eb`, `138e290`, `b4f1831`; capture `c6c9fd4`, `7c50f7f`, `da49671`; backend `18dbebb`, `6f6a782`, `415183f` | S4-01 |
 | 2026-10-15 | Lucas | Ronaldo | Script de demo portátil: acha os repositórios vizinhos, usa CPU quando não há GPU e o vídeo de demonstração como fonte padrão | front `31a5a92`, `2f80550`, `be7a3b9`; capture e backend com os mesmos commits | S4-03, S4-04 |
-| 2026-10-15 | Lucas | — | Vídeo de validação gravado na câmera e clipe do cenário 4 versionados para rodar sem webcam | capture `b997d97`, `312f50b` | S4-04 |
-| 2026-10-15 | Lucas | — | README do backend e do capture (pré-requisitos, testes, execução sem webcam, GPU ou chave de LLM) | backend `6859767`; capture `38bbb24` | S4-02 |
-| 2026-10-15 | Lucas | — | Métricas finais do modelo com a fonte de cada número | capture `38bbb24` | S4-06 |
+| 2026-10-15 | Lucas | — | Vídeo de validação gravado na câmera e clipe do cenário 4 versionados para rodar sem webcam | capture `0ae0d85`, `7b14c07` | S4-04 |
+| 2026-10-15 | Lucas | — | README do backend e do capture (pré-requisitos, testes, execução sem webcam, GPU ou chave de LLM) | backend `df7535b`; capture `156f40e` | S4-02 |
+| 2026-10-15 | Lucas | — | Métricas finais do modelo com a fonte de cada número | capture `156f40e` | S4-06 |
 | 2026-10-15 | Lucas | Ronaldo | README âncora do front | front `005ecd8` | S4-10 |
 | 2026-10-15 | Lucas | Tiago | Arquitetura final com stack e decisões por Sprint | front `02b488f` | S4-07 |
 | 2026-10-15 | Lucas | Rafael | Manual de uso com 16 prints | front `f559fda` | S4-08 |
