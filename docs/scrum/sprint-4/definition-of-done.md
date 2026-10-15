@@ -4,7 +4,7 @@ Um card só vai para **Done** no Trello quando as condições do seu tipo e as g
 
 ## Geral (todo card)
 
-- [ ] O card tem um responsável nomeado no Trello, e o entregável foi commitado **pela conta dessa pessoa**.
+- [ ] O card tem um responsável nomeado no Trello, e o entregável foi commitado pela conta dessa pessoa ou, quando feito em grupo, com essa pessoa no trailer `Co-authored-by`.
 - [ ] Entrou por PR revisado e aprovado por outra pessoa do time (o revisor do card).
 - [ ] O card passou por **Doing → Review → Done**, sem pular a coluna Review.
 

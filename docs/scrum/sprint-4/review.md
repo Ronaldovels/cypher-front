@@ -23,7 +23,7 @@ Parcialmente. O sistema instala e roda seguindo só o README, e a documentação
 | S4-10 | README âncora | [`README.md`](../../../README.md) |
 | S4-11 | Matriz de rastreabilidade | [`rastreabilidade.md`](rastreabilidade.md) |
 
-Responsável de cada card: ver [sprint-backlog.md](sprint-backlog.md). A autoria no git mostra quem commitou cada entregável.
+Responsável de cada card: ver [sprint-backlog.md](sprint-backlog.md). A autoria no git mostra quem commitou cada entregável, e o trailer `Co-authored-by` dos commits do `cypher-front` mostra quem assumiu o card.
 
 ## Não concluído
 
