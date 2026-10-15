@@ -1,207 +1,186 @@
-# Cypher Front
+# Cypher
 
-🔐 **Cypher** é um sistema de monitoramento de segurança industrial por visão computacional — detecta em tempo real uso de EPI, postura de risco e quedas, para a Metaindústria (Challenge SPI/FIAP). Este repositório é o frontend (Angular 21) de um sistema com 3 repositórios (ver [Arquitetura](docs/arquitetura.md)).
+**Cypher** monitora a segurança em chão de fábrica por visão computacional. Ele detecta, em tempo real, o uso de EPI, posturas de risco e quedas, e avisa o operador e o gestor no momento em que acontecem. Foi construído para a Metaindústria no Challenge SPI/FIAP.
 
-## 📋 Sobre o Projeto
+Este repositório (`cypher-front`, Angular 21) é o **repositório principal da entrega final** e a porta de entrada da documentação. O sistema tem três repositórios:
 
-Cypher Front é a interface de gestão e operação do sistema Cypher, apresentando:
+| Repositório | Papel | Stack |
+|---|---|---|
+| [`cypher-front`](https://github.com/Ronaldovels/cypher-front) (este) | Dashboard, heatmap, incidentes, ao vivo, placar, configuração e kiosk do operador | Angular 21 |
+| [`Cypher-Api`](https://github.com/lucvs07/Cypher-Api) | Backend: incidentes, autenticação por papel, multi-empresa, relatórios, análise por IA, servidor MCP | Spring Boot 4.1, Java 21, H2 |
+| [`cypher-capture`](https://github.com/lucvs07/cypher-capture) | Visão computacional: um processo por câmera decide quando um incidente começa e termina | Python, YOLO (EPI), YOLO-pose (postura e queda) |
 
-- **Onboarding**: primeira execução — cria o gestor mestre e configura a empresa
-- **Login** (gestor e kiosk de estação): dois fluxos separados por papel, sem JWT — sessão em cookie `HttpOnly`
-- **Dashboard**: KPIs, heatmap mini e alertas em tempo real (SSE)
-- **Heatmap**: mapa de calor por estação/setor, distribuição temporal e histórico anual, com filtros reais (Período/Setor/EPI/Turno)
-- **Incidentes**: timeline, detalhe com análise de risco por LLM (Claude/Gemini) no snapshot
-- **Ao Vivo**: grade de câmeras por estação, agrupada por setor
-- **Placar**: gamificação por equipe (conformidade, cobertura, sequência, ranking)
-- **Config**: cadastro de estações/câmeras, zonas de risco (editor de polígono em canvas), equipes/usuários, webhooks
-- **Central de notificações**: alertas lidos/não-lidos por usuário
-- **Relatórios**: exportação de CSV/PDF
-- **Chrome TopBar / Dock**: navegação persistente, condicionada ao papel da sessão
+## Links
 
-## 🎬 Vídeos do pitch final (Fase 4)
+- **Vídeo de pitch (YouTube, não listado):** o link entra aqui e em [`entrega-sprint4.txt`](docs/scrum/sprint-4/entrega-sprint4.txt) assim que o vídeo for publicado.
+- **Board Trello:** https://trello.com/b/AqgHhHCP/dev4-cypher-challenge
+- **Protótipo Figma (interface):** https://www.figma.com/design/kyeXTO2Uw0lkm8DPK2a22v/Interface?node-id=48-2
+- **Figma (exploração de estilos):** https://www.figma.com/design/nPjn6ULYdgGZDGlrjz5fhG/cypher---rascunhos-de-telas
 
-Gravados em 29/09/2026 com os 3 projetos rodando sobre a empresa `demo`, na ordem do roteiro do pitch. Este é o repositório principal da entrega; as telas que aparecem são deste front.
+## Proposta de solução
 
-### Demonstração ao vivo · 60s
+**O problema.** Na Metaindústria, a conferência de EPI e de postura depende de alguém olhar. Quando um capacete falta ou alguém se agacha por muito tempo numa posição ruim, o registro costuma acontecer depois do fato, e uma queda pode passar sem resposta imediata.
 
-Backup do slide 12. Na ordem da narração: detecção, decisão (histerese e zona), alerta chegando no kiosk do operador e no dashboard do gestor, e análise por IA.
+**A abordagem.** O Cypher é proativo. Cada câmera tem um pipeline que roda o detector de EPI e a estimativa de pose, aplica as regras de segurança (EPI exigido por zona ou por checklist da empresa, REBA para ergonomia, queda, zona de risco) e só abre um incidente depois de confirmar que ele persiste, para não alarmar à toa. O incidente chega ao kiosk do operador e ao painel do gestor por SSE, com o quadro que o provocou. O gestor pode pedir uma análise de risco por IA sobre esse quadro.
+
+**O que o gestor ganha.** Dashboard em tempo real, heatmap por estação, setor e turno, histórico de incidentes com reconhecimento de status, placar de conformidade por equipe, relatórios em CSV e PDF, webhooks para sistemas externos e um servidor MCP para agentes de IA consultarem os dados.
+
+**Normas cobertas.** NR-6 (EPI) e NR-35 (queda) com detecção medida; NR-12 e NR-17 (ergonomia) pelo motor de regras. As métricas do modelo, cada uma com a fonte, estão em [`cypher-capture/docs/metricas-finais.md`](https://github.com/lucvs07/cypher-capture/blob/main/docs/metricas-finais.md).
+
+## Vídeos do pitch final (Fase 4)
+
+Gravados em 29/09/2026 com os 3 projetos rodando sobre a empresa `demo`. Eles não têm áudio e servem de apoio visual e de backup da demonstração ao vivo. O vídeo narrado pelo grupo é o do YouTube, citado acima.
+
+| Vídeo | Duração |
+|---|---|
+| Demonstração ao vivo | 60 s |
+| Tour pelas telas | 1min45 |
+| Apresentação completa | 2min45 |
 
 https://github.com/user-attachments/assets/1eafada7-b96e-4b8e-9615-0f337889741e
 
-### Tour pelas telas · 1min45
-
-Login por papel, dashboard em tempo real, ao vivo por setor, heatmap, incidentes, placar, EPIs por operação, editor de zonas de risco e servidor MCP.
-
 https://github.com/user-attachments/assets/d2439482-547c-42e5-b491-f5240e6f2619
-
-### Apresentação completa · 2min45
-
-O tour seguido da demonstração ao vivo, em um arquivo só.
 
 https://github.com/user-attachments/assets/ad56a7dd-3999-4b73-a855-ad9485288213
 
-> Os vídeos não têm áudio. Arquivos originais e como foram gravados: [`docs/apresentacao/videos`](docs/apresentacao/videos/README.md).
+Arquivos originais e como foram gravados: [`docs/apresentacao/videos`](docs/apresentacao/videos/README.md).
 
-## 🚀 Começando
+## Como instalar e executar
 
-### Instalação
+Você vai precisar de **Java 21**, **Node.js 20 ou superior** (com npm) e **Python 3.11 ou superior**. Não precisa de webcam, de GPU nem de chave de LLM: o sistema usa um vídeo de demonstração e roda em CPU.
 
-Certifique-se de ter o Node.js e Angular CLI instalados:
+**1. Clone os três repositórios lado a lado.** O script de demonstração procura os outros pela pasta vizinha.
 
 ```bash
-npm install -g @angular/cli@21
+mkdir cypher-projeto && cd cypher-projeto
+git clone https://github.com/Ronaldovels/cypher-front.git
+git clone https://github.com/lucvs07/Cypher-Api.git cypher
+git clone https://github.com/lucvs07/cypher-capture.git
 ```
 
-Clone o repositório e instale as dependências:
+**2. Prepare o ambiente Python do capture** (uma vez; leva alguns minutos e precisa de internet):
 
 ```bash
-git clone <repo-url>
+cd cypher-capture
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+python -c "from ultralytics import YOLO; YOLO('yolo11s-pose.pt')"
+cd ..
+```
+
+**3. Instale as dependências do front:**
+
+```bash
 cd cypher-front
 npm install
 ```
 
-### Servidor de Desenvolvimento
-
-Inicie o servidor local (só o front, precisa do backend rodando à parte para dado real):
+**4. Suba tudo com um comando** (a partir de `cypher-front`):
 
 ```bash
-ng serve
+./scripts/subir-empresa-demo.sh start
 ```
 
-Abra seu navegador e acesse `http://localhost:4200/`. A aplicação recarregará automaticamente quando você modificar os arquivos.
+O script sobe o backend, cria a empresa `demo` com dados simulados (câmeras, equipes, operadores e 14 dias de histórico), sobe o front e inicia o pipeline de captura sobre o vídeo `cypher-capture/data/demo/validacao-camera-2026-10-14.mp4`. Na primeira vez o backend baixa o Maven, então espere alguns minutos. O script avisa quando tudo está no ar.
 
-### Subindo os 3 projetos juntos (backend + front + captura)
+**5. Acesse** `http://localhost:4200`.
 
-Este repositório é um dos três que compõem o sistema (ver [Arquitetura](docs/arquitetura.md)). Para rodar tudo com dado real da empresa de demonstração, use o script `scripts/subir-empresa-demo.sh` (presente também nos outros dois repositórios — pode rodar a partir de qualquer um deles):
+| Papel | Como entrar | Credenciais |
+|---|---|---|
+| Gestor | `/login` | `gestor@demo` / `demo12345` |
+| Operador (kiosk) | `/login-estacao` | usuário e senha do operador criado pelo seed (`operador123`); o usuário de cada estação aparece em [`docs/empresa-demo-runbook.md`](docs/empresa-demo-runbook.md) |
+
+Em alguns segundos de pipeline, a câmera `CAM-WEBCAM` gera incidentes novos (ergonomia, EPI) que aparecem ao vivo no dashboard e em **Incidentes**. A detecção em CPU processa poucos quadros por segundo, o que é esperado.
 
 ```bash
-./scripts/subir-empresa-demo.sh start   # sobe backend, semeia a empresa demo, sobe o front e a webcam
-./scripts/subir-empresa-demo.sh status  # o que está no ar
-./scripts/subir-empresa-demo.sh logs    # acompanha os 3 logs
-./scripts/subir-empresa-demo.sh stop    # derruba tudo
+./scripts/subir-empresa-demo.sh status   # o que está no ar
+./scripts/subir-empresa-demo.sh logs     # acompanha os 3 logs
+./scripts/subir-empresa-demo.sh stop     # derruba tudo
 ```
 
-Por padrão ele assume os repositórios em `~/projects/cypher`, `~/projects/challenge/cypher-front` e `~/projects/challenge/cypher-capture` (configurável por variável de ambiente — ver o cabeçalho do script). Passo a passo manual e detalhes de cada etapa: [`docs/arquitetura.md`](docs/arquitetura.md) §4, [`docs/e1-runbook-local.md`](docs/e1-runbook-local.md) e [`docs/empresa-demo-runbook.md`](docs/empresa-demo-runbook.md).
+**Opções do `start`:** `--source 0` usa a webcam em vez do vídeo; `--device cuda` força a GPU (por padrão ele usa CUDA só se o PyTorch enxergar a GPU); `--orchestrator` reconcilia o catálogo completo de câmeras (as câmeras RTSP reais só respondem na rede da SPI). Para outro layout de pastas, defina `CYPHER_BACKEND_DIR`, `CYPHER_FRONT_DIR` e `CYPHER_CAPTURE_DIR`.
 
-## 🏗️ Estrutura do Projeto
+**Sem chave de LLM** tudo funciona. Só o botão "Analisar com IA" no detalhe do incidente exige `CYPHER_CLAUDE_API_KEY` ou `CYPHER_GEMINI_API_KEY` no ambiente do backend.
+
+**Só o front**, apontando para um backend já rodando em `localhost:8080`: `npm start`.
+
+### Testes e build
+
+```bash
+npm test          # testes unitários do front (Vitest)
+npm run build     # build de produção em dist/
+```
+
+Backend: `./mvnw test` na pasta do `Cypher-Api`. Capture: `pytest` dentro do venv (449 passaram e 2 foram pulados, ver [`cypher-capture/docs/metricas-finais.md`](https://github.com/lucvs07/cypher-capture/blob/main/docs/metricas-finais.md)).
+
+## Telas
+
+O front tem 7 telas e fluxos que não existiam no protótipo do Figma, detalhados em [`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md) e explicados para o usuário final em [`docs/manual-de-uso.md`](docs/manual-de-uso.md):
+
+1. Login do gestor e do kiosk (`/login`, `/login-estacao`)
+2. Equipes e usuários (`/config/equipe`)
+3. Placar de gamificação (`/placar`)
+4. Webhooks (`/config/webhooks`)
+5. Editor de zonas de risco (em `/config/estacoes`)
+6. Central de notificações (global, no topo)
+7. Credenciais MCP (`/config/mcp`)
+
+Além delas, o front tem onboarding, dashboard, heatmap, incidentes (com análise por IA), ao vivo, estações, EPIs, CAs, identidade da empresa e relatórios.
+
+## Estrutura do código
 
 ```
 src/app/
-├── onboarding/          # Primeira execução — cria gestor mestre e empresa
-├── auth/                # Login (gestor / kiosk de estação), guards por papel
-├── dashboard/           # KPIs, heatmap mini, alertas em tempo real
-├── heatmap/             # Heatmap com filtros reais (Período/Setor/EPI/Turno)
-├── incidentes/          # Timeline, detalhe, análise de risco por LLM
-├── ao-vivo/             # Grade de câmeras por estação/setor
-├── placar/              # Gamificação por equipe (E5)
-├── config/              # Estações, câmeras, zonas de risco, equipes/usuários, webhooks
-├── shared/              # Serviços e componentes compartilhados
-│   ├── chrome-topbar/   # Barra de navegação + central de notificações
-│   ├── dock/            # Dock de navegação flutuante
-│   ├── auth/            # AuthService, guards funcionais
-│   └── config.service.ts
-└── Cypher/              # Componentes legacy em JSX
+├── onboarding/   # primeira execução: cria o gestor mestre e a empresa
+├── auth/         # login do gestor e do kiosk, guards por papel
+├── dashboard/    # KPIs, heatmap mini, alertas em tempo real
+├── heatmap/      # filtros de período, setor, EPI e turno
+├── incidents/    # timeline, detalhe e análise por IA
+├── stations/     # grade ao vivo e kiosk da estação
+├── placar/       # gamificação por equipe
+├── config/       # estações, zonas, EPIs, CAs, equipes, webhooks, MCP
+└── shared/       # chrome (topbar e dock), serviços e guards
 ```
 
-Design system (tokens, primitivos, convenções): [`docs/design-system.md`](docs/design-system.md), gerado a partir de `src/styles.scss` (fonte única, nenhum token documentado aqui que não esteja implementado).
+Design system: [`docs/design-system.md`](docs/design-system.md).
 
-## 🛠️ Comandos Principais
+## Documentação
 
-### Gerar Componentes
+| Documento | Conteúdo |
+|---|---|
+| [`docs/arquitetura.md`](docs/arquitetura.md) | Arquitetura final: visão geral, stack com justificativas, decisões por Sprint, gaps |
+| [`docs/manual-de-uso.md`](docs/manual-de-uso.md) | Manual para o gestor de SSMA e o operador |
+| [`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md) | Mapa das telas e evolução em relação ao protótipo |
+| [`docs/empresa-demo-runbook.md`](docs/empresa-demo-runbook.md) | Dados simulados da empresa `demo` |
+| [`docs/mcp-runbook.md`](docs/mcp-runbook.md) | Servidor MCP |
+| [`docs/scrum/`](docs/scrum/) | Artefatos Scrum das Sprints 3 e 4, incluindo a [matriz de rastreabilidade](docs/scrum/sprint-4/rastreabilidade.md) |
 
-```bash
-ng generate component nome-componente
-```
+## Resumo das entregas por Sprint
 
-Para listar todas as opções disponíveis:
+| Sprint | Foco | Entregas |
+|---|---|---|
+| 1 e 2 | Desenho do produto | Protótipo de alta fidelidade no Figma (onboarding, dashboard e heatmap), citado em [`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md) |
+| 3 | Implementação e gestão ágil | Login por papel, multi-empresa, cadastro de câmeras, estações e equipes, timeline de incidentes, kiosk, webhooks, zonas de risco, placar, relatórios, análise por IA, orquestrador de pipelines, board Trello e cerimônias ([`docs/scrum/sprint-3`](docs/scrum/sprint-3/)) |
+| 4 | Entrega final | REBA com câmera angulada, checklist global de EPI, servidor MCP e correções de tracker e webhook; vídeos motion; instalação limpa sem webcam, GPU ou chave de LLM; métricas do modelo com fonte; arquitetura final, manual de uso, rastreabilidade e artefatos Scrum ([`docs/scrum/sprint-4`](docs/scrum/sprint-4/)) |
 
-```bash
-ng generate --help
-```
+A evolução de protótipo para produto está em [`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md), e o caminho de cada requisito até o código e o teste está na [matriz de rastreabilidade](docs/scrum/sprint-4/rastreabilidade.md).
 
-### Build para Produção
+## Integrantes
 
-```bash
-ng build
-```
+| Integrante | Frente na Sprint 4 |
+|---|---|
+| Lucas Rodrigues Grecco | PO e Scrum Master, vídeos motion, edição do pitch, Review e entrega |
+| Felipe Wapf Fettback | Teste de instalação limpa, métricas do modelo |
+| Monique Ferreira dos Anjos | Manual de uso, fluxo de telas |
+| Rafael Augusto Oliveira Silva | README, matriz de rastreabilidade |
+| Ronaldo Veloso Filho | READMEs técnicos dos repositórios, correções de instalação |
+| Tiago Brito Nário | Documento de arquitetura final |
 
-Os artefatos serão armazenados no diretório `dist/`. A build de produção otimiza automaticamente o desempenho da aplicação.
+Divisão detalhada, status e revisores: [`docs/scrum/sprint-4/sprint-backlog.md`](docs/scrum/sprint-4/sprint-backlog.md).
 
-### Testes Unitários
+## Licença
 
-Execute testes com [Vitest](https://vitest.dev/):
-
-```bash
-ng test
-```
-
-### Testes End-to-End
-
-Para testes E2E:
-
-```bash
-ng e2e
-```
-
-## 🗂️ Gestão Ágil (Sprint 3)
-
-- **Board Trello:** [trello.com/b/AqgHhHCP/dev4-cypher-challenge](https://trello.com/b/AqgHhHCP/dev4-cypher-challenge) (visualização pública)
-- **Protótipo Figma — Interface (atualizado):** [figma.com/design/kyeXTO2Uw0lkm8DPK2a22v/Interface](https://www.figma.com/design/kyeXTO2Uw0lkm8DPK2a22v/Interface?node-id=48-2)
-- **Figma — Exploração de estilos:** [figma.com/design/nPjn6ULYdgGZDGlrjz5fhG/cypher---rascunhos-de-telas](https://www.figma.com/design/nPjn6ULYdgGZDGlrjz5fhG/cypher---rascunhos-de-telas)
-- **Documento de cerimônias Scrum:** [docs/scrum/sprint-3/cerimonias.md](docs/scrum/sprint-3/cerimonias.md)
-- **Product Backlog / Sprint Backlog / DoD:** [docs/scrum/sprint-3/](docs/scrum/sprint-3/)
-- **Design system:** [docs/design-system.md](docs/design-system.md)
-- **Arquitetura (3 repositórios + como subir localmente):** [docs/arquitetura.md](docs/arquitetura.md)
-- **Fluxo de telas implementadas (evolução do protótipo):** [docs/fluxo-de-telas.md](docs/fluxo-de-telas.md)
-- **Roteiro de apresentação (5 min):** [docs/apresentacao/2026-08-25-roteiro-sprint3.md](docs/apresentacao/2026-08-25-roteiro-sprint3.md)
-
-**As telas são demonstradas rodando no projeto local** (ver [docs/e1-runbook-local.md](docs/e1-runbook-local.md) e [docs/empresa-demo-runbook.md](docs/empresa-demo-runbook.md)), com dado real da empresa `demo` — o Figma documenta o desenho de alta fidelidade das telas originais (Sprints 1–2); a evolução desta Sprint é código real, mapeada em `docs/fluxo-de-telas.md`.
-
-### 🎥 Vídeo de demonstração (Sprint 3)
-
-https://github.com/user-attachments/assets/da582c0c-9bc6-4ca3-9de6-844e875141b9
-
-Vídeo curto (gravado com os 3 projetos rodando localmente — ver [`scripts/subir-empresa-demo.sh`](scripts/subir-empresa-demo.sh)) navegando pelas principais telas do sistema, com dado real da empresa `demo`. Roteiro sugerido (ver [`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md) para o mapa completo):
-
-- [ ] Login do gestor (`/login`) → Dashboard (KPIs, heatmap mini, alertas em tempo real)
-- [ ] Heatmap (`/heatmap`) — filtros por Período/Setor/EPI/Turno, painéis Temporal e Anual
-- [ ] Incidentes (`/incidentes`) — timeline, detalhe de um incidente, análise de risco por IA
-- [ ] Ao Vivo (`/estacoes`) — grade de câmeras agrupada por setor
-- [ ] Placar (`/placar`) — gamificação por equipe
-- [ ] Config — zonas de risco (editor de polígono), equipes/usuários, webhooks
-- [ ] Central de notificações (sino no topbar)
-- [ ] Login do kiosk (`/login-estacao`) → operação de estação, sem acesso ao dashboard do gestor
-
-### Evolução do protótipo nesta Sprint
-
-O protótipo em alta fidelidade no Figma (`Interface`) documentou o desenho de Onboarding, Dashboard e Heatmap nas Sprints 1–2. A partir da E4 o projeto entrou em fase de implementação — cada tela nova nasceu direto como componente Angular real (seguindo os primitivos do [design system](docs/design-system.md)), em vez de primeiro virar artboard no Figma. O mapeamento completo do fluxo de telas implementadas, com justificativa por tela, está em **[`docs/fluxo-de-telas.md`](docs/fluxo-de-telas.md)** — 6 telas/fluxos novos em relação ao protótipo original: login do gestor, login do kiosk, `/config/equipe`, `/placar` (gamificação), `/config/webhooks` e o editor de zonas de risco.
-
-Nenhuma delas introduz um padrão visual novo — todas reaproveitam os mesmos primitivos já usados no restante da aplicação (`.panel`, `.field`, `.input`, `.btn`, `.chip`, `.list-row`, `.status`), consistente com a convenção de design já registrada nas specs do projeto (`docs/superpowers/specs/2026-08-29-roteiro-de-entregas.md` §4) — única exceção documentada é o canvas do editor de zonas de risco.
-
-## 📁 Branches
-
-- **main**: Produção estável
-- **dev**: Desenvolvimento ativo com features em progresso
-- **hml**: Homologação/staging
-
-## 🔄 Fluxo de Trabalho
-
-1. Desenvolva na branch **dev**
-2. Crie pull requests para revisão
-3. Após aprovação, realize merge para **main**
-4. Deploy automático ou manual para produção
-
-## 📚 Recursos Adicionais
-
-- [Documentação Angular CLI](https://angular.dev/tools/cli)
-- [Angular 21 Guide](https://angular.dev)
-- [Vitest Documentation](https://vitest.dev/)
-
-## 📝 Licença
-
-Projeto acadêmico — Challenge SPI/FIAP.
-
----
-
-**Versão**: Angular 21.2.11
-**Última atualização**: 2026-09-14
+Projeto acadêmico, Challenge SPI/FIAP.
