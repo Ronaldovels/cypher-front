@@ -5,6 +5,18 @@ descreve o que existe na empresa `demo` para teste local — câmeras reais da
 meta indústria, webcam do notebook, equipes/operadores da gamificação (E5) —
 além de como reconstruir esses dados do zero e preparar a banca final.
 
+## Origem dos dados (simulados)
+
+Os dados da empresa `demo` são **simulados** e existem só para demonstração.
+O catálogo (estações, câmeras, equipes, operadores) e o histórico dos últimos
+14 dias (incidentes, alertas, cobertura por turno e o histórico de gamificação)
+são criados por `scripts/seed-empresa-demo.sh` e `seed_gamificacao_demo.py` no
+repositório do backend, a partir de regras fixas e sem dado pessoal real:
+colaboradores aparecem só por equipe e estação, nunca por nome (LGPD). Os
+incidentes novos que aparecem durante a demonstração vêm do pipeline real do
+`cypher-capture` rodando sobre o vídeo de demonstração versionado em
+`cypher-capture/data/demo/`.
+
 **Nunca commitar segredo real aqui.** `data/cypherdb.mv.db` (`cypher`) é
 gitignorado de propósito — carrega tokens de estação e api-keys de câmera em
 texto puro (ver comentário no `.gitignore` do repo). Este documento também
