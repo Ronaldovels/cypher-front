@@ -48,7 +48,7 @@ A disponibilidade de cada integrante em horas por semana não consta em nenhum r
 | Risco | Impacto | Mitigação |
 |---|---|---|
 | Avaliador não consegue subir o sistema só com o README (sem webcam, sem GPU, sem chave de LLM) | Alto (40 pts) | Vídeo de demonstração versionado, script que acha os repositórios vizinhos e cai para CPU, teste de instalação limpa (S4-03) |
-| Vídeo sem narração dos integrantes | Alto (30 pts) | Cada integrante grava o próprio bloco (S4-12); narração por IA não é aceita |
+| Vídeo sem narração dos integrantes | Alto (30 pts) | Mitigado: o S4-12 foi produzido e narrado por Ronaldo, Felipe, Tiago e Rafael e publicado no YouTube como não listado. Narração por IA não é aceita |
 | Repositórios do GitHub privados quando o avaliador abre os links | Alto | Conferir em aba anônima antes de entregar; tornar públicos ou dar acesso aos avaliadores |
 | Autoria concentrada em uma pessoa no histórico | Médio (evidência de Scrum) | Cada integrante commita da própria conta os cards que assumiu |
 
@@ -58,4 +58,4 @@ A disponibilidade de cada integrante em horas por semana não consta em nenhum r
 |---|---|
 | 2026-10-23 | Entrega do `.txt` (prazo do Challenge) |
 
-As datas dos demais marcos (documentação congelada, gravação dos blocos do vídeo, Review final e Retrospectiva) o time define e registra aqui.
+As datas dos demais marcos (documentação congelada, Review final e Retrospectiva; o vídeo de pitch já foi entregue) o time define e registra aqui.

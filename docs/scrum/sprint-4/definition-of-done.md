@@ -21,8 +21,8 @@ Um card só vai para **Done** no Trello quando as condições do seu tipo e as g
 
 ## Vídeo de pitch
 
-- [ ] Tem até 5 minutos, e os integrantes que o produziram aparecem ou falam. Sem narração por IA.
-- [ ] Cobre: apresentação do grupo, problema, solução, demo do app funcionando e impacto esperado para a Metaindústria.
+- [x] Tem até 5 minutos, e os integrantes que o produziram aparecem ou falam. Sem narração por IA.
+- [x] Cobre: apresentação do grupo, problema, solução, demo do app funcionando e impacto esperado para a Metaindústria.
 - [x] Está no YouTube como **não listado**, e o link foi aberto em aba anônima.
 
 ## Cerimônias
