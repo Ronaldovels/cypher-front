@@ -1,4 +1,4 @@
-# Fluxo de telas — evolução do protótipo (Sprint 3)
+# Fluxo de telas — evolução do protótipo (Sprint 3, atualizado na Sprint 4)
 
 **Por que este documento existe:** o protótipo em alta fidelidade no Figma (`Interface`) cobriu a fase de desenho das telas nas Sprints 1–2. A partir da E4, o projeto entrou em fase de implementação — cada tela nova nasceu direto como componente Angular real, seguindo os primitivos do [design system](design-system.md), em vez de primeiro ser desenhada no Figma e só depois implementada. Este documento mapeia o fluxo de telas **realmente implementadas e rodando** (verificável em `src/app/app.routes.ts` e em cada componente), como evidência da evolução do protótipo desta Sprint — a demonstração na defesa é feita rodando a aplicação local (ver [`e1-runbook-local.md`](e1-runbook-local.md)/[`empresa-demo-runbook.md`](empresa-demo-runbook.md)), não apenas por artboards estáticos.
 
@@ -77,3 +77,17 @@ O Figma (`Interface`) documentou o desenho de alta fidelidade de Onboarding, Das
 7. **`/config/mcp`** — cadastro de credenciais para o servidor MCP (integração com agentes de IA).
 
 Cada uma tem razão registrada nas specs de design (`docs/superpowers/specs/`) e no changelog do Sprint Backlog (`docs/scrum/sprint-3/sprint-backlog.md`) — nenhuma foi adicionada "porque sim".
+
+## 5. O que mudou depois da Sprint 3
+
+Mudanças de tela entre 15/09 e o fim da Sprint 4. Nenhuma criou rota nova além das já listadas (a contagem segue em 7 telas e fluxos novos em relação ao protótipo):
+
+| Mudança | Onde | PR / origem |
+|---|---|---|
+| Rotação da câmera e ângulo de inclinação (roll) no cadastro de câmera | `/config/estacoes` | PR [#15](https://github.com/Ronaldovels/cypher-front/pull/15) (`feat/camera-rotacao-angulo`) |
+| Cadastro de credenciais MCP pela interface | `/config/mcp` | PR [#16](https://github.com/Ronaldovels/cypher-front/pull/16) (`feat/mcp-credenciais-ui`) |
+| Checklist de EPIs global da empresa, só com os 6 EPIs que o modelo detecta | `/config/epis` | commit "só os 6 EPIs que o modelo detecta existem no front" |
+| Alerta sonoro e aviso visual no kiosk | `/estacao/:id` | achado da review da SPI de 17/09 |
+| Logout limpa o estado da sessão anterior; login volta ao endereço que o guard barrou | `/login`, guards | PRs [#17](https://github.com/Ronaldovels/cypher-front/pull/17) e [#18](https://github.com/Ronaldovels/cypher-front/pull/18) |
+
+O uso de cada tela, passo a passo e com prints, está no [manual de uso](manual-de-uso.md).
