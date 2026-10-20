@@ -105,6 +105,24 @@ reprovisionada a qualquer momento via `POST /cameras/{id}/apikey/regenerate`.
 Setor de Tenda/Sala 4/SICK não veio na especificação original — em branco,
 editável em `/config/estacoes`.
 
+**LEMBRETE — snapshot no Cloudinary não sobe sem o `.env` exportado no shell.**
+Nem `run_pipeline.py` nem o orquestrador chamam `load_dotenv()` (só
+`src/utils/upload.py` faz isso, e tarde demais pro uploader já ter sido
+escolhido). Isso vale tanto pra `CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET`
+quanto pras credenciais RTSP (`CYPHER_RTSP_USER/PASS`, `CYPHER_TENDA_PASS`,
+etc.) — se o `.env` do `cypher-capture` não estiver carregado no shell que
+sobe o pipeline (manual ou via `scripts/subir-empresa-demo.sh`), o processo
+sobe sem erro nenhum, mas sem enviar foto nenhuma (`snapshotUrl` fica sempre
+`null`) e/ou sem expandir a fonte RTSP. Antes de subir:
+
+```bash
+cd cypher-capture && set -a && source .env && set +a
+```
+
+(achado 2026-10-20, ao cadastrar `CAM-TEATRO1` — câmera VIPC-1230-B-G2 do
+ambiente simulado em teatro: 29 incidentes saíram com `snapshotUrl: null`
+até perceber que faltava isso.)
+
 ---
 
 ## 5. Equipes da gamificação (E5)
