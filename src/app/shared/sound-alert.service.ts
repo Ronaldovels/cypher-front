@@ -56,7 +56,10 @@ export class SoundAlertService {
       return;
     }
 
-    const volume = severidade >= 3 ? 0.55 : 0.4;
+    // Volume no maximo que o Web Audio permite sem distorcer (GainNode
+    // acima de 1.0 clipa o sinal) — achado 2026-10-23: pedido explicito de
+    // aumentar o mais possivel pro alerta ser ouvido na arena.
+    const volume = severidade >= 3 ? 1.0 : 0.85;
     const repeticoes = severidade >= 3 ? 4 : 3;
 
     for (let i = 0; i < repeticoes; i++) {
